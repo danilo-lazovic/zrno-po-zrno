@@ -1,0 +1,73 @@
+# Zrno po zrno
+
+Platforma za obuku barista i zaposlenih Kafeterije: lekcije-priče, izazovi, mini-igre, kartice pojmova i završni test sa sertifikatom; admin deo za trenere i menadžere lokala.
+
+Plan, pravila, uloge, model podataka i redosled modula: **[PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)**. Referenca dizajna: [design/](design/README.md).
+
+Stack: FastAPI + SQLAlchemy + Alembic + Postgres (backend), Next.js + TypeScript (frontend), isto kao Kafeterija Portal.
+
+## Pokretanje (lokalno, Windows PowerShell ili WSL)
+
+Potrebno: Docker Desktop, Python 3.12+, Node 22+.
+
+```powershell
+copy .env.example .env          # pa popuni SECRET_KEY i SEED_LOZINKA
+docker compose up -d db         # Postgres na portu 5433
+
+cd backend
+python -m venv .venv
+.venv\Scripts\pip install -r requirements-dev.txt
+.venv\Scripts\alembic upgrade head
+.venv\Scripts\python seed.py --demo     # sadržaj kursa + demo nalozi
+.venv\Scripts\uvicorn main:app --reload --port 8000
+
+cd ..\frontend                  # u drugom terminalu
+npm install
+npm run dev                     # http://localhost:3000
+```
+
+(WSL/Linux: `.venv/bin/...` umesto `.venv\Scripts\...`.)
+
+Demo nalozi posle `seed.py --demo`:
+
+| Ko | Prijava | Tajna |
+|---|---|---|
+| admin | `admin@kafeterija.test` | `SEED_LOZINKA` |
+| trener | `trener@kafeterija.test` | `SEED_LOZINKA` |
+| menadžer (Demo lokal) | `menadzer@kafeterija.test` | `SEED_LOZINKA` |
+| polaznik (Demo lokal) | `demo.polaznik` | PIN `2580` |
+
+Telefon na istoj mreži: `npm run dev -- -H 0.0.0.0`, pa `http://<IP računara>:3000`. Za pozivne linkove koji rade sa telefona postavi `APP_URL` na tu adresu.
+
+## Testovi
+
+```powershell
+cd backend
+.venv\Scripts\python -m pytest              # SQLite u memoriji
+$env:TEST_DATABASE_URL="postgresql+psycopg://zrno:zrno_dev@127.0.0.1:5433/zrno_test"; .venv\Scripts\python -m pytest   # pravi Postgres
+
+cd ..\frontend
+npm run typecheck
+npm run build
+```
+
+## Kako se testira Modul 0
+
+1. Prijavi se kao admin (`/prijava` → „Prijava za osoblje”). Lokali → dodaj lokal. Osoblje → otvori nalog menadžeru tog lokala.
+2. Polaznici → dodaj polaznika → „Kopiraj poruku sa linkom”. Otvori link (može u privatnom prozoru ili na telefonu).
+3. Na linku postavi PIN (1234, 1111 i slični se odbijaju). Otvara se staza sa 8 nivoa; tap na nivo otvara opis nivoa.
+4. Odjavi se (Profil), pa se prijavi korisničkim imenom i PIN-om. 5 pogrešnih PIN-ova zaredom = 15 min čekanja; 10 = nalog zaključan.
+5. Kao admin/trener: „Novi link” polazniku → stari link i stari PIN više ne rade, polaznik je odjavljen sa telefona.
+6. Kao menadžer: vidi samo polaznike svog lokala i dodaje samo u svoj lokal.
+7. Sadržaj → objavljena verzija v1 (8 nivoa).
+
+## Sadržaj
+
+Kurs je JSON dokument u `backend/modules/sadrzaj/data/`. Posle izmene:
+
+```powershell
+cd backend
+.venv\Scripts\python seed.py --samo-sadrzaj    # radi i u produkciji
+```
+
+Isti dokument se ne uvozi dvaput; izmenjen pravi novu verziju. Svaki korak i pitanje imaju stabilan `id` (`m3.k07`); ne menjaj postojeće `id`-jeve, jer se na njih vezuju odgovori i statistika. Nov korak dobija nov `id`.

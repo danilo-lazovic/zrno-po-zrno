@@ -1,0 +1,63 @@
+/* Dopune uz zrno.css: prijava, pozivnica i admin deo. Tokeni su iz zrno.css. */
+body { margin: 0; }
+a.btn { text-decoration: none; }
+
+/* ---------- prijava i pozivnica ---------- */
+.auth { display: grid; gap: 16px; max-width: 420px; margin: 0 auto; padding: calc(32px + env(safe-area-inset-top, 0px)) 16px 40px; }
+.auth-logo { display: flex; align-items: center; gap: 10px; font: 900 34px/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; }
+.auth-logo .ic { width: 38px; height: 38px; color: var(--bean-roast); }
+.auth form { display: grid; gap: 10px; }
+.auth label { font: 600 12px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+.auth .greska { margin: 0; color: var(--bad-ink); font-weight: 600; }
+.auth .pin { font: 800 30px var(--font-mono); letter-spacing: .5em; text-align: center; }
+.auth .ko { padding: 12px 14px; border-radius: 12px; background: var(--surface-2); }
+.auth .ko b { font-family: var(--font-mono); }
+.prekidac { display: flex; justify-content: center; }
+
+/* ---------- admin ---------- */
+body:has(.adm) { background-image: none; }
+.adm { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100vh; }
+.adm-nav { position: sticky; top: 0; display: flex; flex-direction: column; gap: 4px; height: 100vh; padding: 20px 12px; border-right: 2px solid var(--line); background: var(--surface); }
+.adm-nav .auth-logo { margin: 0 8px 18px; font-size: 26px; }
+.adm-nav .auth-logo .ic { width: 28px; height: 28px; }
+.adm-nav a { padding: 10px 12px; border-radius: 10px; color: var(--ink-2); font-weight: 600; text-decoration: none; }
+.adm-nav a:hover { background: var(--surface-2); color: var(--ink); }
+.adm-nav a[aria-current="page"] { background: var(--gold); color: #241510; }
+.adm-ja { margin-top: auto; padding: 10px 12px; font-size: 13px; color: var(--ink-2); }
+.adm-ja b { display: block; color: var(--ink); }
+.adm-main { padding: 28px 32px 60px; max-width: 1200px; }
+.adm-glava { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.adm-glava .h1 { margin: 0; }
+.adm .btn { min-height: 40px; padding: 8px 14px; font-size: 15px; }
+.adm .inp { padding: 10px 12px; font-size: 15px; }
+.adm select.inp { appearance: auto; }
+
+.tabela { width: 100%; border-collapse: separate; border-spacing: 0; border: 2px solid var(--stroke); border-radius: var(--r); background: var(--surface); overflow: hidden; }
+.tabela th, .tabela td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+.tabela th { font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); background: var(--surface-2); }
+.tabela tr:last-child td { border-bottom: 0; }
+.tabela .mono { font-family: var(--font-mono); font-size: 13px; }
+.tabela .akcije { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.prazno { padding: 28px; border: 2px dashed var(--line); border-radius: var(--r); color: var(--ink-2); text-align: center; }
+
+.znak { display: inline-block; padding: 2px 8px; border-radius: 999px; font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .04em; }
+.znak-aktivan { background: var(--leaf-soft); color: var(--ok-ink); }
+.znak-pozvan { background: var(--gold-soft); color: var(--mid-ink); }
+.znak-zakljucan, .znak-iskljucen { background: var(--cherry-soft); color: var(--bad-ink); }
+
+.forma { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: end; margin-bottom: 18px; }
+.forma label { display: grid; gap: 4px; font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+.forma .greska { grid-column: 1 / -1; margin: 0; color: var(--bad-ink); font-weight: 600; }
+
+.link-kartica { display: grid; gap: 8px; margin-bottom: 18px; border-color: var(--leaf); }
+.link-kartica code { display: block; padding: 10px; border-radius: 10px; background: var(--surface-2); font: 600 13px var(--font-mono); word-break: break-all; }
+.link-kartica .akcije { display: flex; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 760px) {
+  .adm { grid-template-columns: 1fr; }
+  .adm-nav { position: static; flex-direction: row; flex-wrap: wrap; height: auto; padding: 12px; border-right: 0; border-bottom: 2px solid var(--line); }
+  .adm-nav .auth-logo { width: 100%; margin: 0 4px 6px; }
+  .adm-ja { width: 100%; margin-top: 4px; padding: 4px; }
+  .adm-main { padding: 18px 16px 48px; }
+  .tabela { display: block; overflow-x: auto; }
+}

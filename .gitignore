@@ -1,0 +1,35 @@
+# tajne
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# node / next
+node_modules/
+.next/
+out/
+next-env.d.ts
+frontend/AGENTS.md
+frontend/CLAUDE.md
+*.tsbuildinfo
+npm-debug.log*
+
+# unity build-ovi igara (WebGL) ne idu u git; objavljuju se kao statični fajlovi
+frontend/public/unity/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.vs/
+
+# lokalna podešavanja Claude Code-a
+.claude/settings.local.json

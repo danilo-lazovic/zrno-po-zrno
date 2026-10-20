@@ -1,0 +1,3087 @@
+{
+ "kurs": {
+  "kljuc": "osnovni",
+  "naziv": "Osnovni nivo",
+  "opis": "Minimum pre kursa: 8 nivoa i završni test."
+ },
+ "podesavanja": {
+  "prag": 0.8,
+  "test_pitanja": 20,
+  "dnevni_cilj": 50
+ },
+ "delovi": [
+  {
+   "naziv": "Deo 1 · Zrno",
+   "nivoi": [
+    "m1",
+    "m2"
+   ]
+  },
+  {
+   "naziv": "Deo 2 · Oprema",
+   "nivoi": [
+    "m3",
+    "m4"
+   ]
+  },
+  {
+   "naziv": "Deo 3 · Espresso",
+   "nivoi": [
+    "m5",
+    "m6"
+   ]
+  },
+  {
+   "naziv": "Deo 4 · Filter i mleko",
+   "nivoi": [
+    "m7",
+    "m8"
+   ]
+  }
+ ],
+ "rangovi": [
+  {
+   "min": 0,
+   "naziv": "Zeleno zrno"
+  },
+  {
+   "min": 120,
+   "naziv": "Prženo zrno"
+  },
+  {
+   "min": 300,
+   "naziv": "Prvi šot"
+  },
+  {
+   "min": 550,
+   "naziv": "Šef mlina"
+  },
+  {
+   "min": 850,
+   "naziv": "Latte artista"
+  },
+  {
+   "min": 1200,
+   "naziv": "Spreman za bar"
+  }
+ ],
+ "bedzevi": [
+  {
+   "id": "first",
+   "naziv": "Prvi gutljaj",
+   "opis": "Završi prvi nivo."
+  },
+  {
+   "id": "perfect",
+   "naziv": "Bez greške",
+   "opis": "Završi nivo bez ijedne greške."
+  },
+  {
+   "id": "combo5",
+   "naziv": "Niz od 5",
+   "opis": "Pet tačnih odgovora zaredom."
+  },
+  {
+   "id": "streak3",
+   "naziv": "Tri dana zaredom",
+   "opis": "Uči tri dana u nizu."
+  },
+  {
+   "id": "half",
+   "naziv": "Pola puta",
+   "opis": "Završi četiri nivoa."
+  },
+  {
+   "id": "dial",
+   "naziv": "Dial-in majstor",
+   "opis": "Uštimaj šot u igri Uštimaj mlin."
+  },
+  {
+   "id": "swipe",
+   "naziv": "Brzi prsti",
+   "opis": "Osvoji 15+ poena u Brzoj rundi."
+  },
+  {
+   "id": "milk",
+   "naziv": "Kralj pare",
+   "opis": "Spenuj mleko sa 3 zvezdice."
+  },
+  {
+   "id": "latte",
+   "naziv": "Srce iz prve",
+   "opis": "Nacrtaj srce sa 3 zvezdice."
+  },
+  {
+   "id": "recipe",
+   "naziv": "Recept-mašina",
+   "opis": "Složi tri recepta bez greške."
+  },
+  {
+   "id": "allstars",
+   "naziv": "Sve zvezdice",
+   "opis": "Tri zvezdice na svih 8 nivoa."
+  },
+  {
+   "id": "ready",
+   "naziv": "Spreman za kurs",
+   "opis": "Položi završni test."
+  }
+ ],
+ "nivoi": [
+  {
+   "id": "m1",
+   "n": 1,
+   "title": "Priča o kafi",
+   "icon": "leaf",
+   "color": "#277C4D",
+   "min": 6,
+   "desc": "Legenda o Kaldiju, put kafe kroz svet i biljka koja sve pokreće.",
+   "steps": [
+    {
+     "id": "m1.k01",
+     "t": "story",
+     "img": "img/kaldi.jpg",
+     "title": "Kaldi i razigrane koze",
+     "text": "Etiopija, 9. vek. Pastir **Kaldi** iz oblasti Kafa primećuje da su mu koze pune energije kad pojedu crvene bobice sa jednog žbuna. Toliko da noću neće da spavaju. Tako, kaže legenda, počinje priča o kafi.",
+     "remember": "Legenda: pastir Kaldi, Etiopija, 9. vek"
+    },
+    {
+     "id": "m1.k02",
+     "t": "story",
+     "img": "img/qahveh.jpg",
+     "title": "Jemen: prve kuće kafe",
+     "text": "Najraniji zapisi kažu da je **Jemen** prvi počeo da gaji, prži i prodaje kafu. Napitak su zvali **qahwa**, a mesta gde se pio **qahveh khaneh**, kuće kafe. To su preci današnjih kafića.",
+     "remember": "Jemen: prvi uzgoj, prženje i trgovina · qahwa"
+    },
+    {
+     "id": "m1.k03",
+     "t": "mc",
+     "q": "Odakle dolazi ime „kafa“?",
+     "opts": [
+      "Od jemenske reči qahwa",
+      "Od italijanskog caffè",
+      "Od imena pastira Kaldija",
+      "Od imena brazilskog grada"
+     ],
+     "a": 0,
+     "why": "Jemenci su napitak zvali qahwa, a Evropljani su po tome dali ime biljci."
+    },
+    {
+     "id": "m1.k04",
+     "t": "story",
+     "title": "Kafa kreće u svet",
+     "list": [
+      {
+       "y": "17. vek",
+       "t": "Holanđani prvi iznose zrna iz Arabije i sade ih u Bataviji (danas Indonezija), pa na Sumatri i Sulavesiju."
+      },
+      {
+       "y": "17. vek",
+       "t": "Putnici sa Bliskog istoka donose priče o tamnom napitku i kafa postaje hit u Evropi."
+      },
+      {
+       "y": "1723.",
+       "t": "Oficir Gabriel de Clieu nosi seme na Martinik. Za 50 godina tamo raste 18 miliona stabala."
+      },
+      {
+       "y": "Brazil",
+       "t": "Francisco de Mello Palheta donosi seme skriveno u buketu i pokreće globalnu industriju."
+      }
+     ],
+     "remember": "Holanđani prvi iznose kafu iz Arabije · De Clieu → Martinik, 1723."
+    },
+    {
+     "id": "m1.k05",
+     "t": "order",
+     "q": "Poređaj priču kafe, od najstarijeg događaja",
+     "items": [
+      "Kaldi i koze u Etiopiji",
+      "Jemen: qahwa i kuće kafe",
+      "Holanđani sade kafu u Indoneziji",
+      "De Clieu nosi kafu na Martinik"
+     ],
+     "why": "Etiopija (legenda, 9. vek) → Jemen → Holanđani (17. vek) → Martinik (1723.)."
+    },
+    {
+     "id": "m1.k06",
+     "t": "story",
+     "img": "img/grana.jpg",
+     "fit": "contain",
+     "bg": "#fff",
+     "title": "Upoznaj biljku",
+     "text": "Kafa je zimzelena biljka roda **Coffea** iz porodice **Rubiaceae**. Na plantažama se orezuje na **3–5 m** da bi se lakše brala, a inače može da naraste i do 12 m. Najbolje uspeva na **15–30 °C**.",
+     "remember": "Coffea · porodica Rubiaceae · orezuje se na 3–5 m"
+    },
+    {
+     "id": "m1.k07",
+     "t": "tf",
+     "q": "Na istoj grani kafe mogu istovremeno da budu i zrele i nezrele trešnje.",
+     "a": true,
+     "why": "Biljka rađa u kontinuiranom ciklusu, pa su na grani često i crvene i zelene trešnje."
+    },
+    {
+     "id": "m1.k08",
+     "t": "story",
+     "img": "img/tresnje-grana.jpg",
+     "title": "Brojke za pamćenje",
+     "text": "Trešnji treba oko **godinu dana** da sazri. Drvo pun potencijal dostiže za oko 5 godina, najbolje rađa **od 7. do 20. godine**, a može da poživi i 100. Za **1 kg kafe** treba **5–6 kg trešanja**, oko 8.800 komada.",
+     "remember": "5–6 kg trešanja = 1 kg kafe"
+    },
+    {
+     "id": "m1.k09",
+     "t": "num",
+     "q": "Koliko kilograma trešanja treba za 1 kg kafe?",
+     "min": 1,
+     "max": 12,
+     "step": 1,
+     "unit": "kg",
+     "a": [
+      5,
+      6
+     ],
+     "start": 2,
+     "why": "Za 1 kg kafe treba 5–6 kg trešanja, odnosno oko 8.800 bobica."
+    },
+    {
+     "id": "m1.k10",
+     "t": "story",
+     "img": "img/pojas.jpg",
+     "title": "Pojas kafe",
+     "text": "Kafa raste samo u pojasu između **25° severno i 30° južno**. Treba joj bogato zemljište, umerena temperatura, povremena kiša i hlad.",
+     "remember": "Pojas kafe: 25° severno – 30° južno"
+    },
+    {
+     "id": "m1.k11",
+     "t": "mc",
+     "q": "U kojoj zemlji kafa NE može da raste na otvorenom?",
+     "opts": [
+      "Norveška",
+      "Kolumbija",
+      "Etiopija",
+      "Vijetnam"
+     ],
+     "a": 0,
+     "why": "Norveška je daleko izvan pojasa kafe. Ostale tri zemlje su veliki proizvođači kafe."
+    }
+   ],
+   "pool": [
+    {
+     "id": "m1.b01",
+     "t": "mc",
+     "q": "Kojoj porodici biljaka pripada kafa?",
+     "opts": [
+      "Rubiaceae",
+      "Rosaceae",
+      "Fabaceae",
+      "Solanaceae"
+     ],
+     "a": 0,
+     "why": "Kafa (Coffea) pripada porodici Rubiaceae."
+    },
+    {
+     "id": "m1.b02",
+     "t": "mc",
+     "q": "U kom veku je, po legendi, Kaldi otkrio kafu?",
+     "opts": [
+      "9. veku",
+      "5. veku",
+      "13. veku",
+      "17. veku"
+     ],
+     "a": 0,
+     "why": "Legenda smešta Kaldija u Etiopiju, u 9. vek."
+    },
+    {
+     "id": "m1.b03",
+     "t": "mc",
+     "q": "Na koju visinu se orezuje drvo kafe na plantaži?",
+     "opts": [
+      "3–5 m",
+      "Do 1 m",
+      "8–10 m",
+      "12–15 m"
+     ],
+     "a": 0,
+     "why": "Orezuje se na 3–5 m, zbog energije drveta i lakše berbe."
+    },
+    {
+     "id": "m1.b04",
+     "t": "mc",
+     "q": "Koliko treba trešnji kafe da sazri?",
+     "opts": [
+      "Oko godinu dana",
+      "Oko mesec dana",
+      "Oko tri meseca",
+      "Oko pet godina"
+     ],
+     "a": 0,
+     "why": "Trešnjama treba oko godinu dana da sazru."
+    },
+    {
+     "id": "m1.b05",
+     "t": "tf",
+     "q": "Holanđani su prvi izneli zrna kafe izvan Arabije.",
+     "a": true,
+     "why": "Holanđani su prvi preneli zrna i uzgajali kafu u Bataviji."
+    },
+    {
+     "id": "m1.b06",
+     "t": "tf",
+     "q": "Drvo kafe najbolje rađa u prvoj godini.",
+     "a": false,
+     "why": "Najbolje plodove daje između 7. i 20. godine."
+    },
+    {
+     "id": "m1.b07",
+     "t": "mc",
+     "q": "Ko je 1723. preneo kafu na Martinik?",
+     "opts": [
+      "Gabriel de Clieu",
+      "Francisco de Mello Palheta",
+      "Angelo Moriondo",
+      "Pastir Kaldi"
+     ],
+     "a": 0,
+     "why": "Oficir Gabriel de Clieu, uprkos piratima i lošem vremenu."
+    }
+   ],
+   "swipe": [
+    {
+     "id": "m1.s01",
+     "q": "Kaldi je bio pastir iz Etiopije.",
+     "a": true
+    },
+    {
+     "id": "m1.s02",
+     "q": "Jemen je prvi počeo da prži i prodaje kafu.",
+     "a": true
+    },
+    {
+     "id": "m1.s03",
+     "q": "Drvo kafe se na plantažama orezuje na 3–5 m.",
+     "a": true
+    },
+    {
+     "id": "m1.s04",
+     "q": "Kafa može da raste na otvorenom u Skandinaviji.",
+     "a": false
+    },
+    {
+     "id": "m1.s05",
+     "q": "Za 1 kg kafe treba oko 8.800 trešanja.",
+     "a": true
+    },
+    {
+     "id": "m1.s06",
+     "q": "Kafa pripada porodici Rubiaceae.",
+     "a": true
+    },
+    {
+     "id": "m1.s07",
+     "q": "De Clieu je kafu doneo na Martinik 1923.",
+     "a": false
+    },
+    {
+     "id": "m1.s08",
+     "q": "Drvo kafe može da živi i do 100 godina.",
+     "a": true
+    }
+   ]
+  },
+  {
+   "id": "m2",
+   "n": 2,
+   "title": "Od trešnje do zrna",
+   "icon": "cherry",
+   "color": "#D7263D",
+   "min": 8,
+   "desc": "Šest slojeva trešnje, arabika protiv robuste i kako se zrno obrađuje.",
+   "steps": [
+    {
+     "id": "m2.k01",
+     "t": "explore",
+     "art": "cherry",
+     "title": "Preseci trešnju",
+     "text": "U svakoj trešnji krije se **6 slojeva**. Tapni svaki sloj i upoznaj ga.",
+     "remember": "Opna → pulpa → sluz → parčment → srebrna opna → zrno"
+    },
+    {
+     "id": "m2.k02",
+     "t": "order",
+     "q": "Poređaj slojeve trešnje, od spolja ka unutra",
+     "items": [
+      "Spoljašnja opna",
+      "Pulpa",
+      "Sluz (musilaž)",
+      "Parčment",
+      "Srebrna opna",
+      "Zeleno zrno"
+     ],
+     "why": "Spolja ka unutra: opna, pulpa, sluz, parčment, srebrna opna i na kraju zeleno zrno."
+    },
+    {
+     "id": "m2.k03",
+     "t": "story",
+     "img": "img/arabika-robusta.jpg",
+     "fit": "contain",
+     "bg": "#fff",
+     "title": "Arabika ili robusta?",
+     "text": "Postoji preko 100 vrsta biljke Coffea, ali svet uglavnom pije dve: **arabiku** i **canephoru (robustu)**. Arabika voli visinu i blažu klimu, robusta toplinu i niže predele.",
+     "remember": "Arabika: 900–2000 m, 15–25 °C · Robusta: 0–900 m, 20–30 °C"
+    },
+    {
+     "id": "m2.k04",
+     "t": "story",
+     "art": "beans2",
+     "title": "Zašto specialty bira arabiku",
+     "text": "Arabika ima složeniju aromu (voćne, cvetne i čokoladne note), više šećera i **manje kofeina** od robuste. Robusta ima jednostavniji ukus i daje **jaču, čvršću kremu** u espresu.",
+     "remember": "Arabika = složen ukus, manje kofeina"
+    },
+    {
+     "id": "m2.k05",
+     "t": "sort",
+     "q": "Arabika ili robusta?",
+     "left": "Arabika",
+     "right": "Robusta",
+     "items": [
+      [
+       "44 hromozoma",
+       0
+      ],
+      [
+       "22 hromozoma",
+       1
+      ],
+      [
+       "Raste na 900–2000 m",
+       0
+      ],
+      [
+       "Raste na 0–900 m",
+       1
+      ],
+      [
+       "Idealno 15–25 °C",
+       0
+      ],
+      [
+       "Idealno 20–30 °C",
+       1
+      ],
+      [
+       "Dubok koren",
+       0
+      ],
+      [
+       "Plitak koren, traži 2000–3000 mm kiše",
+       1
+      ],
+      [
+       "15–17% masti",
+       0
+      ],
+      [
+       "Jača i čvršća krema",
+       1
+      ]
+     ],
+     "why": "Arabika: 44 hromozoma, viši predeli, 15–25 °C, dubok koren. Robusta: 22 hromozoma, niže i toplije, plitak koren."
+    },
+    {
+     "id": "m2.k06",
+     "t": "story",
+     "img": "img/berba.jpg",
+     "title": "Od sadnice do berbe",
+     "text": "Sadnica raste u hladu oko **9 meseci**, pa se sa 10–16 listova presađuje na plantažu u kišnoj sezoni. Stablo procveta posle **3–4 godine**. Berba je ručna ili mašinska, jednom ili dvaput godišnje.",
+     "remember": "Ručna selektivna berba = bolji kvalitet"
+    },
+    {
+     "id": "m2.k07",
+     "t": "mc",
+     "q": "Zašto ručna berba daje bolju kafu?",
+     "opts": [
+      "Beru se samo zrele trešnje",
+      "Brža je od mašinske",
+      "Trešnje su veće",
+      "Ne treba im obrada"
+     ],
+     "a": 0,
+     "why": "Mašina pokupi i zrele i nezrele plodove. Ručna berba traži više vremena i znanja, ali bira samo zrelo."
+    },
+    {
+     "id": "m2.k08",
+     "t": "story",
+     "img": "img/prirodna.jpg",
+     "title": "Prirodna (suva) obrada",
+     "text": "Cele trešnje se suše na izdignutim **krevetima** i okreću više puta dnevno, nedeljama, dok zrno ne dođe do **12% vlage**. Na kesi piše **natural**. Ukus: **čokoladno i slatko**.",
+     "remember": "Natural: suši se cela trešnja do 12% vlage"
+    },
+    {
+     "id": "m2.k09",
+     "t": "story",
+     "img": "img/prana.jpg",
+     "title": "Prana obrada",
+     "text": "Mašina skine opnu i pulpu, a zrno sa sluzi **fermentiše u vodi 10–30 sati**. Na kesi piše **washed**. Ukus: **kiselost, citrus, voće**. Preduga fermentacija daje previše kiselu kafu.",
+     "remember": "Washed: fermentacija u vodi 10–30 h"
+    },
+    {
+     "id": "m2.k10",
+     "t": "sort",
+     "q": "Natural ili washed?",
+     "left": "Natural",
+     "right": "Washed",
+     "items": [
+      [
+       "Suši se cela trešnja na krevetima",
+       0
+      ],
+      [
+       "Fermentiše u vodi 10–30 h",
+       1
+      ],
+      [
+       "Čokoladni i slatki ukusi",
+       0
+      ],
+      [
+       "Citrusne i voćne note",
+       1
+      ],
+      [
+       "Suši se do 12% vlage",
+       0
+      ],
+      [
+       "Opna i pulpa se skidaju mašinom",
+       1
+      ],
+      [
+       "Taman srednji rez prženog zrna",
+       0
+      ]
+     ],
+     "why": "Natural je suva obrada cele trešnje. Washed znači skidanje pulpe i fermentaciju u vodi."
+    },
+    {
+     "id": "m2.k11",
+     "t": "tf",
+     "q": "Preduga fermentacija može da napravi previše kiselu kafu.",
+     "a": true,
+     "why": "Kiselost je poželjna samo do neke mere. Preduga fermentacija je greška u obradi."
+    }
+   ],
+   "pool": [
+    {
+     "id": "m2.b01",
+     "t": "mc",
+     "q": "Koji sloj trešnje je odmah ispod pulpe?",
+     "opts": [
+      "Sluz (musilaž)",
+      "Parčment",
+      "Srebrna opna",
+      "Zeleno zrno"
+     ],
+     "a": 0,
+     "why": "Redosled: opna, pulpa, sluz, parčment, srebrna opna, zrno."
+    },
+    {
+     "id": "m2.b02",
+     "t": "mc",
+     "q": "Koliko hromozoma ima arabika?",
+     "opts": [
+      "44",
+      "22",
+      "12",
+      "88"
+     ],
+     "a": 0,
+     "why": "Arabika ima 44, robusta 22 hromozoma."
+    },
+    {
+     "id": "m2.b03",
+     "t": "mc",
+     "q": "Do koliko vlage se suši zrno u prirodnoj obradi?",
+     "opts": [
+      "12%",
+      "2%",
+      "25%",
+      "50%"
+     ],
+     "a": 0,
+     "why": "Suši se dok zrno ne dostigne 12% vlage."
+    },
+    {
+     "id": "m2.b04",
+     "t": "mc",
+     "q": "Koliko traje fermentacija kod prane obrade?",
+     "opts": [
+      "10–30 sati",
+      "1–2 sata",
+      "3–5 dana",
+      "Dve nedelje"
+     ],
+     "a": 0,
+     "why": "Fermentacija u vodi traje 10–30 sati."
+    },
+    {
+     "id": "m2.b05",
+     "t": "tf",
+     "q": "Robusta ima više šećera od arabike.",
+     "a": false,
+     "why": "Arabika ima 6–9% šećera, robusta 3–7%."
+    },
+    {
+     "id": "m2.b06",
+     "t": "tf",
+     "q": "Mašinska berba pokupi i zrele i nezrele plodove.",
+     "a": true,
+     "why": "Zato je ručna selektivna berba kvalitetnija."
+    },
+    {
+     "id": "m2.b07",
+     "t": "mc",
+     "q": "Posle koliko godina stablo arabike procveta?",
+     "opts": [
+      "3–4",
+      "1",
+      "10",
+      "20"
+     ],
+     "a": 0,
+     "why": "Stablo procveta posle 3–4 godine."
+    }
+   ],
+   "swipe": [
+    {
+     "id": "m2.s01",
+     "q": "Arabika ima 44 hromozoma.",
+     "a": true
+    },
+    {
+     "id": "m2.s02",
+     "q": "Robusta raste na većim visinama od arabike.",
+     "a": false
+    },
+    {
+     "id": "m2.s03",
+     "q": "Natural kafe su često slatke i čokoladne.",
+     "a": true
+    },
+    {
+     "id": "m2.s04",
+     "q": "Kod prane obrade cela trešnja se suši na suncu.",
+     "a": false
+    },
+    {
+     "id": "m2.s05",
+     "q": "Srebrna opna je sloj odmah uz zeleno zrno.",
+     "a": true
+    },
+    {
+     "id": "m2.s06",
+     "q": "Arabika ima manje kofeina od robuste.",
+     "a": true
+    },
+    {
+     "id": "m2.s07",
+     "q": "Ručna berba je brža od mašinske.",
+     "a": false
+    },
+    {
+     "id": "m2.s08",
+     "q": "Robusta daje jaču i čvršću kremu.",
+     "a": true
+    }
+   ]
+  },
+  {
+   "id": "m3",
+   "n": 3,
+   "title": "Espresso aparat",
+   "icon": "machine",
+   "color": "#55697F",
+   "min": 7,
+   "desc": "Od parne mašine do E61: pritisak, bojleri i predinfuzija.",
+   "steps": [
+    {
+     "id": "m3.k01",
+     "t": "story",
+     "img": "img/aparati-istorija.jpg",
+     "fit": "contain",
+     "bg": "#fff",
+     "title": "Od pare do pumpe",
+     "text": "**1884.** Angelo Moriondo patentira parnu mašinu. **1905.** Desiderio Pavoni kupuje Bezzerin patent i pravi **La Ideale**. **1947.** Achille Gaggia uvodi ručnu polugu i predinfuziju. **1961.** **FAEMA E61** donosi električnu pumpu i termosifon.",
+     "remember": "1884. Moriondo · 1905. La Ideale · 1947. Gaggia · 1961. E61"
+    },
+    {
+     "id": "m3.k02",
+     "t": "order",
+     "q": "Poređaj aparate po godini nastanka",
+     "items": [
+      "Moriondo – parna mašina",
+      "Bezzera i Pavoni – La Ideale",
+      "Gaggia – ručna poluga",
+      "FAEMA E61 – električna pumpa"
+     ],
+     "why": "1884. → 1905. → 1947. → 1961."
+    },
+    {
+     "id": "m3.k03",
+     "t": "story",
+     "art": "pressure4",
+     "title": "Četiri načina da napraviš pritisak",
+     "list": [
+      {
+       "y": "Para",
+       "t": "prvi i jeftiniji modeli"
+      },
+      {
+       "y": "Klip",
+       "t": "ručna poluga, uveo je Gaggia"
+      },
+      {
+       "y": "El. pumpa",
+       "t": "stabilan pritisak, prva je FAEMA E61"
+      },
+      {
+       "y": "Vazduh",
+       "t": "kompresovani vazduh, od 2007."
+      }
+     ],
+     "remember": "Para · klip · električna pumpa · vazdušna pumpa"
+    },
+    {
+     "id": "m3.k04",
+     "t": "match",
+     "q": "Spoji način rada i pronalazak",
+     "pairs": [
+      [
+       "Para",
+       "Moriondo, 1884."
+      ],
+      [
+       "Ručni klip",
+       "Gaggia, 1947."
+      ],
+      [
+       "Električna pumpa",
+       "FAEMA E61, 1961."
+      ],
+      [
+       "Vazdušna pumpa",
+       "Od 2007."
+      ]
+     ]
+    },
+    {
+     "id": "m3.k05",
+     "t": "story",
+     "img": "img/bojleri.jpg",
+     "fit": "contain",
+     "bg": "#fff",
+     "title": "Dva bojlera, dva posla",
+     "text": "**Protočni bojler** je za espresso: voda **88–95 °C**, pritisak **8–9 bara**. **Akumulacioni bojler** daje paru i vruću vodu: do **120 °C**, a stimer radi na oko **1 bar**.",
+     "remember": "Espresso: 88–95 °C i 8–9 bara · para: do 120 °C, ~1 bar"
+    },
+    {
+     "id": "m3.k06",
+     "t": "num",
+     "q": "Koliki je pritisak pri ekstrakciji espresa?",
+     "min": 1,
+     "max": 15,
+     "step": 0.5,
+     "unit": "bar",
+     "a": [
+      8,
+      9
+     ],
+     "start": 3,
+     "why": "Protočni bojler radi na 8–9 bara."
+    },
+    {
+     "id": "m3.k07",
+     "t": "num",
+     "q": "Na kojoj temperaturi je voda za espresso?",
+     "min": 70,
+     "max": 120,
+     "step": 1,
+     "unit": "°C",
+     "a": [
+      88,
+      95
+     ],
+     "start": 75,
+     "why": "Protočni bojler drži 88–95 °C."
+    },
+    {
+     "id": "m3.k08",
+     "t": "story",
+     "art": "machine",
+     "title": "Pre nego što upališ aparat",
+     "text": "Uvek prvo proveri **dovod vode**. Ako aparat povuče vazduh, mogu da se oštete unutrašnji delovi. Mnogi aparati imaju automatski on/off i **stand-by** režim kad se ne koriste.",
+     "remember": "Pre paljenja: proveri dovod vode"
+    },
+    {
+     "id": "m3.k09",
+     "t": "clip",
+     "clip": "preinf",
+     "title": "Predinfuzija protiv kanalisanja",
+     "text": "Na početku ekstrakcije voda pod niskim pritiskom (**oko 3 bara**) polako natopi kolač kafe. Tako se ne prave **kanali**, pukotine kroz koje voda pobegne. Kod Gaggie traje oko 10 s: 5 s punjenje i 5 s natapanje.",
+     "remember": "Predinfuzija: ~3 bara, sprečava kanalisanje"
+    },
+    {
+     "id": "m3.k10",
+     "t": "story",
+     "img": "img/predinfuzija.jpg",
+     "fit": "contain",
+     "bg": "#fff",
+     "title": "Pogledaj presek",
+     "text": "Levo je ekstrakcija sa predinfuzijom: ceo kolač je natopljen i mlaz je ravnomeran. Desno je **kanalisanje**: voda je probila pukotinu i jurnula kroz nju, a ostatak kafe je ostao neiskorišćen."
+    },
+    {
+     "id": "m3.k11",
+     "t": "mc",
+     "q": "Čemu služi predinfuzija?",
+     "opts": [
+      "Ravnomerno natapa kolač i sprečava kanalisanje",
+      "Hladi kafu pre ekstrakcije",
+      "Pravi više mlečne pene",
+      "Ubrzava mlevenje"
+     ],
+     "a": 0,
+     "why": "Postepeno natapanje pod ~3 bara priprema zrna i sprečava kanale."
+    },
+    {
+     "id": "m3.k12",
+     "t": "tf",
+     "q": "Akumulacioni bojler služi za ekstrakciju espresa.",
+     "a": false,
+     "why": "Za espresso je protočni bojler. Akumulacioni daje paru i vruću vodu."
+    }
+   ],
+   "pool": [
+    {
+     "id": "m3.b01",
+     "t": "mc",
+     "q": "Ko je 1947. napravio mašinu sa ručnom polugom?",
+     "opts": [
+      "Achille Gaggia",
+      "Angelo Moriondo",
+      "Luigi Bezzera",
+      "Desiderio Pavoni"
+     ],
+     "a": 0,
+     "why": "Achille Gaggia, 1947."
+    },
+    {
+     "id": "m3.b02",
+     "t": "mc",
+     "q": "Kako se zvala mašina koju je Pavoni komercijalizovao 1905?",
+     "opts": [
+      "La Ideale",
+      "E61",
+      "La Gaggia",
+      "Moka"
+     ],
+     "a": 0,
+     "why": "La Ideale je postavila standard ranih aparata."
+    },
+    {
+     "id": "m3.b03",
+     "t": "mc",
+     "q": "Koji aparat je prvi imao električnu pumpu?",
+     "opts": [
+      "FAEMA E61",
+      "La Ideale",
+      "Gaggijina mašina",
+      "Moriondova mašina"
+     ],
+     "a": 0,
+     "why": "FAEMA E61 iz 1961."
+    },
+    {
+     "id": "m3.b04",
+     "t": "mc",
+     "q": "Koliki je pritisak predinfuzije?",
+     "opts": [
+      "Oko 3 bara",
+      "Oko 9 bara",
+      "Oko 1 bar",
+      "Oko 15 bara"
+     ],
+     "a": 0,
+     "why": "Predinfuzija ide pod znatno manjim pritiskom, oko 3 bara."
+    },
+    {
+     "id": "m3.b05",
+     "t": "mc",
+     "q": "Do koje temperature ide akumulacioni bojler?",
+     "opts": [
+      "Do 120 °C",
+      "Do 95 °C",
+      "Do 60 °C",
+      "Do 200 °C"
+     ],
+     "a": 0,
+     "why": "Akumulacioni bojler ide do 120 °C."
+    },
+    {
+     "id": "m3.b06",
+     "t": "tf",
+     "q": "Kanalisanje znači da voda ravnomerno prolazi kroz kolač.",
+     "a": false,
+     "why": "Kanalisanje je kad voda nađe prečicu kroz pukotinu u kolaču."
+    },
+    {
+     "id": "m3.b07",
+     "t": "tf",
+     "q": "Vazdušna pumpa koristi kompresovani vazduh.",
+     "a": true,
+     "why": "Tako radi, a razvijena je od 2007."
+    },
+    {
+     "id": "m3.b08",
+     "t": "mc",
+     "q": "Koliko otprilike traje predinfuzija na Gaggijinoj mašini?",
+     "opts": [
+      "Oko 10 s",
+      "Oko 1 s",
+      "Oko 30 s",
+      "Oko 1 min"
+     ],
+     "a": 0,
+     "why": "Oko 5 s punjenje komore i još oko 5 s natapanje."
+    }
+   ],
+   "swipe": [
+    {
+     "id": "m3.s01",
+     "q": "FAEMA E61 je uvela električnu pumpu.",
+     "a": true
+    },
+    {
+     "id": "m3.s02",
+     "q": "Espresso se pravi vodom od oko 120 °C.",
+     "a": false
+    },
+    {
+     "id": "m3.s03",
+     "q": "Stimer radi na pritisku od oko 1 bar.",
+     "a": true
+    },
+    {
+     "id": "m3.s04",
+     "q": "Predinfuzija ide pod punim pritiskom od 9 bara.",
+     "a": false
+    },
+    {
+     "id": "m3.s05",
+     "q": "Pre paljenja aparata treba proveriti dovod vode.",
+     "a": true
+    },
+    {
+     "id": "m3.s06",
+     "q": "Moriondo je patentirao svoju mašinu 1884.",
+     "a": true
+    },
+    {
+     "id": "m3.s07",
+     "q": "Gaggia je uveo predinfuziju.",
+     "a": true
+    },
+    {
+     "id": "m3.s08",
+     "q": "Protočni bojler daje paru za mleko.",
+     "a": false
+    }
+   ]
+  },
+  {
+   "id": "m4",
+   "n": 4,
+   "title": "Mlin i granulacija",
+   "icon": "grinder",
+   "color": "#7B4A2D",
+   "min": 9,
+   "desc": "FINE ili COARSE, delovi mlina i mlinovi sa kojima ćeš raditi.",
+   "steps": [
+    {
+     "id": "m4.k01",
+     "t": "explore",
+     "art": "grinder",
+     "title": "Delovi mlina",
+     "text": "Tapni delove mlina. Sve počinje u silosu, a završava u portafilteru.",
+     "remember": "Silos drži zrna · noževi melju · držač drži portafilter"
+    },
+    {
+     "id": "m4.k02",
+     "t": "hotspot",
+     "art": "grinder",
+     "q": "Pronađi delove mlina",
+     "ask": [
+      {
+       "part": "silos",
+       "q": "Tapni silos"
+      },
+      {
+       "part": "nozevi",
+       "q": "Gde su noževi?"
+      },
+      {
+       "part": "drzac",
+       "q": "Tapni držač za portafilter"
+      }
+     ]
+    },
+    {
+     "id": "m4.k03",
+     "t": "story",
+     "img": "img/mlin-delovi.jpg",
+     "fit": "contain",
+     "bg": "#fff",
+     "title": "Pravi mlin, isti delovi",
+     "text": "Ovako isti delovi izgledaju na pravom espresso mlinu. Noževi mogu biti **konusni** ili **ravni** (flat).",
+     "remember": "Noževi su konusni ili ravni (flat)"
+    },
+    {
+     "id": "m4.k04",
+     "t": "story",
+     "img": "img/granulacija.jpg",
+     "fit": "contain",
+     "bg": "#fff",
+     "title": "FINE ili COARSE",
+     "text": "Što su **noževi bliže**, kafa je **sitnija** (FINE). Što su **dalje**, kafa je **krupnija** (COARSE). Na mlinu to piše kao brojevi ili kao FINE i COARSE.",
+     "remember": "Noževi bliže = sitnije"
+    },
+    {
+     "id": "m4.k05",
+     "t": "clip",
+     "clip": "silos",
+     "title": "Zašto granulacija menja protok",
+     "text": "Zamisli dva silosa: jedan pun zrna, drugi pun sitno mlevene kafe. Voda kroz zrna proleti, a kroz prah se probija polako, jer je **manje prostora između čestica**.",
+     "remember": "Sitnije = sporiji protok · krupnije = brži protok"
+    },
+    {
+     "id": "m4.k06",
+     "t": "mc",
+     "q": "Šot ti curi prebrzo. Šta radiš?",
+     "opts": [
+      "Pomeram noževe ka FINE (sitnije)",
+      "Pomeram noževe ka COARSE (krupnije)",
+      "Sipam više vode",
+      "Ništa, brže je bolje"
+     ],
+     "a": 0,
+     "why": "Brz protok znači da je kafa prekrupna. Sitnija kafa usporava vodu."
+    },
+    {
+     "id": "m4.k07",
+     "t": "mc",
+     "q": "Šot curi presporo, kap po kap. Šta radiš?",
+     "opts": [
+      "Pomeram noževe ka COARSE (krupnije)",
+      "Pomeram noževe ka FINE (sitnije)",
+      "Jače tampujem",
+      "Gasim aparat"
+     ],
+     "a": 0,
+     "why": "Spor protok znači da je kafa presitna. Krupnija kafa pušta vodu brže."
+    },
+    {
+     "id": "m4.k08",
+     "t": "story",
+     "title": "Tri vrste mlinova",
+     "gallery": [
+      {
+       "img": "img/mlin-manuelni.jpg",
+       "cap": "Manuelni"
+      },
+      {
+       "img": "img/mlin-poluautomatski.jpg",
+       "cap": "Poluautomatski"
+      },
+      {
+       "img": "img/mlin-automatski.jpg",
+       "cap": "Automatski"
+      }
+     ],
+     "text": "**Manuelni**: melješ ručno, okretanjem ručice. **Poluautomatski**: melje sam, a ti povlačenjem ručice doziraš kafu u portafilter. **Automatski**: programiraš **single i double** dozu.",
+     "remember": "Automatski mlin = programirane single i double doze"
+    },
+    {
+     "id": "m4.k09",
+     "t": "match",
+     "q": "Spoji mlin i opis",
+     "pairs": [
+      [
+       "Manuelni",
+       "Melješ okretanjem ručice"
+      ],
+      [
+       "Poluautomatski",
+       "Doziraš povlačenjem ručice"
+      ],
+      [
+       "Automatski",
+       "Programirane single i double doze"
+      ]
+     ]
+    },
+    {
+     "id": "m4.k10",
+     "t": "story",
+     "img": "img/mlin-panel.jpg",
+     "fit": "contain",
+     "bg": "#111",
+     "title": "Doza na automatskom mlinu",
+     "text": "Doza se programira u **sekundama mlevenja**: dugo drži **MENU**. Pazi: kad mlin podesiš **krupnije, doza raste**, a kad ga podesiš **sitnije, doza pada**. **Dose counter** broji samlevene doze.",
+     "remember": "Krupnije → veća doza · sitnije → manja doza"
+    },
+    {
+     "id": "m4.k11",
+     "t": "tf",
+     "q": "Kad mlin podesiš sitnije, doza u istom vremenu mlevenja se smanji.",
+     "a": true,
+     "why": "Sitnija kafa sporije izlazi iz mlina, pa za isto vreme dobiješ manje grama."
+    },
+    {
+     "id": "m4.k12",
+     "t": "story",
+     "title": "Mazzer mlinovi",
+     "gallery": [
+      {
+       "img": "img/mazzer-major-e.jpg",
+       "cap": "Major E"
+      },
+      {
+       "img": "img/mazzer-super-jolly.jpg",
+       "cap": "Super Jolly"
+      },
+      {
+       "img": "img/mazzer-kold.jpg",
+       "cap": "Kold"
+      },
+      {
+       "img": "img/mazzer-robur.jpg",
+       "cap": "Robur"
+      }
+     ],
+     "text": "Mazzer pravi mlinove od 1940. **Major E** je najčešći: 1.400–1.600 obrtaja u minuti. **Super Jolly** je za srednju potrošnju. **Kold** i **Robur** imaju konusne noževe, 420–500 obrtaja, za veliku potrošnju. **Kony SG** meri dozu na gram, a **Major V/VP** ima ravne noževe od 83 mm.",
+     "remember": "Major E najčešći · Kold i Robur: konusni noževi"
+    },
+    {
+     "id": "m4.k13",
+     "t": "story",
+     "title": "Single shot mlinovi",
+     "gallery": [
+      {
+       "img": "img/ek43.jpg",
+       "cap": "Mahlkönig EK-43"
+      },
+      {
+       "img": "img/mazzer-philos.jpg",
+       "cap": "Mazzer Philos"
+      }
+     ],
+     "text": "Za filter kafu se koriste **single shot** mlinovi. Melju dozu po dozu, sporiji su i rade drugačije od espresso mlinova. Najčešći su **Mahlkönig EK-43** i **Mazzer Philos**.",
+     "remember": "EK-43 i Philos = single shot, za filter"
+    },
+    {
+     "id": "m4.k14",
+     "t": "match",
+     "q": "Spoji pojam i značenje",
+     "pairs": [
+      [
+       "Granulacija",
+       "Veličina čestice samlevene kafe"
+      ],
+      [
+       "Doza",
+       "Količina kafe koja se koristi"
+      ],
+      [
+       "Distribucija",
+       "Ravnomerno raspoređivanje kafe"
+      ],
+      [
+       "Prinos",
+       "Rastvorene materije u šoljici"
+      ]
+     ]
+    }
+   ],
+   "pool": [
+    {
+     "id": "m4.b01",
+     "t": "mc",
+     "q": "Ko je 1665. usavršio ručni mlin?",
+     "opts": [
+      "Nikolas Buk",
+      "Achille Gaggia",
+      "Alan Adler",
+      "Melitta Bentz"
+     ],
+     "a": 0,
+     "why": "Nikolas Buk, 1665."
+    },
+    {
+     "id": "m4.b02",
+     "t": "mc",
+     "q": "Koji Mazzer mlin je najzastupljeniji?",
+     "opts": [
+      "Major E",
+      "Robur",
+      "Kold",
+      "Philos"
+     ],
+     "a": 0,
+     "why": "Major E je najčešći mlin."
+    },
+    {
+     "id": "m4.b03",
+     "t": "mc",
+     "q": "Koliko obrtaja u minuti imaju Kold i Robur?",
+     "opts": [
+      "420–500",
+      "1.400–1.600",
+      "Oko 3.000",
+      "Oko 100"
+     ],
+     "a": 0,
+     "why": "Konusni noževi i lagana rotacija: 420–500 o/min."
+    },
+    {
+     "id": "m4.b04",
+     "t": "mc",
+     "q": "Koji mlin meri dozu na težinu (load cell)?",
+     "opts": [
+      "Kony SG",
+      "Super Jolly",
+      "Major E",
+      "EK-43"
+     ],
+     "a": 0,
+     "why": "Kony SG ima load cell za merenje doze."
+    },
+    {
+     "id": "m4.b05",
+     "t": "tf",
+     "q": "EK-43 je single shot mlin, najčešće za filter kafu.",
+     "a": true,
+     "why": "Mahlkönig EK-43 i Mazzer Philos su single shot mlinovi."
+    },
+    {
+     "id": "m4.b06",
+     "t": "mc",
+     "q": "Kakve noževe ima Major V?",
+     "opts": [
+      "Ravne, 83 mm",
+      "Konusne",
+      "Keramičke, 40 mm",
+      "Nema noževe"
+     ],
+     "a": 0,
+     "why": "Major V/VP ima ravne (flat) noževe prečnika 83 mm."
+    },
+    {
+     "id": "m4.b07",
+     "t": "tf",
+     "q": "Što su noževi dalje, kafa je sitnija.",
+     "a": false,
+     "why": "Obrnuto: noževi dalje = krupnija kafa."
+    },
+    {
+     "id": "m4.b08",
+     "t": "mc",
+     "q": "Kako se na automatskom mlinu ulazi u podešavanje doze?",
+     "opts": [
+      "Dugo držiš dugme MENU",
+      "Okreneš silos",
+      "Izvučeš kontejner",
+      "Dvaput pritisneš prekidač"
+     ],
+     "a": 0,
+     "why": "Dugim pritiskom na MENU, a doza se koriguje u sekundama."
+    }
+   ],
+   "swipe": [
+    {
+     "id": "m4.s01",
+     "q": "Kad šot curi brzo, mlin podešavaš ka COARSE.",
+     "a": false
+    },
+    {
+     "id": "m4.s02",
+     "q": "Što su noževi bliže, kafa je sitnija.",
+     "a": true
+    },
+    {
+     "id": "m4.s03",
+     "q": "Kold i Robur imaju konusne noževe.",
+     "a": true
+    },
+    {
+     "id": "m4.s04",
+     "q": "Major E radi na 420–500 obrtaja u minuti.",
+     "a": false
+    },
+    {
+     "id": "m4.s05",
+     "q": "Na automatskom mlinu doza se podešava u sekundama.",
+     "a": true
+    },
+    {
+     "id": "m4.s06",
+     "q": "Krupnija granulacija smanjuje dozu.",
+     "a": false
+    },
+    {
+     "id": "m4.s07",
+     "q": "Mahlkönig EK-43 je single shot mlin.",
+     "a": true
+    },
+    {
+     "id": "m4.s08",
+     "q": "Nikolas Buk je 1665. usavršio ručni mlin.",
+     "a": true
+    }
+   ]
+  },
+  {
+   "id": "m5",
+   "n": 5,
+   "title": "Recept za espresso",
+   "icon": "scale",
+   "color": "#A86A0C",
+   "min": 10,
+   "desc": "Doza, razmera i vreme. Plus prvi pravi izazov: uštimaj mlin.",
+   "steps": [
+    {
+     "id": "m5.k01",
+     "t": "clip",
+     "clip": "shot",
+     "title": "Ovako izgleda dobar šot",
+     "text": "20 g kafe daje 40 g espresa za oko 28 s. To je razmera **1:2**. Prati vagu i tajmer.",
+     "remember": "Dobar espresso: 1:2 za oko 25–30 s"
+    },
+    {
+     "id": "m5.k02",
+     "t": "story",
+     "art": "ebr",
+     "title": "Šta je EBR?",
+     "text": "**EBR (Espresso Brew Ratio)** je odnos mase suve samlevene kafe u portafilteru i mase espresa u šoljici. Recept uvek kaže tri stvari: **koliko kafe**, **koliko espresa** i **za koliko sekundi**.",
+     "remember": "Recept = doza + prinos + vreme"
+    },
+    {
+     "id": "m5.k03",
+     "t": "match",
+     "q": "Spoji napitak i razmeru",
+     "pairs": [
+      [
+       "Ristretto",
+       "1:1"
+      ],
+      [
+       "Espresso",
+       "1:2"
+      ],
+      [
+       "Lungo",
+       "1:3"
+      ]
+     ],
+     "why": "Svetski standard: ristretto 1:1, espresso 1:2, lungo 1:3."
+    },
+    {
+     "id": "m5.k04",
+     "t": "story",
+     "art": "rules",
+     "title": "Zlatna pravila štelovanja",
+     "list": [
+      {
+       "y": "18–20 g",
+       "t": "mlin se uvek šteluje po duploj dozi"
+      },
+      {
+       "y": "60%",
+       "t": "single doza je 60% mase duple"
+      },
+      {
+       "y": "~25 s",
+       "t": "toliko traje optimalna ekstrakcija"
+      }
+     ],
+     "text": "Za štelovanje ti trebaju: **granulacija, doza, dobra distribucija i ravnomeran tamp, i recept**.",
+     "remember": "Štelovanje po duploj dozi (18–20 g)"
+    },
+    {
+     "id": "m5.k05",
+     "t": "num",
+     "q": "Koliko grama kafe ide u duplu dozu?",
+     "min": 10,
+     "max": 30,
+     "step": 1,
+     "unit": "g",
+     "a": [
+      18,
+      20
+     ],
+     "start": 12,
+     "why": "Dupla doza je 18–20 g i po njoj se šteluje mlin."
+    },
+    {
+     "id": "m5.k06",
+     "t": "num",
+     "q": "Dupla doza je 20 g. Koliko je single?",
+     "min": 6,
+     "max": 20,
+     "step": 1,
+     "unit": "g",
+     "a": [
+      12,
+      12
+     ],
+     "start": 8,
+     "why": "Single je 60% duple: 20 × 0,6 = 12 g."
+    },
+    {
+     "id": "m5.k07",
+     "t": "story",
+     "art": "fist",
+     "title": "Test šake",
+     "text": "Espresso granulacija je kao **pustinjski pesak**. Stisni oko 5 g kafe u šaci: deo treba da ostane **slepljen**, a deo da se **raspadne**. Sve slepljeno kao testo znači presitno. Ako se sve rasipa, prekrupno je.",
+     "remember": "Espresso granulacija = pustinjski pesak"
+    },
+    {
+     "id": "m5.k08",
+     "t": "mc",
+     "q": "Stisneš kafu u šaci i sve se slepi kao testo. Granulacija je:",
+     "opts": [
+      "Presitna",
+      "Prekrupna",
+      "Savršena",
+      "Ne može da se zna"
+     ],
+     "a": 0,
+     "why": "Kad je sve slepljeno kao testo ili brašno, kafa je presitna."
+    },
+    {
+     "id": "m5.k09",
+     "t": "story",
+     "art": "longer",
+     "title": "Duže ne znači jače",
+     "list": [
+      {
+       "y": "20 → 40",
+       "t": "grama za 28 s · EBR 1:2"
+      },
+      {
+       "y": "20 → 60",
+       "t": "grama za 36 s · EBR 1:3"
+      }
+     ],
+     "text": "Što je ekstrakcija duža, to je **veći prinos**, ali je napitak **slabiji**. Dobar barista izvuče veću razmeru bez kanalisanja.",
+     "remember": "Duža ekstrakcija = veći prinos, slabiji napitak"
+    },
+    {
+     "id": "m5.k10",
+     "t": "story",
+     "title": "Distribucija pre tampa",
+     "gallery": [
+      {
+       "img": "img/ocd.jpg",
+       "cap": "OCD"
+      },
+      {
+       "img": "img/wdt.jpg",
+       "cap": "WDT"
+      }
+     ],
+     "text": "Kafa mora ravnomerno da se rasporedi u portafilteru, inače nastaju kanali. **OCD** (Ona Coffee Distributor, Saša Šestić, 2012.) okrećeš na portafilteru. **WDT** su tanke iglice koje razbijaju grudvice. Tek onda ide **tamp**.",
+     "remember": "Prvo distribucija, pa tamp"
+    },
+    {
+     "id": "m5.k11",
+     "t": "order",
+     "q": "Poređaj proceduru puštanja espresa",
+     "items": [
+      "Tariraj šolje na vagi",
+      "Ubaci portafilter u grupu",
+      "Namesti šoljice ispod portafiltera",
+      "Započni ekstrakciju",
+      "Isprazni i očisti portafilter",
+      "Isperi grupu i portafilter",
+      "Osuši portafilter i vrati ga na grupu"
+     ],
+     "why": "Vaga na nulu, portafilter u grupu, šoljice, ekstrakcija, pa čišćenje, ispiranje i vraćanje."
+    },
+    {
+     "id": "m5.k12",
+     "t": "game",
+     "game": "dialin",
+     "title": "Uštimaj mlin",
+     "text": "Tvoj prvi pravi barista zadatak. Podesi mlin i pusti šot."
+    }
+   ],
+   "pool": [
+    {
+     "id": "m5.b01",
+     "t": "mc",
+     "q": "Koliko traje optimalna ekstrakcija espresa?",
+     "opts": [
+      "Oko 25 s",
+      "Oko 10 s",
+      "Oko 60 s",
+      "Oko 2 min"
+     ],
+     "a": 0,
+     "why": "Optimalna ekstrakcija traje oko 25 sekundi."
+    },
+    {
+     "id": "m5.b02",
+     "t": "mc",
+     "q": "Koja je razmera za lungo?",
+     "opts": [
+      "1:3",
+      "1:1",
+      "1:2",
+      "1:16"
+     ],
+     "a": 0,
+     "why": "Ristretto 1:1, espresso 1:2, lungo 1:3."
+    },
+    {
+     "id": "m5.b03",
+     "t": "mc",
+     "q": "Ko je osmislio OCD?",
+     "opts": [
+      "Saša Šestić",
+      "Alan Adler",
+      "Achille Gaggia",
+      "Petar Šlumbom"
+     ],
+     "a": 0,
+     "why": "Saša Šestić, 2012. (sa svetom ga je podelio 2016.)."
+    },
+    {
+     "id": "m5.b04",
+     "t": "mc",
+     "q": "Šta je WDT?",
+     "opts": [
+      "Iglice koje razbijaju grudvice pre tampa",
+      "Vrsta tampera",
+      "Test kvaliteta vode",
+      "Programirana doza mlina"
+     ],
+     "a": 0,
+     "why": "Weiss Distribution Technique: tanke iglice za ravnomernu distribuciju."
+    },
+    {
+     "id": "m5.b05",
+     "t": "tf",
+     "q": "Mlin se šteluje po single dozi.",
+     "a": false,
+     "why": "Mlin se uvek šteluje po duploj dozi (18–20 g)."
+    },
+    {
+     "id": "m5.b06",
+     "t": "tf",
+     "q": "20 g kafe → 60 ml espresa je razmera 1:3.",
+     "a": true,
+     "why": "60 / 20 = 3, dakle 1:3."
+    },
+    {
+     "id": "m5.b07",
+     "t": "num",
+     "q": "Koliko grama espresa dobijaš iz 18 g kafe po razmeri 1:2?",
+     "min": 18,
+     "max": 60,
+     "step": 1,
+     "unit": "g",
+     "a": [
+      36,
+      36
+     ],
+     "start": 24,
+     "why": "18 × 2 = 36 g."
+    },
+    {
+     "id": "m5.b08",
+     "t": "mc",
+     "q": "Šta se radi pre tampanja?",
+     "opts": [
+      "Distribucija",
+      "Ekstrakcija",
+      "Ispiranje grupe",
+      "Tariranje šolje"
+     ],
+     "a": 0,
+     "why": "Prvo se kafa ravnomerno rasporedi, pa se tek onda tampuje."
+    }
+   ],
+   "swipe": [
+    {
+     "id": "m5.s01",
+     "q": "Espresso ima razmeru 1:2.",
+     "a": true
+    },
+    {
+     "id": "m5.s02",
+     "q": "Ristretto ima razmeru 1:3.",
+     "a": false
+    },
+    {
+     "id": "m5.s03",
+     "q": "Single doza je 60% duple.",
+     "a": true
+    },
+    {
+     "id": "m5.s04",
+     "q": "Kafa se tampuje pre distribucije.",
+     "a": false
+    },
+    {
+     "id": "m5.s05",
+     "q": "Duža ekstrakcija daje jači napitak.",
+     "a": false
+    },
+    {
+     "id": "m5.s06",
+     "q": "Espresso granulacija je kao pustinjski pesak.",
+     "a": true
+    },
+    {
+     "id": "m5.s07",
+     "q": "Pre ekstrakcije šolje se tariraju na vagi.",
+     "a": true
+    },
+    {
+     "id": "m5.s08",
+     "q": "Mlin se uvek šteluje po duploj dozi.",
+     "a": true
+    }
+   ]
+  },
+  {
+   "id": "m6",
+   "n": 6,
+   "title": "Ekstrakcija",
+   "icon": "drop",
+   "color": "#C2511F",
+   "min": 7,
+   "desc": "Zašto je kafa nekad kisela, nekad gorka, i kako izgleda balans.",
+   "steps": [
+    {
+     "id": "m6.k01",
+     "t": "story",
+     "img": "img/ekstrakcija.jpg",
+     "title": "Šta je ekstrakcija?",
+     "text": "Ekstrakcija je izvlačenje korisnih materija iz kafe pomoću rastvarača. Kod nas je **voda rastvarač**, a kafa materija. Iz kafe možemo da rastvorimo najviše **35% njene mase**.",
+     "remember": "Voda = rastvarač · max 35% mase kafe"
+    },
+    {
+     "id": "m6.k02",
+     "t": "story",
+     "art": "diffusion",
+     "title": "Erozija ili difuzija",
+     "text": "Espresso izvlači materije **erozijom** zrna, pod pritiskom. Filter kafa radi **međučestičnom difuzijom**. Brzinu ekstrakcije menjaju: **dodirna površina**, **debljina graničnog sloja** oko čestice i **temperatura**.",
+     "remember": "Espresso = erozija · filter = difuzija"
+    },
+    {
+     "id": "m6.k03",
+     "t": "mc",
+     "q": "Šta NE utiče na brzinu ekstrakcije?",
+     "opts": [
+      "Boja šoljice",
+      "Temperatura",
+      "Dodirna površina čestica",
+      "Debljina graničnog sloja"
+     ],
+     "a": 0,
+     "why": "Brzinu menjaju dodirna površina, granični sloj i temperatura. Boja šoljice ne."
+    },
+    {
+     "id": "m6.k04",
+     "t": "story",
+     "img": "img/ekstrakcija-nivoi.jpg",
+     "fit": "contain",
+     "bg": "#fff",
+     "title": "Tri nivoa ekstrakcije",
+     "list": [
+      {
+       "y": "< 18%",
+       "t": "Nepotpuna: slabo telo, kiselo, slano, prazno"
+      },
+      {
+       "y": "18–22%",
+       "t": "Balansirana: slatko i prijatno"
+      },
+      {
+       "y": "> 22%",
+       "t": "Prezasićena: oporo i izraženo gorko"
+      }
+     ],
+     "text": "Rastvorene materije (TDS) merimo **refraktometrom**.",
+     "remember": "Ispod 18% kiselo · 18–22% balans · preko 22% gorko"
+    },
+    {
+     "id": "m6.k05",
+     "t": "mc",
+     "q": "Šot je istekao za 15 s, ukus je kiseo i prazan. Kakva je ekstrakcija?",
+     "opts": [
+      "Nepotpuna",
+      "Balansirana",
+      "Prezasićena"
+     ],
+     "a": 0,
+     "why": "Prekratko i kiselo je nepotpuna ekstrakcija. Probaj sitniju granulaciju."
+    },
+    {
+     "id": "m6.k06",
+     "t": "mc",
+     "q": "Šot je trajao 45 s, gorak je i opor. Šta menjaš?",
+     "opts": [
+      "Krupnija granulacija (ka COARSE)",
+      "Sitnija granulacija (ka FINE)",
+      "Manje tampa",
+      "Hladnija šolja"
+     ],
+     "a": 0,
+     "why": "Presporo i gorko je prezasićena ekstrakcija. Krupnija kafa ubrzava protok."
+    },
+    {
+     "id": "m6.k07",
+     "t": "mc",
+     "q": "Šta NIJE uzrok nepotpune ekstrakcije?",
+     "opts": [
+      "Presitna granulacija",
+      "Prekratka ekstrakcija",
+      "Premala doza",
+      "Preniska temperatura"
+     ],
+     "a": 0,
+     "why": "Presitna granulacija usporava vodu i vodi ka prezasićenoj ekstrakciji."
+    },
+    {
+     "id": "m6.k08",
+     "t": "explore",
+     "art": "espresso",
+     "title": "Slojevi espresa",
+     "text": "Tokom ekstrakcije pod pritiskom nastaju tri sloja. Tapni svaki.",
+     "remember": "Krema · telo · srce (odozgo nadole)"
+    },
+    {
+     "id": "m6.k09",
+     "t": "hotspot",
+     "art": "espresso",
+     "q": "Pronađi sloj",
+     "ask": [
+      {
+       "part": "srce",
+       "q": "Tapni najkoncentrovaniji sloj"
+      },
+      {
+       "part": "krema",
+       "q": "Koji sloj čuva najviše arome?"
+      }
+     ]
+    },
+    {
+     "id": "m6.k10",
+     "t": "tf",
+     "q": "Krema nastaje od mikromehurića ugljen-dioksida.",
+     "a": true,
+     "why": "CO₂ iz kafe se oslobađa tokom ekstrakcije, a ulja stabilizuju mehuriće."
+    }
+   ],
+   "pool": [
+    {
+     "id": "m6.b01",
+     "t": "mc",
+     "q": "Čime se meri TDS?",
+     "opts": [
+      "Refraktometrom",
+      "Termometrom",
+      "Vagom",
+      "Manometrom"
+     ],
+     "a": 0,
+     "why": "TDS se meri refraktometrom."
+    },
+    {
+     "id": "m6.b02",
+     "t": "mc",
+     "q": "Kakav je ukus prezasićene ekstrakcije?",
+     "opts": [
+      "Opor i izraženo gorak",
+      "Kiseo i slan",
+      "Sladak i balansiran",
+      "Vodenast"
+     ],
+     "a": 0,
+     "why": "Preko 22%: opor ukus i izražena gorčina."
+    },
+    {
+     "id": "m6.b03",
+     "t": "mc",
+     "q": "Koji sloj espresa je najkoncentrovaniji?",
+     "opts": [
+      "Srce",
+      "Krema",
+      "Telo",
+      "Svi su isti"
+     ],
+     "a": 0,
+     "why": "Srce je donji, najkoncentrovaniji sloj."
+    },
+    {
+     "id": "m6.b04",
+     "t": "tf",
+     "q": "Iz kafe možemo da rastvorimo najviše 35% mase.",
+     "a": true,
+     "why": "Maksimum je 35% od ukupne mase."
+    },
+    {
+     "id": "m6.b05",
+     "t": "tf",
+     "q": "Espresso se ekstrahuje difuzijom, a filter erozijom.",
+     "a": false,
+     "why": "Obrnuto: espresso erozijom, filter međučestičnom difuzijom."
+    },
+    {
+     "id": "m6.b06",
+     "t": "mc",
+     "q": "Koji je raspon balansirane ekstrakcije?",
+     "opts": [
+      "18–22%",
+      "10–14%",
+      "25–30%",
+      "35–40%"
+     ],
+     "a": 0,
+     "why": "Balansirana ekstrakcija je 18–22%."
+    },
+    {
+     "id": "m6.b07",
+     "t": "mc",
+     "q": "Šta je srednji sloj espresa?",
+     "opts": [
+      "Telo",
+      "Krema",
+      "Srce",
+      "Talog"
+     ],
+     "a": 0,
+     "why": "Odozgo nadole: krema, telo, srce."
+    }
+   ],
+   "swipe": [
+    {
+     "id": "m6.s01",
+     "q": "Balansirana ekstrakcija je između 18% i 22%.",
+     "a": true
+    },
+    {
+     "id": "m6.s02",
+     "q": "Nepotpuna ekstrakcija je kisela i prazna.",
+     "a": true
+    },
+    {
+     "id": "m6.s03",
+     "q": "Prezasićena ekstrakcija je slatka i balansirana.",
+     "a": false
+    },
+    {
+     "id": "m6.s04",
+     "q": "Krema je donji sloj espresa.",
+     "a": false
+    },
+    {
+     "id": "m6.s05",
+     "q": "Voda je rastvarač u ekstrakciji kafe.",
+     "a": true
+    },
+    {
+     "id": "m6.s06",
+     "q": "Krupna granulacija može da izazove nepotpunu ekstrakciju.",
+     "a": true
+    },
+    {
+     "id": "m6.s07",
+     "q": "Temperatura utiče na brzinu ekstrakcije.",
+     "a": true
+    },
+    {
+     "id": "m6.s08",
+     "q": "Espresso se ekstrahuje erozijom zrna.",
+     "a": true
+    }
+   ]
+  },
+  {
+   "id": "m7",
+   "n": 7,
+   "title": "Filter kafa",
+   "icon": "dripper",
+   "color": "#2B7BC0",
+   "min": 10,
+   "desc": "Chemex, V60, Aeropress i ostali: recepti, voda i temperatura.",
+   "steps": [
+    {
+     "id": "m7.k01",
+     "t": "story",
+     "img": "img/filter-metode.jpg",
+     "title": "Espresso protiv filtera",
+     "text": "Filter kafa nastaje **međučestičnom difuzijom**, bez pritiska. Zato traje duže, često ima **više kofeina**, **tanje telo** i manje gorčine od espresa.",
+     "remember": "Filter: duže, više kofeina, tanje telo"
+    },
+    {
+     "id": "m7.k02",
+     "t": "story",
+     "art": "filters",
+     "title": "Papir, tkanina ili metal",
+     "list": [
+      {
+       "y": "Papir",
+       "t": "Melitta Bentz, 1908. Zadržava ulja (kafestol): čista, svetla šolja, citrusne note."
+      },
+      {
+       "y": "Tkanina",
+       "t": "Propušta više materija: punije telo, izraženiji ukus."
+      },
+      {
+       "y": "Metal",
+       "t": "Propušta najviše ulja i čestica: tamnije i bogatije, kao French press."
+      }
+     ],
+     "remember": "Papir = čisto i svetlo · metal = puno telo"
+    },
+    {
+     "id": "m7.k03",
+     "t": "match",
+     "q": "Spoji filter i rezultat",
+     "pairs": [
+      [
+       "Papir",
+       "Čista i svetla šolja"
+      ],
+      [
+       "Tkanina",
+       "Punije telo"
+      ],
+      [
+       "Metal",
+       "Najviše ulja i taloga"
+      ]
+     ]
+    },
+    {
+     "id": "m7.k04",
+     "t": "story",
+     "art": "methods",
+     "title": "Protočna ili imerziona?",
+     "list": [
+      {
+       "y": "Protočna",
+       "t": "voda gravitacijom prolazi kroz kafu: Chemex, V60, Kalita. Ključna je tehnika nalivanja."
+      },
+      {
+       "y": "Imerziona",
+       "t": "kafa je potopljena u vodi: French press, Aeropress, Sifon, Cold brew. Mešanje daje ravnomerno natapanje."
+      }
+     ],
+     "remember": "Protočna: Chemex, V60 · imerziona: French press, Aeropress"
+    },
+    {
+     "id": "m7.k05",
+     "t": "sort",
+     "q": "Protočna ili imerziona?",
+     "left": "Protočna",
+     "right": "Imerziona",
+     "items": [
+      [
+       "Chemex",
+       0
+      ],
+      [
+       "V60",
+       0
+      ],
+      [
+       "Kalita",
+       0
+      ],
+      [
+       "French press",
+       1
+      ],
+      [
+       "Aeropress",
+       1
+      ],
+      [
+       "Sifon",
+       1
+      ],
+      [
+       "Cold brew (potapanje)",
+       1
+      ]
+     ],
+     "why": "Protočne: Chemex, V60, Kalita. Imerzione: French press, Aeropress, Sifon, Cold brew."
+    },
+    {
+     "id": "m7.k06",
+     "t": "story",
+     "art": "ratio116",
+     "title": "Zlatno pravilo: 1:16",
+     "text": "Standard je **1 g kafe na 16 g vode**. Voda između **80 i 95 °C**: iznad 95 °C kafa postaje gorka, ispod 80 °C kisela i nerazvijena. Koristi **filtriranu vodu**.",
+     "remember": "Filter: 1:16 · voda 80–95 °C"
+    },
+    {
+     "id": "m7.k07",
+     "t": "num",
+     "q": "Koliko vode ide na 16 g kafe po razmeri 1:16?",
+     "min": 100,
+     "max": 400,
+     "step": 2,
+     "unit": "g",
+     "a": [
+      250,
+      260
+     ],
+     "start": 160,
+     "why": "16 × 16 = 256 g. Recepti zaokružuju na 250–256 g."
+    },
+    {
+     "id": "m7.k08",
+     "t": "clip",
+     "clip": "v60",
+     "title": "V60 u pet nalivanja",
+     "text": "16 g kafe, **srednja** granulacija, voda **95 °C**. Pet nalivanja po **50 g**, na svakih 30 s, od sredine ka spolja. Ukupno **3:30–5:00**.",
+     "remember": "V60: 16 g · 5 × 50 g · 3:30–5:00"
+    },
+    {
+     "id": "m7.k09",
+     "t": "story",
+     "img": "img/chemex.jpg",
+     "fit": "contain",
+     "bg": "#fff",
+     "title": "Chemex · 1941.",
+     "text": "Izumeo ga je hemičar **Petar Šlumbom**, autor preko 300 patenata, inspirisan Bauhausom. Debeo filter daje čistu šolju. Recept: **16 g krupno mlevene kafe**, voda 95 °C, **3 × 85 g**. Ukupno 3:30–5:00.",
+     "remember": "Chemex: krupna granulacija · 3 × 85 g"
+    },
+    {
+     "id": "m7.k10",
+     "t": "story",
+     "img": "img/aeropress.jpg",
+     "fit": "contain",
+     "bg": "#000",
+     "title": "Aeropress · 2005.",
+     "text": "Izumeo ga je **Alan Adler**. Imerziona metoda: puno telo, slatko i aromatično. **14 g kafe**, prvo 30 g vode i mešanje, pa još 194 g. Potiskivanje traje **1:30–2:00**. Postoji standardna i **invertna** metoda.",
+     "remember": "Aeropress: 14 g · 1:30–2:00"
+    },
+    {
+     "id": "m7.k11",
+     "t": "story",
+     "title": "French press i Sifon",
+     "gallery": [
+      {
+       "img": "img/french-press.jpg",
+       "cap": "French press"
+      },
+      {
+       "img": "img/sifon.jpg",
+       "cap": "Sifon"
+      }
+     ],
+     "text": "**French press** (Ugo Paolini, 1923.): krupna kafa i metalni filter. 16 g kafe i 250 g vode na 95 °C, pa čekaš **4–5 min**. **Sifon** (Loeff, 1830.) je **najstariji** metod filter kafe: kafa je potpuno potopljena, a voda se greje plamenom.",
+     "remember": "French press: 4–5 min · Sifon: najstariji (1830.)"
+    },
+    {
+     "id": "m7.k12",
+     "t": "story",
+     "img": "img/cold-brew.jpg",
+     "fit": "contain",
+     "bg": "#fff",
+     "title": "Cold brew",
+     "text": "Kjoto i holandski trgovci, oko 1600. **Hladna voda** i spora ekstrakcija **6–24 h**, razmera **1:10** (100 g kafe na 1 l), krupna granulacija. Manje kiselosti, više gorčine i kofeina. Slow-drip: 1 kap na 1,5 s.",
+     "remember": "Cold brew: 1:10 · 6–24 h"
+    },
+    {
+     "id": "m7.k13",
+     "t": "match",
+     "q": "Spoji metodu i izumitelja",
+     "pairs": [
+      [
+       "Chemex",
+       "Petar Šlumbom, 1941."
+      ],
+      [
+       "Aeropress",
+       "Alan Adler, 2005."
+      ],
+      [
+       "French press",
+       "Ugo Paolini, 1923."
+      ],
+      [
+       "Sifon",
+       "Loeff, 1830."
+      ],
+      [
+       "V60",
+       "Japan, 2004."
+      ]
+     ]
+    },
+    {
+     "id": "m7.k14",
+     "t": "story",
+     "img": "img/voda.jpg",
+     "title": "Voda je skoro cela tvoja kafa",
+     "text": "Voda čini **88–93%** šolje espresa i **98–99%** šolje filter kafe. Idealna voda ima **pH oko 7** i **TDS 75–250 ppm** (1 ppm = 1 mg/L). Minerali kao kalcijum i magnezijum menjaju ukus.",
+     "remember": "Voda: pH ~7 · TDS 75–250 ppm"
+    },
+    {
+     "id": "m7.k15",
+     "t": "game",
+     "game": "recipe",
+     "title": "Složi recept",
+     "text": "Popuni recept za metode koje si upravo naučio."
+    }
+   ],
+   "pool": [
+    {
+     "id": "m7.b01",
+     "t": "mc",
+     "q": "Koja je razmera za cold brew?",
+     "opts": [
+      "1:10",
+      "1:16",
+      "1:2",
+      "1:5"
+     ],
+     "a": 0,
+     "why": "100 g kafe na 1 litar vode, 1:10."
+    },
+    {
+     "id": "m7.b02",
+     "t": "mc",
+     "q": "Koliko kafe ide u Aeropress po recepturi?",
+     "opts": [
+      "14 g",
+      "16 g",
+      "20 g",
+      "30 g"
+     ],
+     "a": 0,
+     "why": "Aeropress: 14 g kafe."
+    },
+    {
+     "id": "m7.b03",
+     "t": "mc",
+     "q": "Koja metoda filter kafe je najstarija?",
+     "opts": [
+      "Sifon",
+      "Chemex",
+      "French press",
+      "V60"
+     ],
+     "a": 0,
+     "why": "Sifon, Loeff, 1830."
+    },
+    {
+     "id": "m7.b04",
+     "t": "mc",
+     "q": "Ko je izumeo papirni filter?",
+     "opts": [
+      "Melitta Bentz",
+      "Petar Šlumbom",
+      "Alan Adler",
+      "Ugo Paolini"
+     ],
+     "a": 0,
+     "why": "Melitta Bentz, Nemačka, 1908."
+    },
+    {
+     "id": "m7.b05",
+     "t": "mc",
+     "q": "Koliko traje French press?",
+     "opts": [
+      "4–5 min",
+      "30 s",
+      "1:30–2:00",
+      "6–24 h"
+     ],
+     "a": 0,
+     "why": "Poklopi i čekaj 4–5 minuta."
+    },
+    {
+     "id": "m7.b06",
+     "t": "mc",
+     "q": "Kakva granulacija ide u Chemex?",
+     "opts": [
+      "Krupna",
+      "Srednja",
+      "Sitna",
+      "Kao prah"
+     ],
+     "a": 0,
+     "why": "Chemex: krupna granulacija."
+    },
+    {
+     "id": "m7.b07",
+     "t": "mc",
+     "q": "Kakva granulacija ide u V60?",
+     "opts": [
+      "Srednja",
+      "Krupna",
+      "Sitna kao za espresso",
+      "Kao prah"
+     ],
+     "a": 0,
+     "why": "V60: srednja granulacija i sitniji filter od Chemexa."
+    },
+    {
+     "id": "m7.b08",
+     "t": "tf",
+     "q": "Filter kafa često ima više kofeina od espresa.",
+     "a": true,
+     "why": "Zbog dužeg vremena ekstrakcije."
+    },
+    {
+     "id": "m7.b09",
+     "t": "tf",
+     "q": "Voda iznad 95 °C može da učini kafu gorkom.",
+     "a": true,
+     "why": "Idealan opseg je 80–95 °C."
+    },
+    {
+     "id": "m7.b10",
+     "t": "tf",
+     "q": "Idealan pH vode za kafu je oko 4.",
+     "a": false,
+     "why": "Voda treba da bude neutralna, pH oko 7."
+    },
+    {
+     "id": "m7.b11",
+     "t": "num",
+     "q": "Koliko nalivanja ima V60 recept?",
+     "min": 1,
+     "max": 8,
+     "step": 1,
+     "unit": "×",
+     "a": [
+      5,
+      5
+     ],
+     "start": 2,
+     "why": "Pet nalivanja po 50 g."
+    },
+    {
+     "id": "m7.b12",
+     "t": "mc",
+     "q": "Koliki TDS treba da ima voda za kafu?",
+     "opts": [
+      "75–250 ppm",
+      "0–10 ppm",
+      "500–800 ppm",
+      "Preko 1.000 ppm"
+     ],
+     "a": 0,
+     "why": "Voda: TDS 75–250 ppm, pH oko 7."
+    }
+   ],
+   "swipe": [
+    {
+     "id": "m7.s01",
+     "q": "Chemex je protočna metoda.",
+     "a": true
+    },
+    {
+     "id": "m7.s02",
+     "q": "French press je protočna metoda.",
+     "a": false
+    },
+    {
+     "id": "m7.s03",
+     "q": "Standardni odnos za filter kafu je 1:16.",
+     "a": true
+    },
+    {
+     "id": "m7.s04",
+     "q": "Cold brew traje 6–24 sata.",
+     "a": true
+    },
+    {
+     "id": "m7.s05",
+     "q": "Papirni filter propušta najviše ulja.",
+     "a": false
+    },
+    {
+     "id": "m7.s06",
+     "q": "Aeropress je izumeo Alan Adler.",
+     "a": true
+    },
+    {
+     "id": "m7.s07",
+     "q": "Voda čini 98–99% šolje filter kafe.",
+     "a": true
+    },
+    {
+     "id": "m7.s08",
+     "q": "Sifon je izumljen 2005.",
+     "a": false
+    },
+    {
+     "id": "m7.s09",
+     "q": "Voda ispod 80 °C daje kiselu i nerazvijenu kafu.",
+     "a": true
+    }
+   ]
+  },
+  {
+   "id": "m8",
+   "n": 8,
+   "title": "Mleko i latte art",
+   "icon": "pitcher",
+   "color": "#12807B",
+   "min": 10,
+   "desc": "Stimovanje, mikropena, srce i rozeta. I higijena koja čuva ukus.",
+   "steps": [
+    {
+     "id": "m8.k01",
+     "t": "story",
+     "img": "img/stimovanje.jpg",
+     "title": "Kako nastaje mlečna krema",
+     "text": "Stimer izbacuje paru pod pritiskom od oko **1 bar**. **Proteini** u mleku hvataju vazduh i prave penu, a **masti** daju slatkoću i punoću.",
+     "remember": "Proteini = pena · masti = slatkoća i punoća"
+    },
+    {
+     "id": "m8.k02",
+     "t": "clip",
+     "clip": "milk",
+     "title": "Dve faze: vazduh, pa vrtlog",
+     "text": "**1. Vrh na površini**: ubacuješ vazduh. Više vazduha znači deblju penu. **2. Vrh potopljen** u jedan od četiri sektora latijere: mleko se vrti, pena i mleko se spajaju i greju.",
+     "remember": "Prvo vazduh (vrh na površini), pa vrtlog (vrh potopljen)"
+    },
+    {
+     "id": "m8.k03",
+     "t": "mc",
+     "q": "Vrh stimera je previše iznad površine. Šta dobijaš?",
+     "opts": [
+      "Velike, grube mehuriće",
+      "Savršenu mikropenu",
+      "Toplo mleko bez pene",
+      "Hladno mleko"
+     ],
+     "a": 0,
+     "why": "Kad je vrh previše izložen, uvlači se mnogo vazduha i prave se veliki mehurići."
+    },
+    {
+     "id": "m8.k04",
+     "t": "mc",
+     "q": "Vrh stimera je sve vreme duboko u mleku. Šta dobijaš?",
+     "opts": [
+      "Toplo mleko bez pene",
+      "Previše pene",
+      "Velike mehuriće",
+      "Latte art sam od sebe"
+     ],
+     "a": 0,
+     "why": "Bez vazduha nema pene. Para samo zagreva mleko."
+    },
+    {
+     "id": "m8.k05",
+     "t": "game",
+     "game": "milk",
+     "title": "Stimuj mleko",
+     "text": "Pomeraj latijeru i napravi svilenkastu mikropenu."
+    },
+    {
+     "id": "m8.k06",
+     "t": "story",
+     "img": "img/labud.jpg",
+     "title": "Latte art: freepour i etching",
+     "text": "**Freepour**: crtaš samim sipanjem. **Etching**: crtaš iglicom po površini. Osnova svega su dobar espresso i dobro spojeno mleko.",
+     "remember": "Freepour = sipanjem · etching = iglicom"
+    },
+    {
+     "id": "m8.k07",
+     "t": "story",
+     "art": "pour3",
+     "title": "Tri faktora sipanja",
+     "list": [
+      {
+       "y": "Brzina",
+       "t": "spor protok ostavlja smelije poteze, veći protok nežne linije"
+      },
+      {
+       "y": "Blizina",
+       "t": "počni par cm iznad šolje, a za crtanje spusti latijeru do površine"
+      },
+      {
+       "y": "Položaj",
+       "t": "vrh latijere određuje vrh dizajna"
+      }
+     ],
+     "text": "Opusti ruke, laktovi dole. Osnovu naliješ do pola šolje, pa tek onda crtaš.",
+     "remember": "Brzina · blizina · položaj latijere"
+    },
+    {
+     "id": "m8.k08",
+     "t": "clip",
+     "clip": "heart",
+     "title": "Srce u četiri koraka",
+     "text": "Počni iznad sredine šolje, sipaj **tačku**, **uspori** dok dolivaš i **preseci** kroz crtež.",
+     "remember": "Srce: tačka → uspori → preseci"
+    },
+    {
+     "id": "m8.k09",
+     "t": "order",
+     "q": "Poređaj korake za srce",
+     "items": [
+      "Sipaj osnovu do pola šolje",
+      "Spusti latijeru i sipaj tačku",
+      "Uspori protok dok dolivaš",
+      "Preseci kroz crtež"
+     ],
+     "why": "Osnova do pola, tačka blizu površine, usporavanje i presek."
+    },
+    {
+     "id": "m8.k10",
+     "t": "mc",
+     "q": "Koji je ovo dizajn?",
+     "art": "latte-rosetta",
+     "opts": [
+      "Rozeta",
+      "Srce",
+      "Tulip",
+      "Labud"
+     ],
+     "a": 0,
+     "why": "Rozeta nastaje talasanjem levo-desno i završnim presekom."
+    },
+    {
+     "id": "m8.k11",
+     "t": "story",
+     "art": "latte-set",
+     "title": "Izvedeni oblici",
+     "list": [
+      {
+       "y": "Tulip",
+       "t": "više tačaka u slojevima, završni presek ih spaja"
+      },
+      {
+       "y": "Rozeta",
+       "t": "talasanje levo-desno u centru, pa presek"
+      },
+      {
+       "y": "Labud",
+       "t": "baza kao rozeta, krila i vrat linijom mleka, tačka za glavu"
+      }
+     ],
+     "remember": "Tulip = slojevi tačaka · rozeta = talasanje"
+    },
+    {
+     "id": "m8.k12",
+     "t": "game",
+     "game": "latte",
+     "title": "Sipaj srce",
+     "text": "Drži, pusti, preseci. Probaj da nacrtaš srce."
+    },
+    {
+     "id": "m8.k13",
+     "t": "story",
+     "title": "Higijena = ukus",
+     "gallery": [
+      {
+       "img": "img/higijena-krpa.jpg",
+       "cap": "Grupa i tuš"
+      },
+      {
+       "img": "img/higijena-cistac.jpg",
+       "cap": "Portafilter"
+      }
+     ],
+     "text": "Prljava grupa, tuš ili portafilter daju **opor ukus** i suvoću na zadnjem delu nepca. Tokom smene čisti portafiltere, tuševe i grupe, a aparat, mlin i portafiltere **svaki dan**.",
+     "remember": "Čista oprema = jasnije note"
+    },
+    {
+     "id": "m8.k14",
+     "t": "tf",
+     "q": "Prljav portafilter može da napravi opor ukus.",
+     "a": true,
+     "why": "Zaostala ulja i talog daju opor ukus i suvoću u zadnjem delu nepca."
+    }
+   ],
+   "pool": [
+    {
+     "id": "m8.b01",
+     "t": "mc",
+     "q": "Na kom pritisku radi stimer?",
+     "opts": [
+      "Oko 1 bar",
+      "Oko 9 bara",
+      "Oko 3 bara",
+      "Oko 15 bara"
+     ],
+     "a": 0,
+     "why": "Stimer izbacuje paru pod pritiskom od oko 1 bar."
+    },
+    {
+     "id": "m8.b02",
+     "t": "mc",
+     "q": "Šta u mleku pravi penu?",
+     "opts": [
+      "Proteini",
+      "Masti",
+      "Kalcijum",
+      "Voda"
+     ],
+     "a": 0,
+     "why": "Vazduh se ubacuje u proteinsku strukturu mleka."
+    },
+    {
+     "id": "m8.b03",
+     "t": "mc",
+     "q": "Šta u mleku daje slatkoću i punoću?",
+     "opts": [
+      "Masti",
+      "Proteini",
+      "Kalcijum",
+      "Para"
+     ],
+     "a": 0,
+     "why": "Masti daju slatkoću i punoću napitku."
+    },
+    {
+     "id": "m8.b04",
+     "t": "mc",
+     "q": "Dokle se naliva osnova pre crtanja?",
+     "opts": [
+      "Do pola šolje",
+      "Do vrha",
+      "Do četvrtine",
+      "Uopšte se ne naliva"
+     ],
+     "a": 0,
+     "why": "Najbolja praksa je nalivati do pola šolje."
+    },
+    {
+     "id": "m8.b05",
+     "t": "mc",
+     "q": "Koja tehnika koristi iglicu?",
+     "opts": [
+      "Etching",
+      "Freepour",
+      "Tulip",
+      "Rozeta"
+     ],
+     "a": 0,
+     "why": "Etching je crtanje iglicom."
+    },
+    {
+     "id": "m8.b06",
+     "t": "tf",
+     "q": "Vrh latijere određuje vrh dizajna.",
+     "a": true,
+     "why": "Gde je vrh latijere, tu će biti vrh crteža."
+    },
+    {
+     "id": "m8.b07",
+     "t": "tf",
+     "q": "Labud se crta na bazi rozete.",
+     "a": true,
+     "why": "Baza talasanja kao kod rozete, pa krila, vrat i glava."
+    },
+    {
+     "id": "m8.b08",
+     "t": "mc",
+     "q": "Koji je ovo dizajn?",
+     "art": "latte-tulip",
+     "opts": [
+      "Tulip",
+      "Srce",
+      "Rozeta",
+      "Labud"
+     ],
+     "a": 0,
+     "why": "Tulip čine slojevi tačaka spojeni presekom."
+    }
+   ],
+   "swipe": [
+    {
+     "id": "m8.s01",
+     "q": "Stimer radi na oko 1 bar.",
+     "a": true
+    },
+    {
+     "id": "m8.s02",
+     "q": "Masti u mleku prave penu.",
+     "a": false
+    },
+    {
+     "id": "m8.s03",
+     "q": "Etching je crtanje iglicom.",
+     "a": true
+    },
+    {
+     "id": "m8.s04",
+     "q": "Srce se završava presecanjem.",
+     "a": true
+    },
+    {
+     "id": "m8.s05",
+     "q": "Rozeta se pravi talasanjem levo-desno.",
+     "a": true
+    },
+    {
+     "id": "m8.s06",
+     "q": "Grupe aparata se čiste samo jednom nedeljno.",
+     "a": false
+    },
+    {
+     "id": "m8.s07",
+     "q": "Previše izložen vrh stimera pravi velike mehuriće.",
+     "a": true
+    },
+    {
+     "id": "m8.s08",
+     "q": "Za crtanje latijera treba da bude visoko iznad šolje.",
+     "a": false
+    }
+   ]
+  }
+ ],
+ "igre": [
+  {
+   "id": "swipe",
+   "t": "Brza runda",
+   "d": "60 sekundi, tačno ili netačno. Prevlači levo-desno.",
+   "ic": "swap",
+   "after": "m1",
+   "color": "#D7263D",
+   "implementacija": "js"
+  },
+  {
+   "id": "dialin",
+   "t": "Uštimaj mlin",
+   "d": "Tri šota, tri problema. Podesi mlin i dozu.",
+   "ic": "gauge",
+   "after": "m4",
+   "color": "#7B4A2D",
+   "implementacija": "js"
+  },
+  {
+   "id": "recipe",
+   "t": "Složi recept",
+   "d": "Chemex, V60, Aeropress, French press i cold brew.",
+   "ic": "dripper",
+   "after": "m7",
+   "color": "#2B7BC0",
+   "implementacija": "js"
+  },
+  {
+   "id": "milk",
+   "t": "Kralj pare",
+   "d": "Vazduh, vrtlog i prava temperatura mleka.",
+   "ic": "pitcher",
+   "after": "m8",
+   "color": "#12807B",
+   "implementacija": "js"
+  },
+  {
+   "id": "latte",
+   "t": "Sipaj srce",
+   "d": "Osnova, tačka, dolivanje i presek.",
+   "ic": "heart",
+   "after": "m8",
+   "color": "#A86A0C",
+   "implementacija": "js"
+  }
+ ],
+ "pojmovi": [
+  {
+   "id": "p.coffea",
+   "nivo": "m1",
+   "pojam": "Coffea",
+   "opis": "Rod biljaka kojem pripada kafa. Zimzelena biljka iz porodice Rubiaceae."
+  },
+  {
+   "id": "p.pojas-kafe",
+   "nivo": "m1",
+   "pojam": "Pojas kafe",
+   "opis": "Pojas između 25° severno i 30° južno u kom kafa uspeva."
+  },
+  {
+   "id": "p.qahwa",
+   "nivo": "m1",
+   "pojam": "Qahwa",
+   "opis": "Jemenski naziv za napitak od kafe. Po njemu je kafa dobila ime."
+  },
+  {
+   "id": "p.qahveh-khaneh",
+   "nivo": "m1",
+   "pojam": "Qahveh khaneh",
+   "opis": "Kuće kafe u Jemenu, preci današnjih kafića."
+  },
+  {
+   "id": "p.musilaz-sluz",
+   "nivo": "m2",
+   "pojam": "Musilaž (sluz)",
+   "opis": "Lepljivi sloj trešnje ispod pulpe. Kod prane obrade fermentiše u vodi."
+  },
+  {
+   "id": "p.parcment",
+   "nivo": "m2",
+   "pojam": "Parčment",
+   "opis": "Zaštitna ljuska oko zrna, između sluzi i srebrne opne."
+  },
+  {
+   "id": "p.srebrna-opna",
+   "nivo": "m2",
+   "pojam": "Srebrna opna",
+   "opis": "Najtanja opna koja prijanja uz zeleno zrno."
+  },
+  {
+   "id": "p.natural",
+   "nivo": "m2",
+   "pojam": "Natural",
+   "opis": "Prirodna (suva) obrada: cela trešnja se suši do 12% vlage. Slatko i čokoladno."
+  },
+  {
+   "id": "p.washed",
+   "nivo": "m2",
+   "pojam": "Washed",
+   "opis": "Prana obrada: pulpa se skida, zrno fermentiše u vodi 10–30 h. Kiselo, citrusno, voćno."
+  },
+  {
+   "id": "p.arabika",
+   "nivo": "m2",
+   "pojam": "Arabika",
+   "opis": "44 hromozoma, 900–2000 m, 15–25 °C. Složen ukus i manje kofeina."
+  },
+  {
+   "id": "p.robusta-canephora",
+   "nivo": "m2",
+   "pojam": "Robusta (Canephora)",
+   "opis": "22 hromozoma, 0–900 m, 20–30 °C. Jednostavniji ukus, jača krema, više kofeina."
+  },
+  {
+   "id": "p.protocni-bojler",
+   "nivo": "m3",
+   "pojam": "Protočni bojler",
+   "opis": "Bojler za espresso: voda 88–95 °C, pritisak 8–9 bara."
+  },
+  {
+   "id": "p.akumulacioni-bojler",
+   "nivo": "m3",
+   "pojam": "Akumulacioni bojler",
+   "opis": "Bojler za paru i vruću vodu: do 120 °C, stimer oko 1 bar."
+  },
+  {
+   "id": "p.predinfuzija",
+   "nivo": "m3",
+   "pojam": "Predinfuzija",
+   "opis": "Početno natapanje kolača pod oko 3 bara. Sprečava kanalisanje."
+  },
+  {
+   "id": "p.kanalisanje",
+   "nivo": "m3",
+   "pojam": "Kanalisanje",
+   "opis": "Voda nađe prečicu kroz pukotinu u kolaču i neravnomerno izvlači kafu."
+  },
+  {
+   "id": "p.faema-e61",
+   "nivo": "m3",
+   "pojam": "FAEMA E61",
+   "opis": "Aparat iz 1961.: električna pumpa, automatska predinfuzija i termosifon."
+  },
+  {
+   "id": "p.granulacija",
+   "nivo": "m4",
+   "pojam": "Granulacija",
+   "opis": "Veličina čestice samlevene kafe. Određuje procenat ekstrakcije."
+  },
+  {
+   "id": "p.fine-coarse",
+   "nivo": "m4",
+   "pojam": "FINE / COARSE",
+   "opis": "FINE je sitnije (noževi bliže), COARSE krupnije (noževi dalje)."
+  },
+  {
+   "id": "p.doza",
+   "nivo": "m4",
+   "pojam": "Doza",
+   "opis": "Količina kafe koja se koristi."
+  },
+  {
+   "id": "p.distribucija",
+   "nivo": "m4",
+   "pojam": "Distribucija",
+   "opis": "Ravnomerno raspoređivanje kafe u portafilteru, pre tampa."
+  },
+  {
+   "id": "p.prinos",
+   "nivo": "m4",
+   "pojam": "Prinos",
+   "opis": "Količina rastvorenih materija u šoljici."
+  },
+  {
+   "id": "p.dose-counter",
+   "nivo": "m4",
+   "pojam": "Dose counter",
+   "opis": "Brojač samlevenih doza na displeju mlina."
+  },
+  {
+   "id": "p.single-shot-mlin",
+   "nivo": "m4",
+   "pojam": "Single shot mlin",
+   "opis": "Melje dozu po dozu, najčešće za filter. Na primer EK-43 i Philos."
+  },
+  {
+   "id": "p.ebr",
+   "nivo": "m5",
+   "pojam": "EBR",
+   "opis": "Espresso Brew Ratio: odnos samlevene kafe i espresa u šoljici."
+  },
+  {
+   "id": "p.ristretto-espresso-lungo",
+   "nivo": "m5",
+   "pojam": "Ristretto · espresso · lungo",
+   "opis": "Razmere 1:1, 1:2 i 1:3."
+  },
+  {
+   "id": "p.dupla-doza",
+   "nivo": "m5",
+   "pojam": "Dupla doza",
+   "opis": "18–20 g kafe. Mlin se uvek šteluje po duploj dozi."
+  },
+  {
+   "id": "p.tamp",
+   "nivo": "m5",
+   "pojam": "Tamp",
+   "opis": "Sabijanje kafe u portafilteru posle distribucije."
+  },
+  {
+   "id": "p.ocd",
+   "nivo": "m5",
+   "pojam": "OCD",
+   "opis": "Ona Coffee Distributor (Saša Šestić, 2012.), alat za distribuciju."
+  },
+  {
+   "id": "p.wdt",
+   "nivo": "m5",
+   "pojam": "WDT",
+   "opis": "Weiss Distribution Technique: tanke iglice koje razbijaju grudvice."
+  },
+  {
+   "id": "p.tariranje",
+   "nivo": "m5",
+   "pojam": "Tariranje",
+   "opis": "Vraćanje vage na nulu kad je šolja već na njoj."
+  },
+  {
+   "id": "p.ekstrakcija",
+   "nivo": "m6",
+   "pojam": "Ekstrakcija",
+   "opis": "Izvlačenje rastvorljivih materija iz kafe pomoću vode."
+  },
+  {
+   "id": "p.tds-i-refraktometar",
+   "nivo": "m6",
+   "pojam": "TDS i refraktometar",
+   "opis": "TDS su ukupno rastvorene materije. Mere se refraktometrom."
+  },
+  {
+   "id": "p.erozija",
+   "nivo": "m6",
+   "pojam": "Erozija",
+   "opis": "Način ekstrakcije kod espresa, pod pritiskom."
+  },
+  {
+   "id": "p.difuzija",
+   "nivo": "m6",
+   "pojam": "Difuzija",
+   "opis": "Način ekstrakcije kod filter kafe (međučestična difuzija)."
+  },
+  {
+   "id": "p.krema-telo-srce",
+   "nivo": "m6",
+   "pojam": "Krema · telo · srce",
+   "opis": "Tri sloja espresa, odozgo nadole."
+  },
+  {
+   "id": "p.protocna-metoda",
+   "nivo": "m7",
+   "pojam": "Protočna metoda",
+   "opis": "Voda gravitacijom prolazi kroz kafu: Chemex, V60, Kalita."
+  },
+  {
+   "id": "p.imerziona-metoda",
+   "nivo": "m7",
+   "pojam": "Imerziona metoda",
+   "opis": "Kafa je potopljena u vodi: French press, Aeropress, Sifon, Cold brew."
+  },
+  {
+   "id": "p.kafestol",
+   "nivo": "m7",
+   "pojam": "Kafestol",
+   "opis": "Uljana komponenta kafe koju zadržava papirni filter."
+  },
+  {
+   "id": "p.ppm",
+   "nivo": "m7",
+   "pojam": "ppm",
+   "opis": "Parts per million. 1 ppm = 1 mg/L."
+  },
+  {
+   "id": "p.invertna-metoda",
+   "nivo": "m7",
+   "pojam": "Invertna metoda",
+   "opis": "Aeropress se puni naopako, pa se stavi filter i posuda okrene."
+  },
+  {
+   "id": "p.stimer",
+   "nivo": "m8",
+   "pojam": "Stimer",
+   "opis": "Cev za paru (oko 1 bar) kojom se pravi mlečna krema."
+  },
+  {
+   "id": "p.latijera",
+   "nivo": "m8",
+   "pojam": "Latijera",
+   "opis": "Metalni bokal za mleko."
+  },
+  {
+   "id": "p.mikropena",
+   "nivo": "m8",
+   "pojam": "Mikropena",
+   "opis": "Kremasta pena sa sitnim mehurićima ugrađenim u mleko."
+  },
+  {
+   "id": "p.freepour",
+   "nivo": "m8",
+   "pojam": "Freepour",
+   "opis": "Latte art koji crtaš samim sipanjem."
+  },
+  {
+   "id": "p.etching",
+   "nivo": "m8",
+   "pojam": "Etching",
+   "opis": "Crtanje iglicom po površini napitka."
+  }
+ ],
+ "recepti": [
+  {
+   "id": "chemex",
+   "name": "Chemex",
+   "img": "img/chemex.jpg",
+   "f": {
+    "kafa": "16 g",
+    "voda": "3 × 85 g",
+    "granulacija": "Krupna",
+    "temp": "95 °C",
+    "vreme": "3:30–5:00"
+   }
+  },
+  {
+   "id": "v60",
+   "name": "Hario V60",
+   "img": "img/v60.jpg",
+   "f": {
+    "kafa": "16 g",
+    "voda": "5 × 50 g",
+    "granulacija": "Srednja",
+    "temp": "95 °C",
+    "vreme": "3:30–5:00"
+   }
+  },
+  {
+   "id": "aero",
+   "name": "Aeropress",
+   "img": "img/aeropress.jpg",
+   "dark": true,
+   "f": {
+    "kafa": "14 g",
+    "voda": "30 g + 194 g",
+    "vreme": "1:30–2:00"
+   }
+  },
+  {
+   "id": "french",
+   "name": "French press",
+   "img": "img/french-press.jpg",
+   "f": {
+    "kafa": "16 g",
+    "voda": "250 g odjednom",
+    "granulacija": "Krupna",
+    "temp": "95 °C",
+    "vreme": "4–5 min"
+   }
+  },
+  {
+   "id": "cold",
+   "name": "Cold brew",
+   "img": "img/cold-brew.jpg",
+   "f": {
+    "kafa": "100 g na 1 l",
+    "granulacija": "Krupna",
+    "temp": "Hladna voda",
+    "vreme": "6–24 h"
+   }
+  }
+ ],
+ "recept_polja": [
+  {
+   "k": "kafa",
+   "t": "Kafa",
+   "opts": [
+    "14 g",
+    "16 g",
+    "20 g",
+    "100 g na 1 l"
+   ]
+  },
+  {
+   "k": "voda",
+   "t": "Voda",
+   "opts": [
+    "3 × 85 g",
+    "5 × 50 g",
+    "30 g + 194 g",
+    "250 g odjednom"
+   ]
+  },
+  {
+   "k": "granulacija",
+   "t": "Granulacija",
+   "opts": [
+    "Sitna",
+    "Srednja",
+    "Krupna"
+   ]
+  },
+  {
+   "k": "temp",
+   "t": "Voda (temp.)",
+   "opts": [
+    "95 °C",
+    "80 °C",
+    "Hladna voda"
+   ]
+  },
+  {
+   "k": "vreme",
+   "t": "Vreme",
+   "opts": [
+    "1:30–2:00",
+    "3:30–5:00",
+    "4–5 min",
+    "6–24 h"
+   ]
+  }
+ ]
+}
