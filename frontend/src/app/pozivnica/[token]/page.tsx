@@ -1,7 +1,7 @@
 import { PostaviPin } from "@/components/PostaviPin";
 import { Ikona } from "@/components/Svg";
 
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8000";
+const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8001";
 
 type Info = { ime: string; korisnicko_ime: string; lokal: string | null; istice_u: string };
 

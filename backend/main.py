@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from core import auth
+from modules.napredak import router as napredak
 from modules.osoblje import router as osoblje
 from modules.sadrzaj import router as sadrzaj
 
@@ -14,6 +15,7 @@ app = FastAPI(
 app.include_router(auth.router)
 app.include_router(sadrzaj.router)
 app.include_router(osoblje.router)
+app.include_router(napredak.router)
 
 
 @app.get("/api/health")

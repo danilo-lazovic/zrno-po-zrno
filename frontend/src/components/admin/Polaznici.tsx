@@ -137,7 +137,9 @@ export function Polaznici() {
               <th>Korisničko ime</th>
               <th>Lokal</th>
               <th>Status</th>
-              <th>Poslednja prijava</th>
+              <th>Nivoa</th>
+              <th>Zrna</th>
+              <th>Poslednja aktivnost</th>
               <th />
             </tr>
           </thead>
@@ -152,7 +154,9 @@ export function Polaznici() {
                 <td>
                   <span className={`znak znak-${p.status}`}>{STATUS[p.status]}</span>
                 </td>
-                <td className="mono">{datumVreme(p.poslednja_prijava)}</td>
+                <td className="mono">{p.nivoa}/8</td>
+                <td className="mono">{p.zrna}</td>
+                <td className="mono">{datumVreme(p.poslednja_aktivnost ?? p.poslednja_prijava)}</td>
                 <td>
                   <div className="akcije">
                     {p.status !== "iskljucen" && (

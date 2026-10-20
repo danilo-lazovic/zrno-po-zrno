@@ -9,7 +9,7 @@ from core.deps import trenutni_korisnik
 from core.models import Korisnik, Pozivnica
 from core.pristup import vidi_sve_lokale
 from core.rate_limit import KliznProzor
-from core.schemas import KorisnikOut, LokalOut, MeOut, PinIn, PozivnicaInfo, PrijavaIn
+from core.schemas import KorisnikOut, LokalOut, MeOut, PinIn, PozivnicaInfo, PrijavaIn, ProfilIn
 from core.security import PIN, hash_tajne, napravi_token, otisak, proveri_tajnu, slab_pin, trajanje_sesije
 from core.vreme import sada
 
@@ -90,6 +90,13 @@ def me(korisnik: Korisnik = Depends(trenutni_korisnik)):
         lokal=LokalOut.model_validate(korisnik.lokal) if korisnik.lokal else None,
         lokali=None if vidi_sve_lokale(korisnik) else [LokalOut.model_validate(lokal) for lokal in korisnik.lokali],
     )
+
+
+@router.patch("/me", response_model=MeOut)
+def izmeni_profil(body: ProfilIn, korisnik: Korisnik = Depends(trenutni_korisnik), db: Session = Depends(get_db)):
+    korisnik.avatar = body.avatar
+    db.commit()
+    return me(korisnik)
 
 
 def _vazeca_pozivnica(db: Session, token: str) -> Pozivnica:

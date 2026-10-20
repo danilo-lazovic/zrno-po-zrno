@@ -15,6 +15,7 @@ class Akcija(StrEnum):
     reset_lozinke = "reset_lozinke"
     nalog_zakljucan = "nalog_zakljucan"
     lokal = "lokal"
+    lokali_iz_portala = "lokali_iz_portala"
     sadrzaj_objavljen = "sadrzaj_objavljen"
 
 

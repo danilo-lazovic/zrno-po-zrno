@@ -6,6 +6,7 @@ from sqlalchemy import engine_from_config, pool
 from core.config import get_settings
 from core.models import Base, UtcDateTime
 import modules.sadrzaj.models  # noqa: F401  (registruje tabele modula u Base.metadata)
+import modules.napredak.models  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_settings().database_url)

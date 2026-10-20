@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import type { Me } from "./types";
 
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8000";
+const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8001";
 const SESSION_COOKIE = process.env.SESSION_COOKIE ?? "zpz_session";
 
 /** Server-side: trenutni korisnik ili null ako sesija ne postoji ili je istekla. */

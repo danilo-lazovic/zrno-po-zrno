@@ -1,35 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { avatar, BEAN, icon, medal } from "@/lib/art";
-import { api } from "@/lib/api";
+import { avatar, avatars, BEAN, icon, medal } from "@/lib/art";
+import { api, posalji } from "@/lib/api";
+import { RECEPTI } from "@/lib/igre";
+import { esc, sfx } from "@/lib/jezgro";
+import { type Dobitak, type Napredak, oznaciKarticu } from "@/lib/napredak";
 import { IZAZOVI, type Kurs, type Nivo, type SadrzajOut, md, mnozina, rangZa } from "@/lib/sadrzaj";
+import { toast } from "@/lib/toast";
 import type { Me } from "@/lib/types";
 import { Odjava } from "../Odjava";
 import { Ikona, Svg } from "../Svg";
+import { Lekcija } from "./Lekcija";
+import { Uvod } from "./Uvod";
+import { zvezdice } from "./zvezdice";
 
 const KURS = "osnovni";
-
-/** Napredak polaznika. U Modulu 1 dolazi sa servera (GET /api/napredak/osnovni); do tada je prazan. */
-type Napredak = {
-  zrna: number;
-  niz_dana: number;
-  najduzi_niz: number;
-  danas_zrna: number;
-  nivoi: Record<string, { zavrsen: boolean; zvezdice: number }>;
-  bedzevi: string[];
-  test: { najbolje: number; polozen: boolean };
-};
-
-const PRAZAN: Napredak = {
-  zrna: 0,
-  niz_dana: 0,
-  najduzi_niz: 0,
-  danas_zrna: 0,
-  nivoi: {},
-  bedzevi: [],
-  test: { najbolje: 0, polozen: false },
-};
+const ZVUK = "zpz-zvuk";
 
 type Tab = "put" | "igre" | "kartice" | "profil";
 const TABS: [Tab, string, string][] = [
@@ -42,29 +29,103 @@ const TABS: [Tab, string, string][] = [
 const zrnaTxt = (n: number) => `${n} ${mnozina(n, "zrno", "zrna", "zrna")}`;
 const danaTxt = (n: number) => `${n} ${mnozina(n, "dan", "dana", "dana")}`;
 
-function zvezdice(n: number) {
-  let h = `<span class="srow" aria-label="${n} od 3 zvezdice">`;
-  for (let i = 0; i < 3; i++) h += `<span class="${i < n ? "on" : ""}">${icon("star")}</span>`;
-  return h + "</span>";
+function citajZvuk() {
+  try {
+    return localStorage.getItem(ZVUK) !== "0";
+  } catch {
+    return true;
+  }
 }
 
 export function Polaznik({ me }: { me: Me }) {
   const [kurs, setKurs] = useState<Kurs | null>(null);
+  const [napredak, setNapredak] = useState<Napredak | null>(null);
   const [greska, setGreska] = useState("");
   const [tab, setTab] = useState<Tab>("put");
   const [list, setList] = useState<Nivo | null>(null);
-  const napredak = PRAZAN;
+  const [lekcija, setLekcija] = useState<{ nivo: Nivo; kljuc: number } | null>(null);
+  const [av, setAv] = useState(me.korisnik.avatar);
+  const [zvuk, setZvuk] = useState(true);
+  const zrnaRef = useRef(0);
+
+  const ucitajNapredak = useCallback(
+    () =>
+      api<Napredak>(`/api/napredak/${KURS}`)
+        .then((n) => {
+          zrnaRef.current = n.zrna;
+          setNapredak(n);
+        })
+        .catch((e: Error) => setGreska(e.message)),
+    [],
+  );
 
   useEffect(() => {
     api<SadrzajOut>(`/api/sadrzaj/${KURS}`)
-      .then((r) => setKurs(r.dokument))
+      .then((r) => {
+        RECEPTI.recepti = r.dokument.recepti;
+        RECEPTI.polja = r.dokument.recept_polja;
+        setKurs(r.dokument);
+      })
       .catch((e: Error) => setGreska(e.message));
-  }, []);
+    ucitajNapredak();
+    const z = citajZvuk();
+    setZvuk(z);
+    sfx.on = z;
+    const otkljucaj = () => sfx.unlock();
+    document.addEventListener("pointerdown", otkljucaj, { once: true });
+    return () => document.removeEventListener("pointerdown", otkljucaj);
+  }, [ucitajNapredak]);
+
+  /** Server je javio novi zbir zrna i bedževe: obaveštenja i gornja traka (artifact gain/award). */
+  const dobitak = useCallback(
+    (d: Dobitak) => {
+      if (!kurs) return;
+      const pre = rangZa(kurs, zrnaRef.current).i;
+      zrnaRef.current = d.ukupno_zrna;
+      const posle = rangZa(kurs, d.ukupno_zrna);
+      if (posle.i > pre) toast(`${icon("star")}<span>Novi rang: <b>${esc(posle.naziv)}</b></span>`, "gold");
+      for (const id of d.novi_bedzevi) {
+        const b = kurs.bedzevi.find((x) => x.id === id);
+        if (b) {
+          toast(`${medal(id, true)}<span>Novi bedž: <b>${esc(b.naziv)}</b></span>`, "badge");
+          sfx.win();
+        }
+      }
+      setNapredak((n) =>
+        n && { ...n, zrna: d.ukupno_zrna, bedzevi: [...n.bedzevi, ...d.novi_bedzevi.filter((x) => !n.bedzevi.includes(x))] },
+      );
+    },
+    [kurs],
+  );
 
   const idi = (t: Tab) => {
+    sfx.tap();
     setTab(t);
     window.scrollTo(0, 0);
   };
+
+  const pokreni = (nivo: Nivo) => {
+    setList(null);
+    sfx.tap();
+    setLekcija({ nivo, kljuc: Date.now() });
+  };
+
+  function prebaciZvuk() {
+    const z = !zvuk;
+    setZvuk(z);
+    sfx.on = z;
+    try {
+      localStorage.setItem(ZVUK, z ? "1" : "0");
+    } catch {
+      /* bez skladišta: važi do zatvaranja */
+    }
+    if (z) sfx.ok();
+  }
+
+  async function sacuvajAvatar(a: string) {
+    const r = await posalji<Me>("/api/me", "PATCH", { avatar: a });
+    setAv(r.korisnik.avatar);
+  }
 
   if (greska) {
     return (
@@ -73,14 +134,14 @@ export function Polaznik({ me }: { me: Me }) {
       </div>
     );
   }
-  if (!kurs) return <div id="app" aria-busy="true" />;
+  if (!kurs || !napredak) return <div id="app" aria-busy="true" />;
 
   const rang = rangZa(kurs, napredak.zrna);
   return (
     <div id="app">
       <header className="top">
         <button type="button" className="top-me" onClick={() => idi("profil")} aria-label="Profil">
-          <Svg html={avatar("zrno")} />
+          <Svg html={avatar(av ?? "zrno")} />
           <span className="top-rank">
             <small>{me.korisnik.ime}</small>
             <b>{rang.naziv}</b>
@@ -95,13 +156,18 @@ export function Polaznik({ me }: { me: Me }) {
             <Ikona ime="bean" />
             <b>{napredak.zrna}</b>
           </span>
+          <button type="button" className="icon-btn" onClick={prebaciZvuk} aria-label={zvuk ? "Isključi zvuk" : "Uključi zvuk"}>
+            <Ikona ime={zvuk ? "sound" : "mute"} />
+          </button>
         </div>
       </header>
       <main id="view" className={`view view-${tab}`}>
-        {tab === "put" && <Put kurs={kurs} me={me} napredak={napredak} otvori={setList} />}
+        {tab === "put" && <Put kurs={kurs} me={me} napredak={napredak} otvori={setList} pokreni={pokreni} />}
         {tab === "igre" && <Igre kurs={kurs} napredak={napredak} />}
-        {tab === "kartice" && <Kartice kurs={kurs} napredak={napredak} />}
-        {tab === "profil" && <Profil kurs={kurs} me={me} napredak={napredak} />}
+        {tab === "kartice" && <Kartice kurs={kurs} napredak={napredak} setNapredak={setNapredak} dobitak={dobitak} />}
+        {tab === "profil" && (
+          <Profil kurs={kurs} me={me} napredak={napredak} av={av} zvuk={zvuk} prebaciZvuk={prebaciZvuk} sacuvajAvatar={sacuvajAvatar} />
+        )}
       </main>
       <nav className="tabs" aria-label="Glavni meni">
         {TABS.map(([id, naziv, ik]) => (
@@ -117,7 +183,33 @@ export function Polaznik({ me }: { me: Me }) {
           </button>
         ))}
       </nav>
-      {list && <NivoList nivo={list} napredak={napredak} zatvori={() => setList(null)} />}
+      {list && <NivoList nivo={list} napredak={napredak} zatvori={() => setList(null)} pokreni={pokreni} />}
+      {lekcija && (
+        <Lekcija
+          key={lekcija.kljuc}
+          kurs={kurs}
+          nivo={lekcija.nivo}
+          dobitak={dobitak}
+          zatvori={() => {
+            setLekcija(null);
+            ucitajNapredak();
+          }}
+          sledeci={(n) => {
+            ucitajNapredak();
+            if (n) pokreni(n);
+            else setLekcija(null);
+          }}
+        />
+      )}
+      {!av && (
+        <Uvod
+          ime={me.korisnik.ime}
+          sacuvaj={async (a) => {
+            await sacuvajAvatar(a);
+            pokreni(kurs.nivoi[0]);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -126,7 +218,19 @@ export function Polaznik({ me }: { me: Me }) {
 
 const XS = [0, -1, 0, 1, 0, -1, 0, 1];
 
-function Put({ kurs, me, napredak, otvori }: { kurs: Kurs; me: Me; napredak: Napredak; otvori: (n: Nivo) => void }) {
+function Put({
+  kurs,
+  me,
+  napredak,
+  otvori,
+  pokreni,
+}: {
+  kurs: Kurs;
+  me: Me;
+  napredak: Napredak;
+  otvori: (n: Nivo) => void;
+  pokreni: (n: Nivo) => void;
+}) {
   const staza = useRef<HTMLDivElement>(null);
   const linija = useRef<SVGSVGElement>(null);
   const nivoi = kurs.nivoi;
@@ -171,6 +275,7 @@ function Put({ kurs, me, napredak, otvori }: { kurs: Kurs; me: Me; napredak: Nap
   useLayoutEffect(() => {
     nacrtaj();
     window.addEventListener("resize", nacrtaj);
+    document.fonts?.ready.then(nacrtaj);
     return () => window.removeEventListener("resize", nacrtaj);
   }, [nacrtaj, napredak]);
 
@@ -235,9 +340,13 @@ function Put({ kurs, me, napredak, otvori }: { kurs: Kurs; me: Me; napredak: Nap
         </p>
       </div>
 
-      {tekuciNivo && (
-        <button type="button" className="btn btn-gold btn-big" onClick={() => otvori(tekuciNivo)}>
+      {tekuciNivo ? (
+        <button type="button" className="btn btn-gold btn-big" onClick={() => pokreni(tekuciNivo)}>
           {gotovo ? "Nastavi" : "Počni"} · Nivo {tekuciNivo.n}
+        </button>
+      ) : (
+        <button type="button" className="btn btn-gold btn-big" onClick={() => toast("Završni test stiže uskoro.")}>
+          Završni test
         </button>
       )}
 
@@ -266,7 +375,15 @@ function Put({ kurs, me, napredak, otvori }: { kurs: Kurs; me: Me; napredak: Nap
                     type="button"
                     className={`node is-${stanje}`}
                     aria-label={`Nivo ${n.n}: ${n.title}${done ? ", završen" : unl ? "" : ", zaključan"}`}
-                    onClick={() => unl && otvori(n)}
+                    onClick={() => {
+                      if (unl) {
+                        sfx.tap();
+                        otvori(n);
+                      } else {
+                        sfx.bad();
+                        toast(`Prvo završi nivo ${n.n - 1}.`);
+                      }
+                    }}
                   >
                     <Svg html={BEAN} />
                     <span className="node-n">{stanje === "locked" ? <Ikona ime="lock" /> : n.n}</span>
@@ -292,6 +409,9 @@ function Put({ kurs, me, napredak, otvori }: { kurs: Kurs; me: Me; napredak: Nap
             type="button"
             className={`node node-final ${napredak.test.polozen ? "is-done" : sviGotovi ? "is-current" : "is-locked"}`}
             aria-label="Završni test"
+            onClick={() =>
+              toast(sviGotovi ? "Završni test stiže uskoro." : "Završni test se otključava posle svih 8 nivoa.")
+            }
           >
             <Ikona ime={sviGotovi ? "trophy" : "lock"} />
           </button>
@@ -307,7 +427,17 @@ function Put({ kurs, me, napredak, otvori }: { kurs: Kurs; me: Me; napredak: Nap
   );
 }
 
-function NivoList({ nivo, napredak, zatvori }: { nivo: Nivo; napredak: Napredak; zatvori: () => void }) {
+function NivoList({
+  nivo,
+  napredak,
+  zatvori,
+  pokreni,
+}: {
+  nivo: Nivo;
+  napredak: Napredak;
+  zatvori: () => void;
+  pokreni: (n: Nivo) => void;
+}) {
   const zapamti = nivo.steps.filter((s) => s.remember).slice(0, 4);
   const izazova = nivo.steps.filter((s) => IZAZOVI.includes(s.t)).length;
   const stanje = napredak.nivoi[nivo.id];
@@ -345,11 +475,8 @@ function NivoList({ nivo, napredak, zatvori }: { nivo: Nivo; napredak: Napredak;
               </li>
             ))}
           </ul>
-          <button type="button" className="btn btn-gold btn-big" disabled>
-            Lekcije stižu uskoro
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={zatvori}>
-            Zatvori
+          <button type="button" className="btn btn-gold btn-big" onClick={() => pokreni(nivo)} autoFocus>
+            {stanje?.zavrsen ? "Ponovi nivo" : "Započni"}
           </button>
         </div>
       </div>
@@ -370,7 +497,16 @@ function Igre({ kurs, napredak }: { kurs: Kurs; napredak: Napredak }) {
           const nivo = kurs.nivoi.find((n) => n.id === g.after)!;
           const otvorena = !!napredak.nivoi[g.after]?.zavrsen;
           return (
-            <button key={g.id} type="button" className={`gcard${otvorena ? "" : " locked"}`} aria-disabled={!otvorena}>
+            <button
+              key={g.id}
+              type="button"
+              className={`gcard${otvorena ? "" : " locked"}`}
+              aria-disabled={!otvorena}
+              onClick={() => {
+                sfx.tap();
+                toast(otvorena ? "Igraonica stiže uskoro." : `Igra se otključava posle nivoa ${nivo.n}.`);
+              }}
+            >
               <span className="gcard-art" style={{ "--gc": g.color } as React.CSSProperties}>
                 <Ikona ime={g.ic} />
               </span>
@@ -396,56 +532,225 @@ function Igre({ kurs, napredak }: { kurs: Kurs; napredak: Napredak }) {
   );
 }
 
-/* ---------- KARTICE: minimum lista (rečnik sa okretanjem kartica stiže u Modulu 1) ---------- */
+/* ---------- KARTICE: rečnik za okretanje i minimum lista (artifact app.js karticeScreen) ---------- */
 
-function Kartice({ kurs, napredak }: { kurs: Kurs; napredak: Napredak }) {
+function Kartice({
+  kurs,
+  napredak,
+  setNapredak,
+  dobitak,
+}: {
+  kurs: Kurs;
+  napredak: Napredak;
+  setNapredak: React.Dispatch<React.SetStateAction<Napredak | null>>;
+  dobitak: (d: Dobitak) => void;
+}) {
+  const [nacin, setNacin] = useState<"kartice" | "minimum">("kartice");
+  const [filter, setFilter] = useState("all");
+  const [idx, setIdx] = useState(0);
+  const [okrenuta, setOkrenuta] = useState(false);
+  const lista = kurs.pojmovi.filter((p) => filter === "all" || p.nivo === filter);
+  const p = lista[idx % Math.max(1, lista.length)];
+  const zna = lista.filter((x) => napredak.kartice[x.id]).length;
+
+  const pomeri = useCallback(
+    (korak: number) => {
+      setOkrenuta(false);
+      setIdx((i) => (i + korak + lista.length) % Math.max(1, lista.length));
+    },
+    [lista.length],
+  );
+
+  async function oceni(znam: boolean) {
+    if (!p) return;
+    znam ? sfx.ok() : sfx.tap();
+    setNapredak((n) => n && { ...n, kartice: { ...n.kartice, [p.id]: znam } });
+    pomeri(1);
+    try {
+      dobitak(await oznaciKarticu(kurs.kurs.kljuc, p.id, znam));
+    } catch (e) {
+      toast(esc((e as Error).message));
+    }
+  }
+
+  useEffect(() => {
+    if (nacin !== "kartice") return;
+    const strelice = (e: KeyboardEvent) => {
+      if (document.querySelector(".sheet-wrap, #ov")) return;
+      if (e.key === "ArrowRight") pomeri(1);
+      else if (e.key === "ArrowLeft") pomeri(-1);
+    };
+    window.addEventListener("keydown", strelice);
+    return () => window.removeEventListener("keydown", strelice);
+  }, [nacin, pomeri]);
+
+  const seg = (
+    <div className="seg" role="group" aria-label="Prikaz">
+      <button type="button" aria-pressed={nacin === "kartice"} onClick={() => setNacin("kartice")}>
+        Kartice
+      </button>
+      <button type="button" aria-pressed={nacin === "minimum"} onClick={() => setNacin("minimum")}>
+        Minimum lista
+      </button>
+    </div>
+  );
+
+  if (nacin === "minimum") {
+    return (
+      <section className="kartice">
+        <p className="eyebrow">Učionica</p>
+        <h1 className="h1">Šta moraš da znaš</h1>
+        {seg}
+        <p className="lead">
+          Ovo je minimum pre prvog dana kursa. Svaka stavka je „Zapamti“ kartica iz nivoa. Kad završiš nivo, stavke se
+          štikliraju.
+        </p>
+        <div className="minl">
+          {kurs.nivoi.map((n) => {
+            const gotov = !!napredak.nivoi[n.id]?.zavrsen;
+            return (
+              <section key={n.id} style={{ "--mc": n.color } as React.CSSProperties}>
+                <h3 className="minl-h">
+                  <Ikona ime={n.icon} />
+                  <span>
+                    Nivo {n.n} · {n.title}
+                  </span>
+                </h3>
+                <ul>
+                  {n.steps
+                    .filter((s) => s.remember)
+                    .map((s) => (
+                      <li key={s.id} className={gotov ? "on" : ""}>
+                        <Ikona ime={gotov ? "check" : "target"} />
+                        <span dangerouslySetInnerHTML={{ __html: md(String(s.remember)) }} />
+                      </li>
+                    ))}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
+
+  const nivoPojma = p ? kurs.nivoi.find((n) => n.id === p.nivo) : undefined;
   return (
     <section className="kartice">
       <p className="eyebrow">Učionica</p>
-      <h1 className="h1">Šta moraš da znaš</h1>
-      <p className="lead">
-        Ovo je minimum pre prvog dana kursa. Svaka stavka je „Zapamti“ kartica iz nivoa. Kad završiš nivo, stavke se štikliraju.
-      </p>
-      <div className="minl">
-        {kurs.nivoi.map((n) => {
-          const gotov = !!napredak.nivoi[n.id]?.zavrsen;
-          return (
-            <section key={n.id} style={{ "--mc": n.color } as React.CSSProperties}>
-              <h3 className="minl-h">
-                <Ikona ime={n.icon} />
-                <span>
-                  Nivo {n.n} · {n.title}
-                </span>
-              </h3>
-              <ul>
-                {n.steps
-                  .filter((s) => s.remember)
-                  .map((s) => (
-                    <li key={s.id} className={gotov ? "on" : ""}>
-                      <Ikona ime={gotov ? "check" : "target"} />
-                      <span dangerouslySetInnerHTML={{ __html: md(String(s.remember)) }} />
-                    </li>
-                  ))}
-              </ul>
-            </section>
-          );
-        })}
+      <h1 className="h1">Rečnik bariste</h1>
+      {seg}
+      <div className="chips" role="group" aria-label="Filter po nivou">
+        <button
+          type="button"
+          className={`chip${filter === "all" ? " on" : ""}`}
+          onClick={() => {
+            setFilter("all");
+            setIdx(0);
+            setOkrenuta(false);
+          }}
+        >
+          Svi
+        </button>
+        {kurs.nivoi.map((n) => (
+          <button
+            key={n.id}
+            type="button"
+            className={`chip${filter === n.id ? " on" : ""}`}
+            onClick={() => {
+              setFilter(n.id);
+              setIdx(0);
+              setOkrenuta(false);
+            }}
+          >
+            N{n.n}
+          </button>
+        ))}
       </div>
+      <div className="flash-meta">
+        <span>
+          {lista.length ? (idx % lista.length) + 1 : 0} / {lista.length}
+        </span>
+        <span>
+          Znaš: <b>{zna}</b>
+        </span>
+      </div>
+      {p && nivoPojma && (
+        <div className="flash-host">
+          <button
+            type="button"
+            className={`flash${okrenuta ? " flip" : ""}`}
+            aria-label={`Okreni karticu: ${p.pojam}`}
+            onClick={() => {
+              setOkrenuta(!okrenuta);
+              sfx.tap();
+            }}
+          >
+            <span className="flash-in">
+              <span className="flash-face">
+                <span className="flash-tag" style={{ "--mc": nivoPojma.color } as React.CSSProperties}>
+                  Nivo {nivoPojma.n}
+                </span>
+                <b className="flash-term">{p.pojam}</b>
+                {napredak.kartice[p.id] && (
+                  <span className="flash-known">
+                    <Ikona ime="check" />
+                    znaš
+                  </span>
+                )}
+              </span>
+              <span className="flash-face flash-back">
+                <span className="flash-def">{p.opis}</span>
+              </span>
+            </span>
+          </button>
+        </div>
+      )}
+      <div className="flash-act">
+        <button type="button" className="btn" onClick={() => oceni(false)}>
+          Ponovi
+        </button>
+        <button type="button" className="btn btn-leaf" onClick={() => oceni(true)}>
+          <Ikona ime="check" />
+          Znam
+        </button>
+      </div>
+      <p className="hint">Tapni karticu da je okreneš. Strelice levo-desno listaju.</p>
     </section>
   );
 }
 
 /* ---------- PROFIL ---------- */
 
-function Profil({ kurs, me, napredak }: { kurs: Kurs; me: Me; napredak: Napredak }) {
+function Profil({
+  kurs,
+  me,
+  napredak,
+  av,
+  zvuk,
+  prebaciZvuk,
+  sacuvajAvatar,
+}: {
+  kurs: Kurs;
+  me: Me;
+  napredak: Napredak;
+  av: string | null;
+  zvuk: boolean;
+  prebaciZvuk: () => void;
+  sacuvajAvatar: (a: string) => Promise<void>;
+}) {
+  const [biram, setBiram] = useState(false);
   const rang = rangZa(kurs, napredak.zrna);
   const gotovo = kurs.nivoi.filter((n) => napredak.nivoi[n.id]?.zavrsen).length;
   return (
     <section className="profil">
       <div className="phead">
-        <span className="pav">
-          <Svg html={avatar("zrno")} />
-        </span>
+        <button type="button" className="pav" aria-label="Promeni avatar" onClick={() => setBiram(true)}>
+          <Svg html={avatar(av ?? "zrno")} />
+          <span className="pav-edit">
+            <Ikona ime="edit" />
+          </span>
+        </button>
         <div>
           <p className="eyebrow">{rang.naziv}</p>
           <h1 className="h1">
@@ -491,8 +796,22 @@ function Profil({ kurs, me, napredak }: { kurs: Kurs; me: Me; napredak: Napredak
           );
         })}
       </div>
-      <h2 className="h2 sec-h">Nalog</h2>
+      <h2 className="h2 sec-h">Podešavanja</h2>
       <div className="settings card">
+        <button type="button" className="set-row" onClick={prebaciZvuk}>
+          <span>
+            <Ikona ime={zvuk ? "sound" : "mute"} />
+            Zvuk
+          </span>
+          <b>{zvuk ? "Uključen" : "Isključen"}</b>
+        </button>
+        <button type="button" className="set-row" onClick={() => setBiram(true)}>
+          <span>
+            <Ikona ime="edit" />
+            Avatar
+          </span>
+          <b>{(avatars as Record<string, { t: string }>)[av ?? "zrno"]?.t}</b>
+        </button>
         <div className="set-row">
           <span>
             <Ikona ime="user" />
@@ -515,6 +834,34 @@ function Profil({ kurs, me, napredak }: { kurs: Kurs; me: Me; napredak: Napredak
         Napredak se čuva na tvom nalogu, pa možeš da nastaviš i sa drugog telefona.
       </p>
       <Odjava />
+      {biram && (
+        <div className="sheet-wrap" onClick={(e) => e.target === e.currentTarget && setBiram(false)}>
+          <div className="sheet" role="dialog" aria-modal="true" aria-label="Avatar">
+            <div className="edit-form">
+              <h2 className="h2">Avatar</h2>
+              <div className="avs-grid">
+                {Object.entries(avatars as Record<string, { t: string }>).map(([k, a]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    className={`avpick${k === av ? " on" : ""}`}
+                    aria-label={a.t}
+                    aria-pressed={k === av}
+                    onClick={async () => {
+                      sfx.tap();
+                      await sacuvajAvatar(k);
+                      setBiram(false);
+                    }}
+                  >
+                    <Svg html={avatar(k)} />
+                    <span>{a.t}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -54,7 +54,7 @@ def main() -> None:
             if "--demo" in sys.argv:
                 lokal = db.scalar(select(Lokal).where(Lokal.naziv == DEMO_LOKAL))
                 if lokal is None:
-                    lokal = Lokal(naziv=DEMO_LOKAL, grad="Beograd", aktivan=True)
+                    lokal = Lokal(naziv=DEMO_LOKAL, grad="Beograd", aktivan=True, izvor="demo")
                     db.add(lokal)
                     db.flush()
                 _korisnik(db, "trener@kafeterija.test", ime="Trener", prezime="Test", email="trener@kafeterija.test",
