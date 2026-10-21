@@ -104,6 +104,8 @@ def test_igre_i_lokali(prijavi, dokument):
     igraj(c, "milk", 1)
     igraj(c, "milk", 0.5, izvor="unity")
     igraj(c, "dialin", 0.5, kontekst="lekcija")
+    igraj(c, "smena", 0.8, 500, detalji={"kategorije": {"doza": 1, "sot": 0.5}})
+    igraj(c, "smena", 0.6, 300, detalji={"kategorije": {"doza": 0.8, "sot": 0.2, "mleko": 0.9}})
     uradi(c, dokument)
     c.post("/api/auth/odjava")
 
@@ -111,6 +113,7 @@ def test_igre_i_lokali(prijavi, dokument):
     igre = {g["igra"]: g for g in c.get("/api/admin/statistika/igre").json()}
     assert (igre["milk"]["igranja"], igre["milk"]["igraca"], igre["milk"]["prosek"], igre["milk"]["tri_zvezdice"], igre["milk"]["unity"]) == (2, 1, 75, 50, 1)
     assert igre["dialin"]["iz_lekcija"] == 1 and igre["swipe"]["igranja"] == 0
+    assert igre["smena"]["stanice"] == {"doza": 90, "sot": 35, "mleko": 90} and igre["milk"]["stanice"] is None
 
     lokali = {x["naziv"]: x for x in c.get("/api/admin/statistika/lokali").json()}
     a = lokali["Lokal A"]

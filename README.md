@@ -34,7 +34,7 @@ npm install
 npm run dev                     # http://localhost:3001
 ```
 
-Sledeći put je dovoljno: Docker Desktop upaljen, `docker compose up -d db`, pa `uvicorn` u `backend` i `npm run dev` u `frontend`. Posle `git pull` pokreni još `.venv\Scripts\pip install -r requirements-dev.txt`, `.venv\Scripts\alembic upgrade head` i `npm install`, za slučaj da ima nečeg novog.
+Sledeći put je dovoljno: Docker Desktop upaljen, `docker compose up -d db`, pa `uvicorn` u `backend` i `npm run dev` u `frontend`. Posle `git pull` pokreni još `.venv\Scripts\pip install -r requirements-dev.txt`, `.venv\Scripts\alembic upgrade head`, `.venv\Scripts\python seed.py --samo-sadrzaj` i `npm install`, za slučaj da ima nečeg novog.
 
 (WSL/Linux: `.venv/bin/...` umesto `.venv\Scripts\...`, `cp` umesto `copy`.)
 
@@ -112,6 +112,22 @@ npm run build
 3. Brza runda pita samo tvrdnje iz završenih nivoa. 15+ poena daje bedž „Brzi prsti”; 3 zvezdice u Kralju pare ili Sipaj srce daju svoje bedževe.
 4. Igra kao korak lekcije (nivoi 5, 7 i 8) se računa i za bedževe, a zrna idu kroz lekciju.
 5. Kartica igre u igraonici prikazuje rekord i zvezdice.
+
+## Kako se testira Smena u Kafeteriji
+
+Igra u stilu Papa's igara: gosti poručuju, polaznik pravi piće kroz pet stanica. Otključava se posle nivoa 5; pića sa mlekom posle nivoa 8.
+
+1. Posle `git pull` pokreni `npm install` u `frontend` (nova biblioteka Phaser) i uvezi sadržaj (meni i igra su u njemu): u `backend` `.venv\Scripts\python seed.py --samo-sadrzaj`. Uvoz pravi novu objavljenu verziju iz fajla, pa izmene kursa napravljene u uređivaču treba ponoviti posle njega.
+2. Kao polaznik: Igre → Smena u Kafeteriji → Otvori kafić.
+3. Kasa: Primi porudžbinu. Porudžbina visi na traci gore; tap na kartu bira na kojoj radiš. Žuta tačka na dnu pokazuje sledeću stanicu.
+4. Mlin: drži Melji do doze iz recepta (mlin dobaci još malo posle puštanja), pa drži Tampuj i pusti u zelenom (13–20 kg). Granulacija (− / +) važi za sledeće šotove.
+5. Aparat: tap na šolju gore je stavlja na vagu, Tara, Ubaci portafilter, Start, Stop kad vaga pokaže prinos. Prebrz ili spor šot znači da treba promeniti granulaciju. Pa Očisti grupu.
+6. Mleko: tap na tetrapak koji je gost tražio, drži Sipaj do količine iz recepta, Para. Prevlačenjem gore-dole menjaš dubinu vrha: na površini ulazi vazduh, potopljen pravi vrtlog. Isključi paru u zelenoj zoni.
+7. Šank: drži Sipaj sa visine do pola, Spusti latijeru i sipaj belu tačku, Posluži. Gost oceni svaki korak i ostavi napojnicu; ko ne otvori Recept dobija +20 din.
+8. Posle 5 gostiju: kraj smene sa ocenom po stanicama i savetima. 3 zvezdice daju bedž „Šef smene”.
+9. Admin → Igre: ispod tabele „Smena u Kafeteriji: stanice” pokazuje prosek po koraku za izabrani lokal.
+
+Meni (pića, šolje, vrste mleka) je u sadržaju kursa, ključ `meni` u `backend/modules/sadrzaj/data/osnovni-nivo.json`. Trenutno je privremen, sa uobičajenim vrednostima; pravi meni Kafeterije se upisuje tamo (doza, prinos i vreme šota, šolja, mleko u ml, temperatura i pena), pa `seed.py --samo-sadrzaj`.
 
 ## Kako se testira Modul 3
 

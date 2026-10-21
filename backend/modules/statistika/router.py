@@ -263,6 +263,17 @@ class IgraStat(BaseModel):
     tri_zvezdice: int
     iz_lekcija: int
     unity: int
+    # Smena: prosek po stanici (doza, šot, mleko...) u procentima, da trener vidi gde se greši
+    stanice: dict[str, int] | None = None
+
+
+def _stanice(r: list[RezultatIgre]) -> dict[str, int] | None:
+    zbir: dict[str, list[float]] = {}
+    for x in r:
+        for kat, v in ((x.detalji or {}).get("kategorije") or {}).items():
+            if isinstance(v, (int, float)) and not isinstance(v, bool):
+                zbir.setdefault(kat, []).append(float(v))
+    return {k: round(sum(v) / len(v) * 100) for k, v in zbir.items()} or None
 
 
 @router.get("/igre", response_model=list[IgraStat])
@@ -285,6 +296,7 @@ def igre(
                 tri_zvezdice=round(sum(1 for x in r if x.zvezdice == 3) / len(r) * 100) if r else 0,
                 iz_lekcija=sum(1 for x in r if x.kontekst == "lekcija"),
                 unity=sum(1 for x in r if x.izvor == "unity"),
+                stanice=_stanice(r) if g["id"] == "smena" else None,
             )
         )
     return out

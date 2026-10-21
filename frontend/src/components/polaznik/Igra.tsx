@@ -12,7 +12,7 @@ import type { IgraOpis, Kurs } from "@/lib/sadrzaj";
 import { Ikona } from "../Svg";
 
 /** Igre koje imaju dugme "Igraj ponovo" (ostale same nude novu rundu, kao u artifactu). */
-const PONOVO: IgraId[] = ["swipe", "dialin", "recipe"];
+const PONOVO: IgraId[] = ["swipe", "dialin", "recipe", "smena"];
 
 /** Igraonica (artifact app.js openGame): igra preko celog ekrana, rezultat ide serveru po ugovoru. */
 export function Igra({
@@ -47,7 +47,11 @@ export function Igra({
     const { pokreni, izvor } = pokretac(id, igra.implementacija);
     const inst = pokreni(
       host,
-      { igra_id: id, konfiguracija: { mod: "igraonica", pitanja }, podesavanja: podesavanja() },
+      {
+        igra_id: id,
+        konfiguracija: { mod: "igraonica", pitanja, meni: kurs.meni, zavrseni: zavrseni.map((n) => n.id) },
+        podesavanja: podesavanja(),
+      },
       (r: RezultatIgre) => {
         if (r.zvezdice === 3) confetti.burst(70);
         posaljiRezultat(kurs.kurs.kljuc, { ...r, izvor }, "igraonica")
@@ -82,7 +86,7 @@ export function Igra({
 
   return (
     <div id="ov">
-      <div className="ls gv" style={{ "--mc": igra.color } as React.CSSProperties}>
+      <div className={`ls gv${id === "smena" ? " gv-pun" : ""}`} style={{ "--mc": igra.color } as React.CSSProperties}>
         <div className="ls-top">
           <button type="button" className="icon-btn" aria-label="Zatvori" onClick={zatvori}>
             <Ikona ime="close" />
@@ -97,7 +101,8 @@ export function Igra({
           {/* igra crta sama u ovaj element (canvas ili Unity), React ga ne dira */}
           <div className="game-host" ref={hostRef} key={runda} />
         </div>
-        <div className="ls-foot">
+        {/* Smena koristi ceo ekran; dno se pojavi tek sa rezultatom */}
+        <div className="ls-foot" hidden={id === "smena" && !rezultat && !naCekanju && !greska}>
           {greska && (
             <p className="note bad" role="alert">
               <Ikona ime="info" />

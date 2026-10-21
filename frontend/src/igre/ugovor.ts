@@ -6,7 +6,7 @@
  * Tako Unity verzija može da zameni JS verziju bez izmene ostatka sistema.
  */
 
-export type IgraId = "swipe" | "dialin" | "recipe" | "milk" | "latte";
+export type IgraId = "swipe" | "dialin" | "recipe" | "milk" | "latte" | "smena";
 
 export type Implementacija = "js" | "unity";
 

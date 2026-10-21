@@ -328,6 +328,10 @@ input[type=range]:disabled { opacity: .6; cursor: default; }
 
 /* igre */
 .game { display: grid; gap: 12px; }
+.gv-pun .ls-body { display: flex; padding: 0; overflow: hidden; }
+.gv-pun .game-host { flex: 1; min-width: 0; min-height: 0; overflow: hidden; background: var(--bg); }
+.gv-pun .ls-foot[hidden] { display: none; }
+.game-ucitava { margin: 40px 16px; color: var(--ink-2); font: 700 16px var(--font-body); text-align: center; }
 .g-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
 .g-goal { color: var(--ink); }
 .g-brief { margin: 0; font-weight: 600; }

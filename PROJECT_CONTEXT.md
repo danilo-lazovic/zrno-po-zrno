@@ -45,6 +45,16 @@ Pravila koja se ne krše:
 - Unity igra menja JS verziju tek kad prođe proveru na telefonima: veličina builda, vreme učitavanja i rad na iOS Safariju. Ako ne prođe, ostaje zaseban portfolio projekat (ili kasnije native app).
 - Koja implementacija se koristi za koju igru je podešavanje (`igre[].implementacija` u sadržaju kursa), ne izmena koda.
 
+## Smena u Kafeteriji (odluka 21.10.2026.)
+
+- 3D proba (three.js, Blender) je uklonjena: nije davala osećaj prave igre. Pravac je igra u stilu Papa's igara (2D, crtani stil, tok smene), u pregledaču, bez Unity-ja.
+- Igra `smena` (`frontend/src/igre/smena/`): Phaser 3, učitava se tek kad se otvori (≈ 330 KB gzip), service worker je pamti za rad bez mreže. Ekran 1080 × 1920, uspravan telefon.
+- Tok: kasa (porudžbina) → mlin (doza, tamp, granulacija) → aparat (šolja, tara, šot na vagi i tajmeru) → mleko (vrsta, količina, para: vazduh pa vrtlog, temperatura) → šank (sipanje, crtež, posluženje). Više porudžbina istovremeno; šot teče i dok si na drugoj stanici.
+- Gost ocenjuje po stanicama (`model.ts`, `oceni`): doza, tamp, šot (prinos i vreme), procedura (tara), šolja, mleko (vrsta, temperatura, pena, spajanje, mehurići), sipanje (puno, crtež), čekanje. Prosek se umanjuje prema najslabijoj stanici; pogrešna vrsta mleka obara piće. Napojnica raste sa ocenom; +20 din za piće bez otvaranja recepta.
+- Rezultat po ugovoru igre: `rezultat` je prosek gostiju, `poeni` su napojnice, `detalji.kategorije` su proseci po stanici. Statistika (Admin → Igre) iz njih pravi prosek po stanici, da trener vidi šta se vežba za šankom.
+- Crteži su SVG iz koda (`crtezi.ts`) u Kafeterija stilu: ravne boje, debela crna ivica, tvrda senka; logo iz `public/brand/`. Gosti se slažu iz delova (koža, kosa, frizura, majica, naočare, kapa, brada) sa četiri raspoloženja.
+- Meni je deo sadržaja kursa (`meni`: pića, šolje, vrste mleka; svako piće se otključava posle svog nivoa). Server proverava meni pri objavi. Trenutni meni je privremen dok ne stignu recepture Kafeterije.
+
 ## Uloge
 
 | Uloga | Prijava | Vidi i radi |
@@ -169,7 +179,7 @@ Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 - Zapeo: postavio PIN, nije položio test i nema aktivnosti 7+ dana (računa se i od prijave ili otvaranja naloga ako nikad nije učio).
 - Levak: koliko polaznika je postavilo PIN, završilo svaki nivo i položilo test; procenat je u odnosu na prvi red.
 - Pitanja: tačnost je prosek rezultata (0–1) svih odgovora; prikazuju se pitanja sa bar 3 odgovora, najteža prva. Najčešći pogrešan odgovor se vidi za izbor i klizač.
-- Igre: igranja iz igraonice i iz lekcija, prosečan rezultat, udeo igranja sa 3 zvezdice, broj igranja Unity verzije.
+- Igre: igranja iz igraonice i iz lekcija, prosečan rezultat, udeo igranja sa 3 zvezdice, broj igranja Unity verzije. Za Smenu i prosek po stanici.
 - Grafikoni: jedna serija u boji `--graf` (#2D6FD6 svetlo, #5A92EC tamno; provereno validatorom palete), broj na najvišem i poslednjem stubiću, ostalo u oblačiću, „Tabela” za iste brojeve kao tekst.
 
 ## Uređivač sadržaja (Modul 5)

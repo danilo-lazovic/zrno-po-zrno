@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Procenat } from "@/components/admin/grafikoni";
 import { IzborLokala } from "@/components/admin/IzborLokala";
+import { KATEGORIJE } from "@/igre/smena/model";
 import { upit, useAdminKurs } from "@/lib/adminKurs";
 import { api } from "@/lib/api";
 import type { IgraStat } from "@/lib/statistika";
@@ -61,6 +62,29 @@ export default function IgreStrana() {
             ))}
           </tbody>
         </table>
+      )}
+      {lista?.map(
+        (g) =>
+          g.stanice && (
+            <section className="panel" key={`st-${g.igra}`} style={{ marginTop: 16 }}>
+              <h2 className="h2">{g.naziv}: stanice</h2>
+              <p className="sub">Prosečna ocena gostiju po koraku. Najniži red je ono što treba vežbati za šankom.</p>
+              <table className="tabela">
+                <tbody>
+                  {KATEGORIJE.filter((c) => g.stanice![c.id] != null)
+                    .sort((a, b) => g.stanice![a.id] - g.stanice![b.id])
+                    .map((c) => (
+                      <tr key={c.id}>
+                        <td>{c.naziv}</td>
+                        <td>
+                          <Procenat v={g.stanice![c.id]} />
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </section>
+          ),
       )}
     </>
   );

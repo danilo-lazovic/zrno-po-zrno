@@ -67,6 +67,8 @@ def _bedzevi(db: Session, uid: int, kid: int, body: RezultatIn, zvezdice: int, n
         b.dodeli_bedz(db, uid, kid, "milk", novi)
     if igra == "latte" and zvezdice == 3:
         b.dodeli_bedz(db, uid, kid, "latte", novi)
+    if igra == "smena" and zvezdice == 3:
+        b.dodeli_bedz(db, uid, kid, "smena", novi)
     if igra == "dialin" and body.rezultat > 0.2:
         b.dodeli_bedz(db, uid, kid, "dial", novi)
     if igra == "recipe":

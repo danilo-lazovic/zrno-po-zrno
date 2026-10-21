@@ -140,7 +140,54 @@ def greske_sadrzaja(dok: dict[str, Any]) -> list[str]:
             greske.append(f"igra {g.get('id')}: otključava se posle nepoznatog nivoa {g.get('after')}")
         if g.get("implementacija", "js") not in ("js", "unity"):
             greske.append(f"igra {g.get('id')}: implementacija mora biti js ili unity")
+    if "meni" in dok:
+        _proveri_meni(dok["meni"], nivoi, greske)
+    elif any(g.get("id") == "smena" for g in dok["igre"]):
+        greske.append("igra smena: kurs nema meni")
     return greske
+
+
+def _opseg(x: Any) -> bool:
+    return (
+        isinstance(x, list) and len(x) == 2 and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in x)
+        and 0 <= x[0] <= x[1]
+    )
+
+
+def _proveri_meni(meni: Any, nivoi: set[str], greske: list[str]) -> None:
+    """Meni za igru Smena (frontend/src/igre/smena/meni.ts): pića, šolje i vrste mleka."""
+    if not isinstance(meni, dict) or not all(isinstance(meni.get(k), list) and meni[k] for k in ("pica", "solje", "mleka")):
+        greske.append("meni: treba pića, šolje i vrste mleka")
+        return
+    solje = {s.get("id") for s in meni["solje"] if isinstance(s, dict)}
+    for s in meni["solje"]:
+        if not (isinstance(s, dict) and s.get("id") and str(s.get("naziv", "")).strip() and isinstance(s.get("ml"), int) and s["ml"] > 0
+                and isinstance(s.get("g"), int) and s.get("oblik") in ("soljica", "solja", "casa")):
+            greske.append(f"meni, šolja {s.get('id') if isinstance(s, dict) else s}: treba id, naziv, ml, g i oblik (soljica, solja, casa)")
+    for m in meni["mleka"]:
+        if not (isinstance(m, dict) and m.get("id") and str(m.get("naziv", "")).strip() and str(m.get("boja", "")).startswith("#")):
+            greske.append(f"meni, mleko {m.get('id') if isinstance(m, dict) else m}: treba id, naziv i boju (#rrggbb)")
+    vidjeni: set[str] = set()
+    for p in meni["pica"]:
+        gde = f"meni, piće {p.get('id') if isinstance(p, dict) else p}"
+        if not isinstance(p, dict) or not p.get("id") or p["id"] in vidjeni:
+            greske.append(f"{gde}: nema id ili se ponavlja")
+            continue
+        vidjeni.add(p["id"])
+        if not str(p.get("naziv", "")).strip():
+            greske.append(f"{gde}: nema naziv")
+        if p.get("after") not in nivoi:
+            greske.append(f"{gde}: otključava se posle nepoznatog nivoa {p.get('after')}")
+        if p.get("solja") not in solje:
+            greske.append(f"{gde}: nepoznata šolja {p.get('solja')}")
+        e = p.get("espreso")
+        if not (isinstance(e, dict) and all(_opseg(e.get(k)) for k in ("doza", "prinos", "vreme"))):
+            greske.append(f"{gde}: espreso treba doza, prinos i vreme kao [od, do]")
+        m = p.get("mleko")
+        if m is not None and not (
+            isinstance(m, dict) and _opseg(m.get("ml")) and _opseg(m.get("temp")) and m.get("pena") in ("tanka", "srednja", "gusta")
+        ):
+            greske.append(f"{gde}: mleko treba ml i temp kao [od, do] i penu (tanka, srednja, gusta)")
 
 
 def proveri(dok: dict[str, Any]) -> None:

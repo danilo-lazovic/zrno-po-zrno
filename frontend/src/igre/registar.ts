@@ -5,6 +5,7 @@
 
 import * as G from "@/lib/igre";
 import { sfx } from "@/lib/jezgro";
+import type { Meni } from "./smena/meni";
 import { type IgraId, type Implementacija, type PokreniIgru, zvezdiceZa } from "./ugovor";
 
 /** Konfiguracija koju aplikacija daje igri (ulaz.konfiguracija). */
@@ -13,9 +14,12 @@ export type KonfiguracijaIgre = {
   mod: "lekcija" | "igraonica";
   /** Brza runda: tvrdnje iz završenih nivoa */
   pitanja?: { id: string; q: string; a: boolean }[];
+  /** Smena: meni kursa i završeni nivoi (otključavaju pića) */
+  meni?: Meni;
+  zavrseni?: string[];
 };
 
-const JS_FUNKCIJA: Record<IgraId, string> = {
+const JS_FUNKCIJA: Partial<Record<IgraId, string>> = {
   swipe: "swipeGame",
   dialin: "dialin",
   recipe: "recipe",
@@ -32,7 +36,7 @@ function jsIgra(id: IgraId): PokreniIgru {
     const konf = ulaz.konfiguracija as KonfiguracijaIgre;
     sfx.on = ulaz.podesavanja.zvuk;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pokreni = (G as any)[JS_FUNKCIJA[id]];
+    const pokreni = (G as any)[JS_FUNKCIJA[id]!];
     const inst = pokreni(host, {
       mode: konf.mod === "lekcija" ? "lesson" : "arcade",
       items: konf.pitanja?.map((p) => [p.q, p.a]) ?? null,
@@ -53,6 +57,35 @@ function jsIgra(id: IgraId): PokreniIgru {
 }
 
 /**
+ * Veće JS igre (Phaser) se učitavaju tek kad se otvore, da ne opterećuju ostatak aplikacije.
+ * Service worker pamti njihov kod posle prvog otvaranja, pa rade i bez mreže.
+ */
+const LENJE: Partial<Record<IgraId, () => Promise<PokreniIgru>>> = {
+  smena: () => import("./smena/igra").then((m) => m.smena),
+};
+
+function lenjaIgra(id: IgraId): PokreniIgru {
+  return (host, ulaz, gotovo) => {
+    let inst: { unisti(): void } | null = null;
+    let ugasena = false;
+    host.innerHTML = '<p class="game-ucitava">Učitavam igru…</p>';
+    LENJE[id]!()
+      .then((pokreni) => {
+        if (!ugasena) inst = pokreni(host, ulaz, gotovo);
+      })
+      .catch(() => {
+        if (!ugasena) host.innerHTML = '<p class="game-ucitava">Igra nije stigla. Proveri mrežu i otvori je ponovo.</p>';
+      });
+    return {
+      unisti: () => {
+        ugasena = true;
+        inst?.unisti();
+      },
+    };
+  };
+}
+
+/**
  * Unity WebGL igre: kad igra prođe proveru na telefonima (veličina builda, učitavanje, iOS Safari),
  * ovde se upisuje njen pokretač (react-unity-webgl + JS bridge koji na kraju zove `gotovo` sa istim rezultatom).
  * Dok igre nema u ovoj mapi, sadržaj sa `implementacija: "unity"` koristi JS verziju.
@@ -61,7 +94,8 @@ const UNITY: Partial<Record<IgraId, PokreniIgru>> = {};
 
 export function pokretac(igra: IgraId, implementacija: Implementacija = "js"): { pokreni: PokreniIgru; izvor: Implementacija } {
   const unity = implementacija === "unity" ? UNITY[igra] : undefined;
-  return unity ? { pokreni: unity, izvor: "unity" } : { pokreni: jsIgra(igra), izvor: "js" };
+  if (unity) return { pokreni: unity, izvor: "unity" };
+  return { pokreni: igra in LENJE ? lenjaIgra(igra) : jsIgra(igra), izvor: "js" };
 }
 
 /** Podešavanja za ulaz igre iz trenutnog stanja aplikacije. */
