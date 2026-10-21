@@ -31,6 +31,9 @@ class Settings(BaseSettings):
 
     seed_lozinka: str | None = None
 
+    # slike koje urednici otpremaju u uređivaču sadržaja (van gita; ide u backup zajedno sa bazom)
+    slike_dir: Path = ROOT_DIR / "podaci" / "slike"
+
     # Kafeterija Portal: lokali se preuzimaju sa njegovog API-ja (GET /api/me), ključem kp_... admin naloga
     # (Administracija → Ključ za Claude, samo čitanje)
     portal_url: str | None = None

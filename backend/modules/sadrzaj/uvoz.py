@@ -23,8 +23,46 @@ def otisak_dokumenta(dok: dict[str, Any]) -> str:
     return hashlib.sha256(json.dumps(dok, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
-def proveri(dok: dict[str, Any]) -> None:
-    """Greške koje bi oborile polazničku aplikaciju ili pokvarile statistiku; skuplja sve odjednom."""
+def _proveri_korak(k: dict[str, Any], gde: str, greske: list[str]) -> None:
+    """Polja koja ekran tog tipa koraka čita; bez njih bi se lekcija srušila na telefonu."""
+    t = k.get("t")
+    tekst = lambda x: isinstance(k.get(x), str) and k[x].strip() != ""  # noqa: E731
+    if t in IZAZOVI and t != "game" and not tekst("q"):
+        greske.append(f"{gde}: nema pitanja (q)")
+    if t in ("story", "explore", "clip", "game") and not tekst("title"):
+        greske.append(f"{gde}: nema naslova")
+    if t == "mc":
+        opts = k.get("opts")
+        if not isinstance(opts, list) or len(opts) < 2 or not all(isinstance(o, str) and o.strip() for o in opts):
+            greske.append(f"{gde}: treba bar dva ponuđena odgovora")
+        elif not (isinstance(k.get("a"), int) and 0 <= k["a"] < len(opts)):
+            greske.append(f"{gde}: tačan odgovor van ponuđenih")
+    elif t == "tf" and not isinstance(k.get("a"), bool):
+        greske.append(f"{gde}: tačno ili netačno nije izabrano")
+    elif t == "num":
+        try:
+            lo, hi = k["a"]
+            ok = k["min"] < k["max"] and k["step"] > 0 and k["min"] <= lo <= hi <= k["max"] and k["min"] <= k["start"] <= k["max"]
+        except (KeyError, TypeError, ValueError):
+            ok = False
+        if not ok:
+            greske.append(f"{gde}: klizač treba min < max, korak > 0, a tačan opseg i početna vrednost unutar min–max")
+    elif t == "order" and not (isinstance(k.get("items"), list) and len(k["items"]) >= 2):
+        greske.append(f"{gde}: ređanje treba bar dve stavke")
+    elif t == "match" and not (
+        isinstance(k.get("pairs"), list) and len(k["pairs"]) >= 2 and all(isinstance(p, list) and len(p) == 2 for p in k["pairs"])
+    ):
+        greske.append(f"{gde}: spajanje treba bar dva para")
+    elif t == "sort":
+        if not (isinstance(k.get("items"), list) and len(k["items"]) >= 2 and all(isinstance(x, list) and len(x) == 2 and x[1] in (0, 1) and not isinstance(x[1], bool) for x in k["items"])):
+            # strana je 0 (leva) ili 1 (desna), kao u artifactu
+            greske.append(f"{gde}: prevlačenje treba bar dve stavke sa stranom")
+        if not (tekst("left") and tekst("right")):
+            greske.append(f"{gde}: prevlačenje treba nazive leve i desne strane")
+
+
+def greske_sadrzaja(dok: dict[str, Any]) -> list[str]:
+    """Greške koje bi oborile polazničku aplikaciju ili pokvarile statistiku; sve odjednom."""
     greske: list[str] = []
     ids: set[str] = set()
 
@@ -40,33 +78,61 @@ def proveri(dok: dict[str, Any]) -> None:
         if kljuc not in dok:
             greske.append(f"nedostaje '{kljuc}'")
     if greske:
-        raise NeispravanSadrzaj("; ".join(greske))
+        return greske
+
+    pod = dok["podesavanja"]
+    if not (isinstance(pod.get("prag"), (int, float)) and 0.5 <= pod["prag"] <= 1):
+        greske.append("podešavanja: prag za test mora biti između 50% i 100%")
+    if not (isinstance(pod.get("test_pitanja"), int) and 5 <= pod["test_pitanja"] <= 50):
+        greske.append("podešavanja: broj pitanja na testu mora biti između 5 i 50")
+    if not (isinstance(pod.get("dnevni_cilj"), int) and 10 <= pod["dnevni_cilj"] <= 1000):
+        greske.append("podešavanja: dnevni cilj mora biti između 10 i 1000 zrna")
 
     nivoi = {n.get("id") for n in dok["nivoi"]}
+    za_test = 0
     for n in dok["nivoi"]:
         jedinstven(n.get("id"), "nivo")
+        if not n.get("steps"):
+            greske.append(f"{n.get('id')}: nivo nema nijedan korak")
         for k in n.get("steps", []):
             gde = f"{n.get('id')}/{k.get('id')}"
             jedinstven(k.get("id"), gde)
             if k.get("t") not in TIPOVI_KORAKA:
                 greske.append(f"{gde}: nepoznat tip '{k.get('t')}'")
-            if k.get("t") == "mc" and not (0 <= k.get("a", -1) < len(k.get("opts", []))):
-                greske.append(f"{gde}: tačan odgovor van ponuđenih")
+            else:
+                _proveri_korak(k, gde, greske)
+            za_test += k.get("t") in ZA_TEST
         for k in n.get("pool", []):
-            jedinstven(k.get("id"), f"{n.get('id')}/{k.get('id')}")
+            gde = f"{n.get('id')}/{k.get('id')}"
+            jedinstven(k.get("id"), gde)
             if k.get("t") not in ZA_TEST:
-                greske.append(f"{n.get('id')}/{k.get('id')}: u banci smeju samo mc, tf i num")
+                greske.append(f"{gde}: u banci smeju samo mc, tf i num")
+            else:
+                _proveri_korak(k, gde, greske)
+                za_test += 1
         for k in n.get("swipe", []):
-            jedinstven(k.get("id"), f"{n.get('id')}/{k.get('id')}")
+            gde = f"{n.get('id')}/{k.get('id')}"
+            jedinstven(k.get("id"), gde)
+            if not (isinstance(k.get("q"), str) and k["q"].strip() and isinstance(k.get("a"), bool)):
+                greske.append(f"{gde}: tvrdnja za Brzu rundu treba tekst i tačno/netačno")
+    if isinstance(pod.get("test_pitanja"), int) and za_test < pod["test_pitanja"]:
+        greske.append(f"podešavanja: test traži {pod['test_pitanja']} pitanja, a u kursu ih ima {za_test}")
     for p in dok["pojmovi"]:
         jedinstven(p.get("id"), "pojam")
         if p.get("nivo") not in nivoi:
             greske.append(f"pojam {p.get('id')}: nepoznat nivo {p.get('nivo')}")
+        if not (str(p.get("pojam", "")).strip() and str(p.get("opis", "")).strip()):
+            greske.append(f"pojam {p.get('id')}: treba naziv i opis")
     for g in dok["igre"]:
         if g.get("after") not in nivoi:
             greske.append(f"igra {g.get('id')}: otključava se posle nepoznatog nivoa {g.get('after')}")
         if g.get("implementacija", "js") not in ("js", "unity"):
             greske.append(f"igra {g.get('id')}: implementacija mora biti js ili unity")
+    return greske
+
+
+def proveri(dok: dict[str, Any]) -> None:
+    greske = greske_sadrzaja(dok)
     if greske:
         raise NeispravanSadrzaj("; ".join(greske))
 

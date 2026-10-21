@@ -100,6 +100,10 @@ Modul 3:
 Modul 4:
 - `odgovori.izbor`: šta je polaznik izabrao (mc: indeks ponuđenog odgovora, tf, num), za „najčešći pogrešan odgovor”. Odgovori iz lekcija pre Modula 4 ga nemaju.
 
+Modul 5:
+- `sadrzaj_nacrti`: jedan nacrt po kursu (ceo dokument, verzija na kojoj je nastao, revizija, ko i kada je sačuvao). Objava ga briše.
+- Slike iz uređivača: fajlovi u `podaci/slike` (van gita; u produkciji trajni volumen), ime je otisak sadržaja.
+
 ## Admin deo (šta pratimo)
 
 - Pregled: aktivni polaznici danas i ove nedelje, završeni nivoi, položeni testovi, ko je zapeo (bez aktivnosti 7 dana)
@@ -108,7 +112,7 @@ Modul 4:
 - Igre: rezultati i zvezdice
 - Lokali: poređenje lokala (za admina i trenera)
 - Sertifikati: lista, provera koda, opoziv
-- Sadržaj: pregled verzija; kasnije uređivač (nacrt, pregled kao polaznik, objava)
+- Sadržaj: pregled verzija i uređivač (nacrt, pregled kao polaznik, objava)
 
 ## Moduli i redosled
 
@@ -119,7 +123,7 @@ Modul 4:
 | 2 | Igraonica: Brza runda, Uštimaj mlin, Složi recept, Kralj pare, Sipaj srce po ugovoru igre (registar JS/Unity); rezultati igraonice i igara iz lekcija na serveru, rekordi, zrna, bedževi igara | gotovo |
 | 3 | Završni test i sertifikat: izvlačenje i provera na serveru, sertifikat sa kodom, provera i opoziv koda u adminu, procenat u tabeli polaznika (i za menadžera) | gotovo |
 | 4 | Admin statistika: Pregled (aktivnost, levak, zapeli, lokali), Pitanja (najteža, najčešći pogrešan odgovor), Igre, detalj polaznika | gotovo |
-| 5 | Uređivač sadržaja: nacrt, pregled kao polaznik, objava nove verzije, slike | sledeće |
+| 5 | Uređivač sadržaja: nacrt, forme za svaki tip koraka, banka pitanja, Brza runda, pojmovi, podešavanja, slike, pregled kao polaznik, objava nove verzije sa spiskom izmena | gotovo |
 | 6 | Kasnije: novi kursevi, PWA (instalacija na telefon, rad bez mreže za lekcije), podsetnici, rang lista po lokalu | |
 
 Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
@@ -162,6 +166,18 @@ Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 - Pitanja: tačnost je prosek rezultata (0–1) svih odgovora; prikazuju se pitanja sa bar 3 odgovora, najteža prva. Najčešći pogrešan odgovor se vidi za izbor i klizač.
 - Igre: igranja iz igraonice i iz lekcija, prosečan rezultat, udeo igranja sa 3 zvezdice, broj igranja Unity verzije.
 - Grafikoni: jedna serija u boji `--graf` (#2D6FD6 svetlo, #5A92EC tamno; provereno validatorom palete), broj na najvišem i poslednjem stubiću, ostalo u oblačiću, „Tabela” za iste brojeve kao tekst.
+
+## Uređivač sadržaja (Modul 5)
+
+- Uređuju admin i trener. Rade na nacrtu kursa; polaznici vide objavljenu verziju dok se nacrt ne objavi.
+- Čuvanje nosi broj revizije: ako je neko drugi sačuvao u međuvremenu, čuvanje se odbija (409) umesto da pregazi tuđe izmene.
+- Nacrt sa greškama se čuva, ali se ne objavljuje. Provera pre objave: polja svakog tipa koraka (pitanje, bar dva ponuđena odgovora i tačan među njima, opseg klizača, stavke za ređanje i parove...), Brza runda, pojmovi, podešavanja (prag 0.5–1, 5–50 pitanja na testu, dnevni cilj 10–1000) i da u kursu ima dovoljno pitanja za test.
+- Zaštite napretka i statistike: nivoi se ne dodaju, ne brišu i ne premeštaju; postojećem koraku se ne menja `id` ni tip; nov korak dobija sledeći slobodan `id`, a obrisani `id` se nikad ne koristi ponovo. Koraci unutar nivoa se slobodno dodaju, brišu i premeštaju.
+- Objava traži napomenu i prikazuje šta je dodato, izmenjeno i obrisano (računa server). Pravi novu verziju, usklađuje indeks `pitanja` (obrisana pitanja postaju neaktivna i ostaju u statistici) i upisuje se u audit log. Napredak, zrna i sertifikati ostaju.
+- Crteži, klipovi i igre su kod (`art.ts`, `igre.ts`): uređivač menja njihove tekstove, a ostala polja svakog koraka su u „Napredno (JSON)”. Novi tipovi koraka iz uređivača: priča, izbor, tačno/netačno, klizač, ređanje, spajanje, prevlačenje.
+- Slike: JPG, PNG ili WebP do 5 MB, proverava se i sadržaj fajla, ne samo tip; služe se samo prijavljenima.
+- Pregled kao polaznik: isti ekran lekcije, nad nacrtom, bez ijednog poziva serveru.
+- `seed.py --samo-sadrzaj` i dalje radi; ako pravi novu verziju dok postoji nacrt, objava nacrta se odbija dok se nacrt ne odbaci (nastao je na staroj verziji).
 
 ## Otvorena pitanja
 

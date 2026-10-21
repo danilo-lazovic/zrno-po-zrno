@@ -21,6 +21,9 @@ frontend/CLAUDE.md
 *.tsbuildinfo
 npm-debug.log*
 
+# slike iz uređivača sadržaja i drugi lokalni podaci
+podaci/
+
 # unity build-ovi igara (WebGL) ne idu u git; objavljuju se kao statični fajlovi
 frontend/public/unity/
 
