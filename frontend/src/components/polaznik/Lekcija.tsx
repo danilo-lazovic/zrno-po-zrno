@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { confetti, sfx } from "@/lib/jezgro";
+import { pokretac, podesavanja } from "@/igre/registar";
+import { posaljiRezultat } from "@/igre/rezultat";
+import type { IgraId, RezultatIgre } from "@/igre/ugovor";
 import { RENDER, postaviKontekst } from "@/lib/koraci";
 import {
   type Dobitak,
@@ -134,7 +137,11 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
     pocetakRef.current = Date.now();
     setFb(null);
     setSpremno(!izazov);
-    postaviKontekst({ odgovoreno: () => odgovorenoRef.current, pospremi: (f) => pospremiRef.current.push(f) });
+    postaviKontekst({
+      odgovoreno: () => odgovorenoRef.current,
+      pospremi: (f) => pospremiRef.current.push(f),
+      igra: (igra, host, gotovo) => pokreniIgruULekciji(kurs, igra as IgraId, host, gotovo, dobitak),
+    });
     const R = RENDER[st.t](st);
     const crumb = `<p class="crumb">Nivo ${nivo.n} · ${md(nivo.title)}</p>`;
     el.innerHTML = crumb + R.html;
@@ -294,6 +301,26 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
       )}
     </div>
   );
+}
+
+/** Igra kao korak lekcije: isti ugovor kao u igraonici, rezultat ide serveru (bez zrna; zrna su u odgovoru lekcije). */
+function pokreniIgruULekciji(
+  kurs: Kurs,
+  igra: IgraId,
+  host: HTMLElement,
+  gotovo: (r: RezultatIgre) => void,
+  dobitak: (d: Dobitak) => void,
+) {
+  const opis = kurs.igre.find((g) => g.id === igra);
+  const { pokreni, izvor } = pokretac(igra, opis?.implementacija);
+  return pokreni(host, { igra_id: igra, konfiguracija: { mod: "lekcija" }, podesavanja: podesavanja() }, (r) => {
+    posaljiRezultat(kurs.kurs.kljuc, { ...r, izvor }, "lekcija")
+      .then(dobitak)
+      .catch(() => {
+        /* rezultat igre u lekciji je samo za statistiku i bedževe; odgovor lekcije ide posebno */
+      });
+    gotovo(r);
+  });
 }
 
 function Rezultat({

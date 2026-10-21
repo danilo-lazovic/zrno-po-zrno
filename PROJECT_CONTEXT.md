@@ -36,7 +36,9 @@ Pravila koja se ne krše:
   - ulaz: `igra_id`, konfiguracija nivoa (JSON), podešavanja (zvuk, smanjeno kretanje)
   - izlaz: `{ igra_id, rezultat (0–1), zvezdice (0–3), poeni, trajanje_ms, detalji }`
   - backend prima rezultat preko istog API-ja bez obzira na izvor (`izvor`: `js` ili `unity`, radi poređenja)
-- Ugovor je u kodu: `frontend/src/igre/ugovor.ts` (TS tipovi) i `backend/modules/igre/schemas.py` (Modul 2). Igra ne zove API sama; vrati rezultat, a aplikacija ga šalje, dodeljuje zrna i bedževe.
+- Ugovor je u kodu: `frontend/src/igre/ugovor.ts` (TS tipovi), `frontend/src/igre/registar.ts` (koja implementacija pokreće koju igru) i `backend/modules/igre/router.py` (`POST /api/igre/{kurs}/rezultat`). Igra ne zove API sama; vrati rezultat, a aplikacija ga šalje, a server dodeljuje zrna i bedževe.
+- Ista igra radi u igraonici i kao korak lekcije (konfiguracija `mod: "lekcija"`): lekcija i igraonica zovu samo `pokretac(igra, implementacija)`.
+- Unity igra se uključuje upisom njenog pokretača u `UNITY` mapu u `registar.ts` i `implementacija: "unity"` u sadržaju. Dok pokretača nema, sadržaj sa `unity` koristi JS verziju. Build-ovi idu u `frontend/public/unity/<igra>/` (van gita).
 - Unity verzije igara se rade paralelno, jedna po jedna (portfolio). Ugrađuju se kao WebGL komponenta (`react-unity-webgl`) preko JS bridge-a.
 - Unity igra menja JS verziju tek kad prođe proveru na telefonima: veličina builda, vreme učitavanja i rad na iOS Safariju. Ako ne prođe, ostaje zaseban portfolio projekat (ili kasnije native app).
 - Koja implementacija se koristi za koju igru je podešavanje (`igre[].implementacija` u sadržaju kursa), ne izmena koda.
@@ -87,10 +89,13 @@ Modul 1:
 - `bedzevi_korisnika`, `kartice_korisnika` (zna, nagrađena: zrno samo prvi put)
 - `korisnici.avatar`
 
-Kasnije (predlog):
-- `igre_rezultati` (igra, izvor js/unity, rezultat, zvezdice, poeni, trajanje, detalji)
-- `testovi`: pokušaj završnog testa (izvučena pitanja, odgovori, procenat, polozen, pocetak, kraj)
-- `sertifikati`: korisnik, kurs, test_id, kod, izdat_u, opozvan_u. Kod se proverava na serveru (strana za trenera i javna provera bez ličnih podataka).
+Modul 2:
+- `igre_rezultati`: igra, izvor (js, unity), kontekst (igraonica, lekcija), rezultat, zvezdice (računa server), poeni, trajanje_ms, detalji (json), zrna, dan
+
+Modul 3:
+- `testovi`: pokušaj završnog testa (izvučena pitanja redom, početak, kraj, procenat, položen, tačnost po nivou). Bez procenta: prekinut.
+- `odgovori.test_id`: odgovori na test idu u istu tabelu (kontekst `test`), pa statistika po pitanju vidi i lekcije i test.
+- `sertifikati`: jedan po polazniku i kursu (kod `ZP-XXXX-XXXX`, procenat, izdat, opozvan, ko i zašto).
 
 ## Admin deo (šta pratimo)
 
@@ -108,11 +113,11 @@ Kasnije (predlog):
 |---|---|---|
 | 0 | Kostur: Docker, baza, auth (pozivnica + PIN, lozinka za osoblje), uloge, audit log, sadržaj u bazi + API, admin: lokali, osoblje, polaznici i pozivnice; frontend: prijava, pozivnica, staza nivoa, igre i minimum lista (zaključano), profil, admin (polaznici, lokali, osoblje, sadržaj) | gotovo |
 | 1 | Polaznička aplikacija: lekcije (svih 11 tipova koraka, klipovi i igre unutar lekcija), ekran rezultata, uvod sa avatarom, kartice za okretanje, zvuk; napredak, zrna, niz dana i bedževi na serveru; lokali iz portala; napredak u adminu | gotovo |
-| 2 | Igraonica: Brza runda, Uštimaj mlin, Složi recept, Kralj pare, Sipaj srce kao posebne igre po ugovoru; rezultati na serveru, bedževi igara (dial, swipe, milk, latte, recipe) | sledeće |
-| 3 | Završni test i sertifikat: izvlačenje na serveru, serverski kod, provera koda, PDF ili slika za deljenje | |
-| 4 | Admin statistika: pregled, polaznici, pitanja, igre, lokali | |
+| 2 | Igraonica: Brza runda, Uštimaj mlin, Složi recept, Kralj pare, Sipaj srce po ugovoru igre (registar JS/Unity); rezultati igraonice i igara iz lekcija na serveru, rekordi, zrna, bedževi igara | gotovo |
+| 3 | Završni test i sertifikat: izvlačenje i provera na serveru, sertifikat sa kodom, provera i opoziv koda u adminu, procenat u tabeli polaznika (i za menadžera) | gotovo |
+| 4 | Admin statistika: pregled, polaznici, pitanja, igre, lokali | sledeće |
 | 5 | Uređivač sadržaja: nacrt, pregled kao polaznik, objava nove verzije, slike | |
-| 6 | Kasnije: novi kursevi, PWA (instalacija na telefon, rad bez mreže za lekcije), podsetnici, rang lista po lokalu, veza sa lokalima iz portala | |
+| 6 | Kasnije: novi kursevi, PWA (instalacija na telefon, rad bez mreže za lekcije), podsetnici, rang lista po lokalu | |
 
 Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 
@@ -128,9 +133,22 @@ Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 - Odgovor: `10 × rezultat` zrna; tačan odgovor produžava niz, od trećeg zaredom bonus `min(10, (niz − 2) × 2)`. Pogrešan ili delimičan prekida niz i broji se kao greška.
 - Kraj nivoa: zvezdice 3 (≥ 90%), 2 (≥ 70%), 1; bonus 20 + 20 bez greške, pola bonusa za ponovljen nivo. Zrna od odgovora ostaju i kad se nivo prekine.
 - Kartica „Znam” daje 1 zrno samo prvi put po pojmu.
-- Bedževi: prvi nivo, nivo bez greške, 5 tačnih zaredom, 3 dana zaredom, 4 nivoa, sve zvezdice; bedževi igara i testa u modulima 2 i 3.
+- Bedževi: prvi nivo, nivo bez greške, 5 tačnih zaredom, 3 dana zaredom, 4 nivoa, sve zvezdice; bedž testa u Modulu 3.
+- Igre (Modul 2): igraonica daje `5 + 15 × rezultat` zrna za prvih 5 igranja iste igre u danu (artifact nije imao granicu, pa se Brza runda mogla vrteti radi zrna); posle toga se igra za rekord. Igra kao korak lekcije ne daje zrna posebno (zrna idu kroz odgovor u lekciji), ali se beleži i računa za bedževe. Zvezdice (≥ 90% 3, ≥ 70% 2, ≥ 40% 1) računa server iz rezultata. Rekord: poeni za Brzu rundu, procenat za ostale.
+- Bedževi igara: Brzi prsti (15+ poena u Brzoj rundi), Kralj pare i Srce iz prve (3 zvezdice), Dial-in majstor (Uštimaj mlin, rezultat iznad 20%), Recept-mašina (ukupno 3 recepta bez greške, i iz lekcija).
 - Dani zaredom: dani (Beograd) sa bar jednim zrnom; niz traje dok je poslednji takav dan danas ili juče.
-- Tačnost odgovora u lekciji javlja klijent (odgovori su u sadržaju koji telefon ima). Završni test će proveravati server, a banka pitanja za test nikad ne ide na telefon.
+- Tačnost odgovora u lekciji javlja klijent (odgovori su u sadržaju koji telefon ima).
+
+## Završni test i sertifikat (Modul 3)
+
+- Otključava se kad su završeni svi nivoi (proverava server).
+- Server izvlači 20 pitanja (mc, tf, num iz lekcija i iz banke): po dva iz svakog nivoa, ostatak nasumično. Telefon dobija pitanja bez tačnih odgovora i objašnjenja; posle svakog odgovora server vraća rezultat, tačan odgovor i objašnjenje. Banka pitanja nikad ne ide na telefon.
+- Ocena kao u lekciji: tačno 1; klizač u blizini (6% opsega) 0,5. Prolaz: 80% (`podesavanja.prag` u sadržaju).
+- Odgovori na testu ne donose zrna (da se test ne ponavlja radi zrna); prvi položen test donosi 100 zrna i bedž „Spreman za kurs”.
+- Nov pokušaj prekida nedovršen. Pad: predlog nivoa za ponavljanje (tačnost ispod 75%).
+- Sertifikat: jedan po polazniku i kursu. Bolji rezultat menja procenat, kod ostaje isti. Trener ili admin može da opozove sertifikat (sa razlogom, u audit logu); posle opoziva nov položen test daje nov kod.
+- Kod `ZP-XXXX-XXXX` (bez slova koja se mešaju: 0/O, 1/I/L, U/V) trener proverava u Admin → Sertifikati; unos prašta mala slova, razmake i izostavljene crtice. Menadžer proverava i vidi samo polaznike svojih lokala.
+- Javna provera koda bez prijave i PDF/slika za deljenje: kasnije, ako zatreba (sada polaznik šalje screenshot iz profila).
 
 ## Otvorena pitanja
 

@@ -62,7 +62,7 @@ def test_dani_zaredom():
 def test_prazan_napredak(prijavi):
     n = prijavi("ana.a").get("/api/napredak/osnovni").json()
     assert n == {
-        "zrna": 0, "danas_zrna": 0, "niz_dana": 0, "najduzi_niz": 0, "nivoi": {}, "bedzevi": [], "kartice": {},
+        "zrna": 0, "danas_zrna": 0, "niz_dana": 0, "najduzi_niz": 0, "nivoi": {}, "bedzevi": [], "kartice": {}, "igre": {},
         "test": {"najbolje": 0, "polozen": False},
     }
 

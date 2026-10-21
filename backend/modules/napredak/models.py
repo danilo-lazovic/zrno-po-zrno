@@ -32,7 +32,10 @@ class Odgovor(Base):
     """Odgovor na izazov; osnova za statistiku po pitanju. Ključ pitanja je id iz sadržaja (m3.k07)."""
 
     __tablename__ = "odgovori"
-    __table_args__ = (UniqueConstraint("prolaz_id", "pitanje", name="uq_odgovori_prolaz_pitanje"),)
+    __table_args__ = (
+        UniqueConstraint("prolaz_id", "pitanje", name="uq_odgovori_prolaz_pitanje"),
+        UniqueConstraint("test_id", "pitanje", name="uq_odgovori_test_pitanje"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     korisnik_id: Mapped[int] = mapped_column(ForeignKey("korisnici.id", ondelete="CASCADE"), index=True)
@@ -40,9 +43,10 @@ class Odgovor(Base):
     verzija_id: Mapped[int] = mapped_column(ForeignKey("sadrzaj_verzije.id", ondelete="CASCADE"))
     pitanje: Mapped[str] = mapped_column(String(40), index=True)
     nivo: Mapped[str] = mapped_column(String(20))
-    # lekcija; test i brza_runda stižu u modulima 2 i 3
+    # lekcija ili test
     kontekst: Mapped[str] = mapped_column(String(20))
     prolaz_id: Mapped[int | None] = mapped_column(ForeignKey("prolazi_nivoa.id", ondelete="CASCADE"), index=True)
+    test_id: Mapped[int | None] = mapped_column(ForeignKey("testovi.id", ondelete="CASCADE"), index=True)
     rezultat: Mapped[float] = mapped_column(Float)
     vreme_ms: Mapped[int | None] = mapped_column(Integer)
     u: Mapped[datetime] = mapped_column(UtcDateTime(), server_default=func.now())

@@ -20,6 +20,7 @@ from core.security import MIN_LOZINKA, hash_tajne, novi_token_pozivnice
 from core.vreme import sada
 from modules.napredak.models import NivoKorisnika, Zrno
 from modules.osoblje import portal
+from modules.test.models import Test
 
 router = APIRouter(prefix="/api/admin")
 
@@ -133,6 +134,9 @@ class PolaznikOut(BaseModel):
     nivoa: int = 0
     zrna: int = 0
     poslednja_aktivnost: datetime | None = None
+    # najbolji procenat na završnom testu (menadžer ga vidi za svoje polaznike) i da li je položen
+    test_najbolje: int | None = None
+    test_polozen: bool = False
 
 
 class PozivnicaOut(BaseModel):
@@ -149,7 +153,7 @@ def _status(k: Korisnik) -> str:
     return "aktivan" if k.pin_hash else "pozvan"
 
 
-def _napredak(db: Session, ids: list[int]) -> dict[int, tuple[int, int, datetime | None]]:
+def _napredak(db: Session, ids: list[int]) -> dict[int, "Napredak"]:
     if not ids:
         return {}
     zrna = {
@@ -167,15 +171,28 @@ def _napredak(db: Session, ids: list[int]) -> dict[int, tuple[int, int, datetime
             .group_by(NivoKorisnika.korisnik_id)
         ).all()
     )
-    return {uid: (nivoa.get(uid, 0), *zrna.get(uid, (0, None))) for uid in ids}
+    testovi = {
+        uid: (najbolje, polozenih > 0)
+        for uid, najbolje, polozenih in db.execute(
+            select(Test.korisnik_id, func.max(Test.procenat), func.count().filter(Test.polozen.is_(True)))
+            .where(Test.korisnik_id.in_(ids), Test.procenat.isnot(None))
+            .group_by(Test.korisnik_id)
+        )
+    }
+    return {uid: (nivoa.get(uid, 0), *zrna.get(uid, (0, None)), *testovi.get(uid, (None, False))) for uid in ids}
 
 
-def _polaznik_out(k: Korisnik, napredak: tuple[int, int, datetime | None] = (0, 0, None)) -> PolaznikOut:
-    nivoa, zrna, poslednja = napredak
+Napredak = tuple[int, int, datetime | None, int | None, bool]
+
+
+def _polaznik_out(k: Korisnik, napredak: Napredak = (0, 0, None, None, False)) -> PolaznikOut:
+    nivoa, zrna, poslednja, test_najbolje, test_polozen = napredak
     return PolaznikOut(
         nivoa=nivoa,
         zrna=zrna,
         poslednja_aktivnost=poslednja,
+        test_najbolje=test_najbolje,
+        test_polozen=test_polozen,
         id=k.id,
         ime=k.ime,
         prezime=k.prezime,

@@ -31,6 +31,9 @@ export type Polaznik = {
   nivoa: number;
   zrna: number;
   poslednja_aktivnost: string | null;
+  /** najbolji procenat na završnom testu; null ako nije radio test */
+  test_najbolje: number | null;
+  test_polozen: boolean;
 };
 
 export type PozivnicaOut = { polaznik: Polaznik; link: string; istice_u: string };
