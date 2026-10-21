@@ -52,6 +52,8 @@ body:has(.adm) { background-image: none; }
 .link-kartica { display: grid; gap: 8px; margin-bottom: 18px; border-color: var(--leaf); }
 .link-kartica code { display: block; padding: 10px; border-radius: 10px; background: var(--surface-2); font: 600 13px var(--font-mono); word-break: break-all; }
 .link-kartica .akcije { display: flex; flex-wrap: wrap; gap: 8px; }
+.link-kartica.opozvan { border-color: var(--cherry); }
+.link-kartica .h2 { margin: 0; }
 
 @media (max-width: 760px) {
   .adm { grid-template-columns: 1fr; }

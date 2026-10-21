@@ -17,6 +17,7 @@ class Akcija(StrEnum):
     lokal = "lokal"
     lokali_iz_portala = "lokali_iz_portala"
     sadrzaj_objavljen = "sadrzaj_objavljen"
+    sertifikat_opozvan = "sertifikat_opozvan"
 
 
 def zapisi(

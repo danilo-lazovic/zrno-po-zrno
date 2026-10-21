@@ -94,6 +94,15 @@ npm run build
 4. Igra kao korak lekcije (nivoi 5, 7 i 8) se računa i za bedževe, a zrna idu kroz lekciju.
 5. Kartica igre u igraonici prikazuje rekord i zvezdice.
 
+## Kako se testira Modul 3
+
+1. Polaznik sa svih 8 završenih nivoa: Put → „Završni test” (ili trofej na kraju staze) → uvod (pitanja, prag, najbolji rezultat, broj pokušaja) → „Kreni na test”.
+2. 20 pitanja; posle svakog odgovora server kaže da li je tačno, tačan odgovor i objašnjenje.
+3. Ispod 80%: procenat, koliko fali i nivoi za ponavljanje (tap otvara nivo); „Pokušaj ponovo” daje nova pitanja.
+4. 80% i više: sertifikat sa kodom `ZP-XXXX-XXXX`, 100 zrna i bedž (samo prvi put). Sertifikat je i u Profilu.
+5. Kao trener: Admin → Sertifikati → upiši kod (mala slova i razmaci rade) → ime, lokal, procenat, datum. „Opozovi” traži razlog; polaznik tada u profilu vidi da mora ponovo da položi test i dobija nov kod.
+6. Kao menadžer: Polaznici prikazuje procenat i da li je test položen; Sertifikati samo za svoje lokale.
+
 ## Sadržaj
 
 Kurs je JSON dokument u `backend/modules/sadrzaj/data/`. Posle izmene:
