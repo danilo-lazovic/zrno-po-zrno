@@ -175,20 +175,6 @@ Radi samo u produkcionom buildu (`npm run build` pa `npm start`); u `npm run dev
 5. Preduslov: na stranici Sadržaj za nov kurs izaberi „Položen test: Osnovni nivo”. Polaznik koji nije položio osnovni vidi kurs zaključan i šta ga otključava.
 6. U adminu se u meniju bira „Statistika za kurs”: Pregled, Pitanja, Igre i Rang lista prikazuju izabrani kurs.
 
-## 3D igre (proba)
-
-„Kralj pare” u igraonici ima 3D verziju (three.js); prekidač „3D / Klasično” je u zaglavlju igre. Modeli se prave skriptom u Blender-u:
-
-```powershell
-# jednom: Python 3.11 i Blender kao modul
-py -3.11 -m venv .blender
-.blender\Scripts\pip install bpy==4.2.0
-# posle izmene skripte:
-.blender\Scripts\python frontend\modeli\kralj_pare.py --pregled   # piše public\modeli\kralj-pare.glb i render modeli\kralj-pare-pregled.png
-```
-
-Ili u samom Blender-u: Scripting → otvori `frontend/modeli/kralj_pare.py` → Run Script. Model može da se otvori i doradi ručno (File → Import → glTF), pa izveze nazad u `frontend/public/modeli/kralj-pare.glb`; igra traži objekte `Latijera` (sa extras `profil`) i `Stimer`.
-
 ## Sadržaj
 
 Sadržaj se menja u uređivaču (Modul 5). JSON u `backend/modules/sadrzaj/data/` je prva verzija i rezervni put za veće izmene:

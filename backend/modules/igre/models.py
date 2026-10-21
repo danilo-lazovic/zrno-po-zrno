@@ -16,7 +16,7 @@ class RezultatIgre(Base):
     korisnik_id: Mapped[int] = mapped_column(ForeignKey("korisnici.id", ondelete="CASCADE"), index=True)
     kurs_id: Mapped[int] = mapped_column(ForeignKey("kursevi.id", ondelete="CASCADE"))
     igra: Mapped[str] = mapped_column(String(20))
-    # js (canvas), 3d (three.js) ili unity, radi poređenja implementacija
+    # js ili unity, radi poređenja implementacija
     izvor: Mapped[str] = mapped_column(String(10))
     # igraonica (donosi zrna) ili lekcija (zrna idu kroz odgovor u lekciji)
     kontekst: Mapped[str] = mapped_column(String(20))

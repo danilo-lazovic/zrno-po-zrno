@@ -110,7 +110,6 @@ def test_igre_i_lokali(prijavi, dokument):
     c = prijavi("admin@test.rs")
     igre = {g["igra"]: g for g in c.get("/api/admin/statistika/igre").json()}
     assert (igre["milk"]["igranja"], igre["milk"]["igraca"], igre["milk"]["prosek"], igre["milk"]["tri_zvezdice"], igre["milk"]["unity"]) == (2, 1, 75, 50, 1)
-    assert igre["milk"]["tri_d"] == 0
     assert igre["dialin"]["iz_lekcija"] == 1 and igre["swipe"]["igranja"] == 0
 
     lokali = {x["naziv"]: x for x in c.get("/api/admin/statistika/lokali").json()}

@@ -37,22 +37,13 @@ Pravila koja se ne krše:
 - Svaka igra poštuje isti ugovor, da implementacija može da bude JS ili Unity bez izmene ostatka sistema:
   - ulaz: `igra_id`, konfiguracija nivoa (JSON), podešavanja (zvuk, smanjeno kretanje)
   - izlaz: `{ igra_id, rezultat (0–1), zvezdice (0–3), poeni, trajanje_ms, detalji }`
-  - backend prima rezultat preko istog API-ja bez obzira na izvor (`izvor`: `js`, `3d` ili `unity`, radi poređenja)
+  - backend prima rezultat preko istog API-ja bez obzira na izvor (`izvor`: `js` ili `unity`, radi poređenja)
 - Ugovor je u kodu: `frontend/src/igre/ugovor.ts` (TS tipovi), `frontend/src/igre/registar.ts` (koja implementacija pokreće koju igru) i `backend/modules/igre/router.py` (`POST /api/igre/{kurs}/rezultat`). Igra ne zove API sama; vrati rezultat, a aplikacija ga šalje, a server dodeljuje zrna i bedževe.
 - Ista igra radi u igraonici i kao korak lekcije (konfiguracija `mod: "lekcija"`): lekcija i igraonica zovu samo `pokretac(igra, implementacija)`.
 - Unity igra se uključuje upisom njenog pokretača u `UNITY` mapu u `registar.ts` i `implementacija: "unity"` u sadržaju. Dok pokretača nema, sadržaj sa `unity` koristi JS verziju. Build-ovi idu u `frontend/public/unity/<igra>/` (van gita).
 - Unity verzije igara se rade paralelno, jedna po jedna (portfolio). Ugrađuju se kao WebGL komponenta (`react-unity-webgl`) preko JS bridge-a.
 - Unity igra menja JS verziju tek kad prođe proveru na telefonima: veličina builda, vreme učitavanja i rad na iOS Safariju. Ako ne prođe, ostaje zaseban portfolio projekat (ili kasnije native app).
 - Koja implementacija se koristi za koju igru je podešavanje (`igre[].implementacija` u sadržaju kursa), ne izmena koda.
-
-### 3D u pregledaču (proba, 21.10.2026.)
-
-- Treći put pored JS i Unity: three.js u samom sajtu, modeli iz Blender-a. Proba je „Kralj pare” (`frontend/src/igre/mleko3d.ts`).
-- Pravila i bodovanje su zajednički sa 2D verzijom (`mlekoKorak`, `mlekoOcena` u `lib/igre.ts`), pa se rezultati porede pošteno; server beleži `izvor: "3d"`, a admin → Igre ima kolonu 3D.
-- Modeli se prave skriptom u Blender-u (`frontend/modeli/kralj_pare.py`, `bpy` 4.2) i izvoze u `frontend/public/modeli/kralj-pare.glb` (146 KB); isti `.glb` može kasnije i u Unity.
-- Three.js i igra su poseban deo koda (oko 155 KB kompresovano, plus model) i učitavaju se tek kad se igra otvori; ostatak aplikacije nije teži. Bez WebGL-a igra radi u klasičnoj verziji.
-- U igraonici je 3D podrazumevana za „Kralja pare”, a prekidač „3D / Klasično” se pamti na telefonu. U lekcijama je zasad klasična verzija.
-- Isti kriterijum kao za Unity: 3D postaje jedina verzija tek posle provere na pravim telefonima (Android i iPhone: brzina učitavanja, glatkoća, baterija). Scena se crta samo kad se nešto menja, a gustina piksela je ograničena na 1,5.
 
 ## Uloge
 

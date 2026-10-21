@@ -138,8 +138,8 @@ def greske_sadrzaja(dok: dict[str, Any]) -> list[str]:
     for g in dok["igre"]:
         if g.get("after") not in nivoi:
             greske.append(f"igra {g.get('id')}: otključava se posle nepoznatog nivoa {g.get('after')}")
-        if g.get("implementacija", "js") not in ("js", "3d", "unity"):
-            greske.append(f"igra {g.get('id')}: implementacija mora biti js, 3d ili unity")
+        if g.get("implementacija", "js") not in ("js", "unity"):
+            greske.append(f"igra {g.get('id')}: implementacija mora biti js ili unity")
     return greske
 
 

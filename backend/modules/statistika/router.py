@@ -263,8 +263,6 @@ class IgraStat(BaseModel):
     tri_zvezdice: int
     iz_lekcija: int
     unity: int
-    # igranja 3D verzije (three.js, proba)
-    tri_d: int
 
 
 @router.get("/igre", response_model=list[IgraStat])
@@ -287,7 +285,6 @@ def igre(
                 tri_zvezdice=round(sum(1 for x in r if x.zvezdice == 3) / len(r) * 100) if r else 0,
                 iz_lekcija=sum(1 for x in r if x.kontekst == "lekcija"),
                 unity=sum(1 for x in r if x.izvor == "unity"),
-                tri_d=sum(1 for x in r if x.izvor == "3d"),
             )
         )
     return out
