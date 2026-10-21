@@ -10,7 +10,9 @@ Prvi kurs je **Osnovni nivo** (minimum pre kursa uživo): 8 nivoa u 4 dela, 5 ig
 
 `design/artifact/` je kopija Claude artifacta "Zrno po zrno" (https://claude.ai/artifact/Tg6YmJDquHtHxd6CZ2Cf86): `index.html` (CSS, tokeni, raspored), `content.js` (sadržaj), `core.js`, `art.js` (ikonice, avatari, dijagrami, latte art), `games.js` (klipovi i igre na canvasu), `app.js` (ekrani), `img/`.
 
-To je referenca za izgled i ponašanje polazničke strane. Artifact čuva napredak samo na telefonu i kod sertifikata računa u browseru; ovde je server izvor istine.
+To je referenca za ponašanje polazničke strane. Artifact čuva napredak samo na telefonu i kod sertifikata računa u browseru; ovde je server izvor istine.
+
+Izgled (od 21.10.2026.): **Kafeterija design system** iz Kafeterija Portala (`kafeterija-portal/design/DESIGN.md`). Admin, prijava i pozivnica su kao portal; polaznička aplikacija ima iste tokene, fontove i dugmad, ali zadržava igrive elemente. Detalji u `design/README.md`.
 
 ## Arhitektura i stack
 
