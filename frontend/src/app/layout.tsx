@@ -5,6 +5,10 @@ import "./osnova.css";
 export const metadata: Metadata = {
   title: "Zrno po zrno",
   description: "Obuka barista Kafeterije: lekcije, igre i završni test.",
+  applicationName: "Zrno po zrno",
+  // iPhone: sa početnog ekrana se otvara preko celog ekrana
+  appleWebApp: { capable: true, title: "Zrno po zrno", statusBarStyle: "default" },
+  icons: { apple: "/ikone/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

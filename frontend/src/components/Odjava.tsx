@@ -1,8 +1,12 @@
 "use client";
 
-export function Odjava({ className }: { className?: string }) {
+import { obrisiKes } from "@/lib/pwa";
+
+export function Odjava({ className, pre }: { className?: string; pre?: () => boolean }) {
   async function odjavi() {
-    await fetch("/api/auth/odjava", { method: "POST" });
+    if (pre && !pre()) return;
+    await fetch("/api/auth/odjava", { method: "POST" }).catch(() => {});
+    await obrisiKes();
     window.location.href = "/prijava";
   }
   return (

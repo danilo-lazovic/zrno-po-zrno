@@ -27,6 +27,8 @@ class ProlazNivoa(Base):
     niz: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     zrna: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     zvezdice: Mapped[int | None] = mapped_column(Integer)
+    # ključ sa telefona za nivo pređen bez mreže (jedan upis po ključu)
+    kljuc: Mapped[str | None] = mapped_column(String(36), unique=True)
 
 
 class Odgovor(Base):

@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { avatar, avatars, BEAN, icon, medal } from "@/lib/art";
-import { api, posalji } from "@/lib/api";
+import { api, BezMreze, posalji } from "@/lib/api";
 import { RECEPTI } from "@/lib/igre";
 import { esc, sfx } from "@/lib/jezgro";
 import { type Dobitak, type Napredak, oznaciKarticu } from "@/lib/napredak";
 import { type IgraOpis, IZAZOVI, type Kurs, type Nivo, type SadrzajOut, md, mnozina, rangZa } from "@/lib/sadrzaj";
 import type { TestStanje } from "@/lib/test";
+import { DOGADJAJ_POSLATO, DOGADJAJ_PROMENA, type Poslato, type Stavka, citajRed, dodajURed, noviKljuc, posaljiRed, postaviKorisnika } from "@/lib/red";
+import { instaliraj, pratiInstalaciju, registrujSW, sacuvajZaOffline, stanjeInstalacije } from "@/lib/pwa";
 import { toast } from "@/lib/toast";
 import type { Me } from "@/lib/types";
 import { Odjava } from "../Odjava";
@@ -41,9 +43,24 @@ function citajZvuk() {
   }
 }
 
+/** Napredak sa servera dopunjen onim što čeka u redu za slanje (nivo pređen bez mreže otključava sledeći). */
+function saRedom(n: Napredak, red: Stavka[]): Napredak {
+  if (!red.length) return n;
+  const nivoi = { ...n.nivoi };
+  const kartice = { ...n.kartice };
+  for (const s of red) {
+    if (s.tip === "nivo") {
+      const bio = nivoi[s.nivo];
+      nivoi[s.nivo] = { zavrsen: true, zvezdice: Math.max(bio?.zvezdice ?? 0, s.zvezdice), najbolje: bio?.najbolje ?? 0 };
+    } else if (s.tip === "kartica") kartice[s.pojam] = s.zna;
+  }
+  return { ...n, nivoi, kartice };
+}
+
 export function Polaznik({ me }: { me: Me }) {
+  postaviKorisnika(me.korisnik.id);
   const [kurs, setKurs] = useState<Kurs | null>(null);
-  const [napredak, setNapredak] = useState<Napredak | null>(null);
+  const [napredakServer, setNapredak] = useState<Napredak | null>(null);
   const [greska, setGreska] = useState("");
   const [tab, setTab] = useState<Tab>("put");
   const [list, setList] = useState<Nivo | null>(null);
@@ -54,6 +71,8 @@ export function Polaznik({ me }: { me: Me }) {
   const [test, setTest] = useState(0);
   const [av, setAv] = useState(me.korisnik.avatar);
   const [zvuk, setZvuk] = useState(true);
+  const [red, setRed] = useState<Stavka[]>([]);
+  const [uMrezi, setUMrezi] = useState(true);
   const zrnaRef = useRef(0);
 
   const ucitajNapredak = useCallback(
@@ -74,9 +93,14 @@ export function Polaznik({ me }: { me: Me }) {
         RECEPTI.recepti = r.dokument.recepti;
         RECEPTI.polja = r.dokument.recept_polja;
         setKurs(r.dokument);
+        const slike = r.dokument.nivoi.flatMap((n) =>
+          n.steps.flatMap((k) => [k.img, ...((k.gallery as { img: string }[] | undefined) ?? []).map((g) => g.img)]),
+        );
+        sacuvajZaOffline(slike.filter((x): x is string => typeof x === "string").map((x) => (x.startsWith("/") ? x : `/${x}`)));
       })
       .catch((e: Error) => setGreska(e.message));
     ucitajNapredak();
+    registrujSW();
     const z = citajZvuk();
     setZvuk(z);
     sfx.on = z;
@@ -106,6 +130,37 @@ export function Polaznik({ me }: { me: Me }) {
     },
     [kurs],
   );
+
+  // red za slanje: šalje se pri otvaranju, kad se veza vrati i povremeno dok nešto čeka
+  useEffect(() => {
+    const osvezi = () => setRed(citajRed());
+    const mreza = () => {
+      setUMrezi(navigator.onLine);
+      if (navigator.onLine) posaljiRed();
+    };
+    const poslato = (e: Event) => {
+      const p = (e as CustomEvent<Poslato>).detail;
+      if (p.dobitak) dobitak(p.dobitak);
+      if (p.poslato) toast(`${icon("check")}<span>Poslato sa telefona: <b>${p.poslato}</b></span>`, "gold");
+      if (p.odbijeno) toast(`${icon("info")}<span>Server nije prihvatio ${p.odbijeno} sačuvanih rezultata (sadržaj je u međuvremenu izmenjen).</span>`);
+      ucitajNapredak();
+    };
+    osvezi();
+    setUMrezi(navigator.onLine);
+    window.addEventListener(DOGADJAJ_PROMENA, osvezi);
+    window.addEventListener(DOGADJAJ_POSLATO, poslato);
+    window.addEventListener("online", mreza);
+    window.addEventListener("offline", mreza);
+    const t = window.setInterval(() => citajRed().length && navigator.onLine && posaljiRed(), 30_000);
+    posaljiRed();
+    return () => {
+      window.removeEventListener(DOGADJAJ_PROMENA, osvezi);
+      window.removeEventListener(DOGADJAJ_POSLATO, poslato);
+      window.removeEventListener("online", mreza);
+      window.removeEventListener("offline", mreza);
+      window.clearInterval(t);
+    };
+  }, [dobitak, ucitajNapredak]);
 
   const idi = (t: Tab) => {
     sfx.tap();
@@ -143,8 +198,9 @@ export function Polaznik({ me }: { me: Me }) {
       </div>
     );
   }
-  if (!kurs || !napredak) return <div id="app" aria-busy="true" />;
+  if (!kurs || !napredakServer) return <div id="app" aria-busy="true" />;
 
+  const napredak = saRedom(napredakServer, red);
   const rang = rangZa(kurs, napredak.zrna);
   return (
     <div id="app">
@@ -170,6 +226,13 @@ export function Polaznik({ me }: { me: Me }) {
           </button>
         </div>
       </header>
+      {(!uMrezi || red.length > 0) && (
+        <p className="mreza" role="status">
+          <Ikona ime={uMrezi ? "clock" : "info"} />
+          {uMrezi ? "Šaljem sačuvano sa telefona" : "Bez mreže. Lekcije, igre i kartice rade; test čeka vezu."}
+          {red.length > 0 && <b>{red.length} čeka</b>}
+        </p>
+      )}
       <main id="view" className={`view view-${tab}`}>
         {tab === "put" && (
           <Put kurs={kurs} me={me} napredak={napredak} otvori={setList} pokreni={pokreni} test={() => setUvodTesta(true)} />
@@ -646,7 +709,8 @@ function Kartice({
     try {
       dobitak(await oznaciKarticu(kurs.kurs.kljuc, p.id, znam));
     } catch (e) {
-      toast(esc((e as Error).message));
+      if (e instanceof BezMreze) dodajURed({ tip: "kartica", kljuc: noviKljuc(), kurs: kurs.kurs.kljuc, pojam: p.id, zna: znam });
+      else toast(esc((e as Error).message));
     }
   }
 
@@ -918,6 +982,7 @@ function Profil({
           </span>
           <b>{zvuk ? "Uključen" : "Isključen"}</b>
         </button>
+        <Instalacija />
         <button type="button" className="set-row" onClick={() => setBiram(true)}>
           <span>
             <Ikona ime="edit" />
@@ -946,7 +1011,12 @@ function Profil({
         <Ikona ime="info" />
         Napredak se čuva na tvom nalogu, pa možeš da nastaviš i sa drugog telefona.
       </p>
-      <Odjava />
+      <Odjava
+        pre={() =>
+          !citajRed().length ||
+          confirm("Neki rezultati još nisu poslati. Biće poslati kad se ponovo prijaviš na ovom telefonu. Odjaviti se?")
+        }
+      />
       {biram && (
         <div className="sheet-wrap" onClick={(e) => e.target === e.currentTarget && setBiram(false)}>
           <div className="sheet" role="dialog" aria-modal="true" aria-label="Avatar">
@@ -1026,6 +1096,35 @@ function UvodTesta({ stanje, zatvori, kreni }: { stanje: TestStanje; zatvori: ()
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Red u podešavanjima: aplikacija na početnom ekranu (Android dugme, iPhone uputstvo). */
+function Instalacija() {
+  const [stanje, setStanje] = useState<ReturnType<typeof stanjeInstalacije>>("ne");
+  useEffect(() => {
+    setStanje(stanjeInstalacije());
+    return pratiInstalaciju(() => setStanje(stanjeInstalacije()));
+  }, []);
+  if (stanje === "ne") return null;
+  if (stanje === "moze")
+    return (
+      <button type="button" className="set-row" onClick={instaliraj}>
+        <span>
+          <Ikona ime="bean" />
+          Aplikacija na telefonu
+        </span>
+        <b>Instaliraj</b>
+      </button>
+    );
+  return (
+    <div className="set-row">
+      <span>
+        <Ikona ime="bean" />
+        Aplikacija na telefonu
+      </span>
+      <b>{stanje === "instalirana" ? "Instalirana" : "Deli → Dodaj na početni ekran"}</b>
     </div>
   );
 }

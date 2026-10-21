@@ -124,7 +124,10 @@ Modul 5:
 | 3 | Završni test i sertifikat: izvlačenje i provera na serveru, sertifikat sa kodom, provera i opoziv koda u adminu, procenat u tabeli polaznika (i za menadžera) | gotovo |
 | 4 | Admin statistika: Pregled (aktivnost, levak, zapeli, lokali), Pitanja (najteža, najčešći pogrešan odgovor), Igre, detalj polaznika | gotovo |
 | 5 | Uređivač sadržaja: nacrt, forme za svaki tip koraka, banka pitanja, Brza runda, pojmovi, podešavanja, slike, pregled kao polaznik, objava nove verzije sa spiskom izmena | gotovo |
-| 6 | Kasnije: novi kursevi, PWA (instalacija na telefon, rad bez mreže za lekcije), podsetnici, rang lista po lokalu | |
+| 6a | Aplikacija na telefonu: instalacija na početni ekran, otvaranje i lekcije, igre i kartice bez mreže, red za slanje | gotovo |
+| 6b | Podsetnici u aplikaciji (bez push, SMS i Vibera) | sledeće |
+| 6c | Nedeljna rang lista po lokalu | |
+| 6d | Više kurseva: infrastruktura (izbor kursa, nov kurs iz uređivača) i jedan probni kurs | |
 
 Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 
@@ -178,6 +181,28 @@ Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 - Slike: JPG, PNG ili WebP do 5 MB, proverava se i sadržaj fajla, ne samo tip; služe se samo prijavljenima.
 - Pregled kao polaznik: isti ekran lekcije, nad nacrtom, bez ijednog poziva serveru.
 - `seed.py --samo-sadrzaj` i dalje radi; ako pravi novu verziju dok postoji nacrt, objava nacrta se odbija dok se nacrt ne odbaci (nastao je na staroj verziji).
+
+## Modul 6 (odluke 21.10.2026.)
+
+- Redosled: aplikacija na telefonu, podsetnici, rang lista, više kurseva; svaki deo je poseban PR.
+- Podsetnici samo u aplikaciji: bez push notifikacija, SMS-a i Vibera (polaznici nemaju email, a SMS/Viber koštaju po poruci).
+- Rang lista: zrna ove nedelje (ponedeljak–nedelja, Beograd), samo kolege iz istog lokala.
+- Kursevi: sadržaj za drugi kurs još ne postoji; pravi se infrastruktura sa jednim malim probnim kursom.
+
+## Aplikacija na telefonu i rad bez mreže (Modul 6a)
+
+- Instalacija: manifest i ikone. Android i Chrome nude „Instaliraj” u Profilu; iPhone dobija uputstvo Deli → Dodaj na početni ekran.
+- Service worker (`frontend/public/sw.js`): JS i CSS buildova, slike kursa, ikone i fontovi idu u keš. Početna strana i API koji polaznik čita (me, sadržaj, napredak, stanje testa) idu prvo na mrežu, a bez mreže se koristi poslednji sačuvan odgovor. Admin uvek ide na mrežu. Banka pitanja ne stiže na telefon, pa je nema ni u kešu.
+- Uslov: aplikacija se otvara bez mreže tek pošto je jednom otvorena sa mrežom posle prijave.
+- Red za slanje (`frontend/src/lib/red.ts`, localStorage, posebno po korisniku): nivo pređen bez mreže, rezultat igre i ocena kartice. Šalje se redom pri otvaranju aplikacije, kad se veza vrati i na 30 s dok nešto čeka. Stavka koju server odbije (npr. pitanje izbačeno u novoj verziji sadržaja) izbacuje se iz reda, a polaznik dobija obaveštenje.
+- Nivo bez mreže ide jednim zahtevom (`POST /api/napredak/{kurs}/nivoi/{nivo}/sinhronizacija`):
+  - nosi ključ sa telefona, pa isti nivo poslat dvaput (izgubljen odgovor servera) ne daje zrna dvaput;
+  - ako je nivo započet sa mrežom pa je veza pukla, nastavlja se isti prolaz i već upisani odgovori se preskaču;
+  - obračun je isti kao sa mrežom;
+  - upisuje se vreme kada je nivo pređen (za niz dana i dnevni cilj), najviše 3 dana unazad i nikad u budućnosti.
+- Do slanja aplikacija prikazuje nivo kao završen (sledeći se otključava), a zrna, bonus i bedževi stižu sa servera posle slanja.
+- Završni test traži mrežu (pitanja izvlači i proverava server).
+- Odjava briše sačuvane stranice i podatke iz keša. Red ostaje na telefonu i šalje se kad se isti polaznik ponovo prijavi.
 
 ## Otvorena pitanja
 

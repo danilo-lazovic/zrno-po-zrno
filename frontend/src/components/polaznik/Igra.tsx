@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { podesavanja, pokretac } from "@/igre/registar";
 import { type RezultatOut, posaljiRezultat } from "@/igre/rezultat";
 import type { IgraId, RezultatIgre } from "@/igre/ugovor";
+import { BezMreze } from "@/lib/api";
 import { confetti, sfx } from "@/lib/jezgro";
 import type { Dobitak, Napredak } from "@/lib/napredak";
+import { dodajURed, noviKljuc } from "@/lib/red";
 import type { IgraOpis, Kurs } from "@/lib/sadrzaj";
 import { Ikona } from "../Svg";
 
@@ -30,6 +32,7 @@ export function Igra({
   const [runda, setRunda] = useState(0);
   const [rezultat, setRezultat] = useState<RezultatOut | null>(null);
   const [greska, setGreska] = useState("");
+  const [naCekanju, setNaCekanju] = useState(false);
   const id = igra.id as IgraId;
 
   useEffect(() => {
@@ -37,6 +40,7 @@ export function Igra({
     if (!host) return;
     setRezultat(null);
     setGreska("");
+    setNaCekanju(false);
     // Brza runda pita samo iz nivoa koje je polaznik završio (bar prvi)
     const zavrseni = kurs.nivoi.filter((n) => napredak.nivoi[n.id]?.zavrsen);
     const pitanja = (zavrseni.length ? zavrseni : kurs.nivoi.slice(0, 1)).flatMap((n) => n.swipe);
@@ -51,7 +55,12 @@ export function Igra({
             setRezultat(out);
             dobitak(out);
           })
-          .catch((e: Error) => setGreska(`Rezultat nije sačuvan: ${e.message}`));
+          .catch((e: Error) => {
+            if (e instanceof BezMreze) {
+              dodajURed({ tip: "igra", kljuc: noviKljuc(), kurs: kurs.kurs.kljuc, rezultat: { ...r, izvor }, kontekst: "igraonica" });
+              setNaCekanju(true);
+            } else setGreska(`Rezultat nije sačuvan: ${e.message}`);
+          });
       },
     );
     return () => inst.unisti();
@@ -102,7 +111,13 @@ export function Igra({
               {rezultat.zrna > 0 ? `+${rezultat.zrna} zrna` : "Za danas si iz ove igre pokupio sva zrna, igraj za rekord."}
             </p>
           )}
-          {rezultat && PONOVO.includes(id) && (
+          {naCekanju && (
+            <p className="note" role="status">
+              <Ikona ime="clock" />
+              Bez mreže: rezultat je sačuvan na telefonu, zrna stižu kad se veza vrati.
+            </p>
+          )}
+          {(rezultat || naCekanju) && PONOVO.includes(id) && (
             <button
               type="button"
               className="btn btn-big"
