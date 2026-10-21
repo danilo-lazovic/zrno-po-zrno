@@ -11,6 +11,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+import modules.napredak.models  # noqa: F401
 import modules.sadrzaj.models  # noqa: F401
 from core.auth import login_limiter
 from core.db import get_db

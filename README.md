@@ -19,11 +19,11 @@ python -m venv .venv
 .venv\Scripts\pip install -r requirements-dev.txt
 .venv\Scripts\alembic upgrade head
 .venv\Scripts\python seed.py --demo     # sadržaj kursa + demo nalozi
-.venv\Scripts\uvicorn main:app --reload --port 8000
+.venv\Scripts\uvicorn main:app --reload --port 8001
 
 cd ..\frontend                  # u drugom terminalu
 npm install
-npm run dev                     # http://localhost:3000
+npm run dev                     # http://localhost:3001
 ```
 
 (WSL/Linux: `.venv/bin/...` umesto `.venv\Scripts\...`.)
@@ -37,7 +37,21 @@ Demo nalozi posle `seed.py --demo`:
 | menadžer (Demo lokal) | `menadzer@kafeterija.test` | `SEED_LOZINKA` |
 | polaznik (Demo lokal) | `demo.polaznik` | PIN `2580` |
 
-Telefon na istoj mreži: `npm run dev -- -H 0.0.0.0`, pa `http://<IP računara>:3000`. Za pozivne linkove koji rade sa telefona postavi `APP_URL` na tu adresu.
+Portovi su 3001 (frontend), 8001 (backend) i 5433 (baza), da zrno radi pored Kafeterija Portala (3000, 8000, 5432).
+
+Telefon na istoj mreži: `npm run dev -- -H 0.0.0.0`, pa `http://<IP računara>:3001`. Za pozivne linkove koji rade sa telefona postavi `APP_URL` na tu adresu.
+
+## Lokali iz Kafeterija Portala
+
+U `.env` postavi `PORTAL_URL` (adresa portala) i `PORTAL_KLJUC` (u portalu: Administracija → Ključ za Claude, admin nalog). Zatim Admin → Lokali → „Preuzmi iz portala”, ili:
+
+```powershell
+cd backend
+.venv\Scripts\python scripts\uvezi_lokale.py --dry-run
+.venv\Scripts\python scripts\uvezi_lokale.py
+```
+
+Ponovno preuzimanje ažurira nazive i zatvara lokale kojih više nema u portalu.
 
 ## Testovi
 
@@ -60,6 +74,17 @@ npm run build
 5. Kao admin/trener: „Novi link” polazniku → stari link i stari PIN više ne rade, polaznik je odjavljen sa telefona.
 6. Kao menadžer: vidi samo polaznike svog lokala i dodaje samo u svoj lokal.
 7. Sadržaj → objavljena verzija v1 (8 nivoa).
+
+## Kako se testira Modul 1
+
+1. Prijavi se kao polaznik (`demo.polaznik`, PIN `2580` posle `seed.py --demo`). Prvi put: uvod, izbor avatara, pa odmah nivo 1.
+2. Prođi nivo: priče, pitanja, klizač, ređanje. Posle svakog izazova vidi se povratna informacija i zrna; od trećeg tačnog zaredom raste bonus. Na kraju: tačnost, zvezdice, zrna, dani zaredom, obaveštenje o bedžu.
+3. Prekini nivo na pola (X): zrna ostaju, nivo nije završen. Ponovi nivo: pola bonusa.
+4. Staza: završen nivo dobija zvezdice, sledeći se otključava; dnevni cilj (50 zrna) i rang rastu.
+5. Kartice: okreni karticu, „Znam” daje 1 zrno samo prvi put; minimum lista se štiklira po završenim nivoima.
+6. Profil: bedževi, promena avatara, zvuk.
+7. Kao trener ili menadžer: Polaznici prikazuje završene nivoe, zrna i poslednju aktivnost.
+8. Kao admin: Lokali → „Preuzmi iz portala” (sa `PORTAL_URL` i `PORTAL_KLJUC`).
 
 ## Sadržaj
 

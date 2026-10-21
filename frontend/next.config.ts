@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8000";
+const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8001";
 
 const nextConfig: NextConfig = {
   // Dev server inače blokira svoje skripte kad se aplikacija otvara sa telefona preko tunela

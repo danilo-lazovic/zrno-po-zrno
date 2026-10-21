@@ -27,9 +27,14 @@ class Settings(BaseSettings):
     pozivnica_vazi_dana: int = 7
 
     # javna adresa aplikacije, za pozivne linkove
-    app_url: str = "http://localhost:3000"
+    app_url: str = "http://localhost:3001"
 
     seed_lozinka: str | None = None
+
+    # Kafeterija Portal: lokali se preuzimaju sa njegovog API-ja (GET /api/me), ključem kp_... admin naloga
+    # (Administracija → Ključ za Claude, samo čitanje)
+    portal_url: str | None = None
+    portal_kljuc: str | None = None
 
     @property
     def produkcija(self) -> bool:

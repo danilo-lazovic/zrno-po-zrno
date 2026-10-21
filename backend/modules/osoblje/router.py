@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from core.audit import Akcija, zapisi
@@ -18,6 +18,8 @@ from core.pristup import dozvoljeni_lokal_ids, filtriraj_polaznike, sme_polaznik
 from core.schemas import LokalOut
 from core.security import MIN_LOZINKA, hash_tajne, novi_token_pozivnice
 from core.vreme import sada
+from modules.napredak.models import NivoKorisnika, Zrno
+from modules.osoblje import portal
 
 router = APIRouter(prefix="/api/admin")
 
@@ -44,7 +46,7 @@ def lokali(korisnik: Korisnik = Depends(samo_osoblje), db: Session = Depends(get
 def novi_lokal(body: LokalIn, admin: Korisnik = Depends(samo_admin), db: Session = Depends(get_db)):
     if db.scalar(select(Lokal).where(Lokal.naziv == body.naziv.strip())):
         raise HTTPException(status.HTTP_409_CONFLICT, "Lokal sa tim nazivom već postoji.")
-    lokal = Lokal(naziv=body.naziv.strip(), grad=body.grad, aktivan=body.aktivan)
+    lokal = Lokal(naziv=body.naziv.strip(), grad=body.grad, aktivan=body.aktivan, izvor="rucno")
     db.add(lokal)
     db.flush()
     zapisi(db, admin, Akcija.lokal, lokal.naziv, {"novi": True})
@@ -57,11 +59,31 @@ def izmeni_lokal(lokal_id: int, body: LokalIn, admin: Korisnik = Depends(samo_ad
     lokal = db.get(Lokal, lokal_id)
     if lokal is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Lokal ne postoji.")
+    if lokal.izvor == "portal":
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Lokal iz portala se menja u portalu, pa preuzme ponovo.")
     pre = {"naziv": lokal.naziv, "grad": lokal.grad, "aktivan": lokal.aktivan}
     lokal.naziv, lokal.grad, lokal.aktivan = body.naziv.strip(), body.grad, body.aktivan
     zapisi(db, admin, Akcija.lokal, lokal.naziv, {"pre": pre, "posle": body.model_dump()})
     db.commit()
     return lokal
+
+
+class PortalOut(BaseModel):
+    novih: int
+    izmenjenih: int
+    zatvorenih: int
+    ukupno: int
+
+
+@router.post("/lokali/portal", response_model=PortalOut)
+def lokali_iz_portala(admin: Korisnik = Depends(samo_admin), db: Session = Depends(get_db)):
+    try:
+        rez = portal.uskladi(db, portal.preuzmi())
+    except portal.GreskaPortala as e:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(e)) from e
+    zapisi(db, admin, Akcija.lokali_iz_portala, None, rez.__dict__)
+    db.commit()
+    return PortalOut(**rez.__dict__)
 
 
 # ---------- polaznici ----------
@@ -107,6 +129,10 @@ class PolaznikOut(BaseModel):
     status: str
     poslednja_prijava: datetime | None
     kreiran_u: datetime
+    # napredak na svim kursevima (zasad jedan): završeni nivoi, zrna, poslednje zrno
+    nivoa: int = 0
+    zrna: int = 0
+    poslednja_aktivnost: datetime | None = None
 
 
 class PozivnicaOut(BaseModel):
@@ -123,8 +149,33 @@ def _status(k: Korisnik) -> str:
     return "aktivan" if k.pin_hash else "pozvan"
 
 
-def _polaznik_out(k: Korisnik) -> PolaznikOut:
+def _napredak(db: Session, ids: list[int]) -> dict[int, tuple[int, int, datetime | None]]:
+    if not ids:
+        return {}
+    zrna = {
+        uid: (ukupno, poslednje)
+        for uid, ukupno, poslednje in db.execute(
+            select(Zrno.korisnik_id, func.sum(Zrno.iznos), func.max(Zrno.u))
+            .where(Zrno.korisnik_id.in_(ids))
+            .group_by(Zrno.korisnik_id)
+        )
+    }
+    nivoa = dict(
+        db.execute(
+            select(NivoKorisnika.korisnik_id, func.count())
+            .where(NivoKorisnika.korisnik_id.in_(ids))
+            .group_by(NivoKorisnika.korisnik_id)
+        ).all()
+    )
+    return {uid: (nivoa.get(uid, 0), *zrna.get(uid, (0, None))) for uid in ids}
+
+
+def _polaznik_out(k: Korisnik, napredak: tuple[int, int, datetime | None] = (0, 0, None)) -> PolaznikOut:
+    nivoa, zrna, poslednja = napredak
     return PolaznikOut(
+        nivoa=nivoa,
+        zrna=zrna,
+        poslednja_aktivnost=poslednja,
         id=k.id,
         ime=k.ime,
         prezime=k.prezime,
@@ -183,7 +234,9 @@ def polaznici(
     upit = select(Korisnik).where(Korisnik.uloga == Uloga.polaznik).order_by(Korisnik.prezime, Korisnik.ime)
     if lokal_id is not None:
         upit = upit.where(Korisnik.lokal_id == lokal_id)
-    return [_polaznik_out(k) for k in db.scalars(filtriraj_polaznike(upit, korisnik))]
+    lista = list(db.scalars(filtriraj_polaznike(upit, korisnik)))
+    napredak = _napredak(db, [k.id for k in lista])
+    return [_polaznik_out(k, napredak[k.id]) for k in lista]
 
 
 @router.post("/polaznici", response_model=PozivnicaOut, status_code=status.HTTP_201_CREATED)

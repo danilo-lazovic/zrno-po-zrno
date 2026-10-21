@@ -47,7 +47,7 @@ Pravila koja se ne krše:
 |---|---|---|
 | admin | email + lozinka | sve: lokali, osoblje, polaznici, sadržaj, statistika |
 | trener | email + lozinka | svi polaznici (dodaje, pozivnice), statistika, sertifikati, pregled sadržaja |
-| menadzer | email + lozinka | polaznici svojih lokala (dodaje, pozivnice), njihov napredak |
+| menadzer | email + lozinka | polaznici svojih lokala (dodaje, pozivnice), njihov napredak i procenat na testu |
 | polaznik | korisničko ime + PIN | samo svoj napredak (polaznička aplikacija) |
 
 ## Prijava polaznika (pozivnica + PIN)
@@ -72,22 +72,25 @@ Format koraka ostaje kao u artifactu (`t`, `q`, `opts`, `a`, `why`, `remember`..
 ## Model podataka
 
 Modul 0:
-- `lokali`: id, naziv, grad, aktivan
+- `lokali`: id, naziv, grad, format, aktivan, izvor (portal, rucno, demo), portal_id
 - `korisnici`: id, ime, prezime, korisnicko_ime (unique), email (unique, samo osoblje), uloga, lokal_id (polaznik), lozinka_hash (osoblje), pin_hash (polaznik), neuspeli_pin, zakljucan, aktivan, sesije_od, poslednja_prijava, kreiran_u
 - `korisnik_lokal`: menadžer sa više lokala
 - `pozivnice`: korisnik_id, otisak tokena (sha256, sam token se ne čuva), istice_u, iskoriscena_u, kreirao_id
 - `kursevi`, `sadrzaj_verzije`, `pitanja`
 - `audit_log`: ko, kada, akcija, objekat, detalji (json)
 
-Modul 1 i dalje (predlog):
-- `upisi`: korisnik_id, kurs_id, verzija_id, upisan_u, zavrsen_u
-- `nivo_prolasci`: korisnik, kurs, nivo, pocetak, kraj, tacno, ukupno, zvezdice, greske (json id-jeva)
-- `odgovori`: korisnik, pitanje_id, verzija_id, kontekst (lekcija, test, brza runda), tacno, vreme_ms, u
-- `zrna`: knjiga zrna (korisnik, iznos, razlog, izvor_id, u); zbir je XP, a dnevni cilj i niz dana se računaju iz nje
-- `bedzevi_korisnika`, `igre_rezultati` (igra, poeni, procenat, zvezdice, trajanje)
+Modul 1:
+- `prolazi_nivoa`: jedan prolazak kroz nivo (verzija sadržaja, poeni, izazova, greške, niz tačnih, zrna, zvezdice, kraj). Bez kraja: prekinut.
+- `odgovori`: korisnik, pitanje (id iz sadržaja), nivo, kontekst (lekcija; test i brza runda u modulima 2 i 3), prolaz, rezultat 0–1, vreme_ms
+- `zrna`: knjiga zrna (iznos, razlog: odgovor, nivo, kartica, igra, test; objekat; dan po Beogradu). Zbir je XP; dnevni cilj i dani zaredom se računaju iz nje.
+- `nivoi_korisnika`: najbolji ishod po nivou (prvi završetak, zvezdice, najbolja tačnost, broj prolazaka)
+- `bedzevi_korisnika`, `kartice_korisnika` (zna, nagrađena: zrno samo prvi put)
+- `korisnici.avatar`
+
+Kasnije (predlog):
+- `igre_rezultati` (igra, izvor js/unity, rezultat, zvezdice, poeni, trajanje, detalji)
 - `testovi`: pokušaj završnog testa (izvučena pitanja, odgovori, procenat, polozen, pocetak, kraj)
 - `sertifikati`: korisnik, kurs, test_id, kod, izdat_u, opozvan_u. Kod se proverava na serveru (strana za trenera i javna provera bez ličnih podataka).
-- `kartice_znanje`: korisnik, pojam_id, zna, u
 
 ## Admin deo (šta pratimo)
 
@@ -104,8 +107,8 @@ Modul 1 i dalje (predlog):
 | # | Modul | Status |
 |---|---|---|
 | 0 | Kostur: Docker, baza, auth (pozivnica + PIN, lozinka za osoblje), uloge, audit log, sadržaj u bazi + API, admin: lokali, osoblje, polaznici i pozivnice; frontend: prijava, pozivnica, staza nivoa, igre i minimum lista (zaključano), profil, admin (polaznici, lokali, osoblje, sadržaj) | gotovo |
-| 1 | Polaznička aplikacija: lekcije (svih 11 tipova koraka), staza, kartice, profil; napredak, zrna, niz dana i bedževi na serveru | sledeće |
-| 2 | Igre: Brza runda, Uštimaj mlin, Složi recept, Kralj pare, Sipaj srce; klipovi u lekcijama; rezultati na serveru | |
+| 1 | Polaznička aplikacija: lekcije (svih 11 tipova koraka, klipovi i igre unutar lekcija), ekran rezultata, uvod sa avatarom, kartice za okretanje, zvuk; napredak, zrna, niz dana i bedževi na serveru; lokali iz portala; napredak u adminu | gotovo |
+| 2 | Igraonica: Brza runda, Uštimaj mlin, Složi recept, Kralj pare, Sipaj srce kao posebne igre po ugovoru; rezultati na serveru, bedževi igara (dial, swipe, milk, latte, recipe) | sledeće |
 | 3 | Završni test i sertifikat: izvlačenje na serveru, serverski kod, provera koda, PDF ili slika za deljenje | |
 | 4 | Admin statistika: pregled, polaznici, pitanja, igre, lokali | |
 | 5 | Uređivač sadržaja: nacrt, pregled kao polaznik, objava nove verzije, slike | |
@@ -113,12 +116,26 @@ Modul 1 i dalje (predlog):
 
 Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 
+## Lokali iz portala (odluka 20.10.2026.)
+
+- Lokali se preuzimaju iz Kafeterija Portala (evidencija iz dela za recenzije). Zrno čita portalov API (`GET /api/me` ključem `kp_…` admin naloga, samo čitanje) i nikad ne dira bazu portala.
+- Pokreće se dugmetom Admin → Lokali → „Preuzmi iz portala” ili `python scripts/uvezi_lokale.py`. Lokal se vezuje po `portal_id`; promena naziva u portalu se prenosi, a lokal koji nestane iz portala se ovde zatvara (ne briše, zbog polaznika i istorije).
+- Ručno unet lokal istog naziva prelazi pod portal pri prvom preuzimanju, zajedno sa svojim polaznicima. Lokal iz portala se ne menja u zrnu.
+- Menadžer vidi procenat na testu svojih polaznika (Modul 3).
+
+## Bodovanje (isto kao artifact, računa server)
+
+- Odgovor: `10 × rezultat` zrna; tačan odgovor produžava niz, od trećeg zaredom bonus `min(10, (niz − 2) × 2)`. Pogrešan ili delimičan prekida niz i broji se kao greška.
+- Kraj nivoa: zvezdice 3 (≥ 90%), 2 (≥ 70%), 1; bonus 20 + 20 bez greške, pola bonusa za ponovljen nivo. Zrna od odgovora ostaju i kad se nivo prekine.
+- Kartica „Znam” daje 1 zrno samo prvi put po pojmu.
+- Bedževi: prvi nivo, nivo bez greške, 5 tačnih zaredom, 3 dana zaredom, 4 nivoa, sve zvezdice; bedževi igara i testa u modulima 2 i 3.
+- Dani zaredom: dani (Beograd) sa bar jednim zrnom; niz traje dok je poslednji takav dan danas ili juče.
+- Tačnost odgovora u lekciji javlja klijent (odgovori su u sadržaju koji telefon ima). Završni test će proveravati server, a banka pitanja za test nikad ne ide na telefon.
+
 ## Otvorena pitanja
 
-- Lista lokala: ručno u adminu ili preuzimanje iz Kafeterija Portala (isti nazivi)?
+- Domen: preskočeno dok se ne nabavi (isti server kao portal).
 - Ko šalje pozivni link: trener ručno (kopiraj link) ili sistem SMS-om/Viberom?
-- Da li menadžer vidi i rezultate testa ili samo da je položen?
-- Domen i server (isti VPS kao portal, poddomen tipa `obuka.kafeterija.rs`?)
 - Da li polaznici posle Osnovnog nivoa ostaju na platformi (novi kursevi, osvežavanje znanja)?
 
 Valuta nije bitna; vremenska zona Europe/Belgrade (čuva se UTC, prikazuje lokalno). Dan za dnevni cilj i niz dana je kalendarski dan u Beogradu.

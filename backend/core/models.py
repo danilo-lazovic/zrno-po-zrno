@@ -79,7 +79,12 @@ class Lokal(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     naziv: Mapped[str] = mapped_column(String(120), unique=True)
     grad: Mapped[str | None] = mapped_column(String(80))
+    format: Mapped[str | None] = mapped_column(String(30))
     aktivan: Mapped[bool] = mapped_column(Boolean, server_default=true())
+    # portal (preuzet iz Kafeterija Portala, menja se samo tamo), rucno ili demo
+    izvor: Mapped[str] = mapped_column(String(20), server_default="rucno")
+    # id lokala u portalu; po njemu se lokal ažurira pri sledećem preuzimanju
+    portal_id: Mapped[int | None] = mapped_column(Integer, unique=True)
 
 
 class Korisnik(Base):
@@ -107,6 +112,8 @@ class Korisnik(Base):
     poslednja_prijava: Mapped[datetime | None] = mapped_column(UtcDateTime())
     kreiran_u: Mapped[datetime] = mapped_column(UtcDateTime(), server_default=func.now())
     kreirao_id: Mapped[int | None] = mapped_column(ForeignKey("korisnici.id", ondelete="SET NULL"))
+    # izbor polaznika u aplikaciji (zrno, tresnja, soljica...); None dok ne prođe uvod
+    avatar: Mapped[str | None] = mapped_column(String(20))
 
     lokal: Mapped[Lokal | None] = relationship(foreign_keys=[lokal_id])
     lokali: Mapped[list[Lokal]] = relationship(secondary=korisnik_lokal, order_by=Lokal.naziv)

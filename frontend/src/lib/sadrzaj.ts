@@ -44,6 +44,8 @@ export type Kurs = {
   nivoi: Nivo[];
   igre: IgraOpis[];
   pojmovi: { id: string; nivo: string; pojam: string; opis: string }[];
+  recepti: unknown[];
+  recept_polja: unknown[];
 };
 
 export type SadrzajOut = { kurs: string; verzija: number; dokument: Kurs };

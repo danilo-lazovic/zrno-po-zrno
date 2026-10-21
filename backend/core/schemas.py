@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,7 +20,9 @@ class LokalOut(BaseModel):
     id: int
     naziv: str
     grad: str | None
+    format: str | None
     aktivan: bool
+    izvor: str
 
 
 class KorisnikOut(BaseModel):
@@ -30,6 +33,7 @@ class KorisnikOut(BaseModel):
     prezime: str
     korisnicko_ime: str
     uloga: str
+    avatar: str | None
 
 
 class MeOut(BaseModel):
@@ -37,6 +41,11 @@ class MeOut(BaseModel):
     lokal: LokalOut | None
     # lokali čije polaznike vidi; None za admina i trenera (svi)
     lokali: list[LokalOut] | None
+
+
+class ProfilIn(BaseModel):
+    # avatari iz art modula (frontend/src/lib/art.ts)
+    avatar: Literal["zrno", "tresnja", "soljica", "latijera", "portafilter", "ketl"]
 
 
 class PozivnicaInfo(BaseModel):

@@ -8,6 +8,26 @@ export default function LokaliStrana() {
   const [lokali, setLokali] = useState<Lokal[] | null>(null);
   const [forma, setForma] = useState({ naziv: "", grad: "" });
   const [greska, setGreska] = useState("");
+  const [poruka, setPoruka] = useState("");
+  const [preuzima, setPreuzima] = useState(false);
+
+  async function izPortala() {
+    setGreska("");
+    setPoruka("");
+    setPreuzima(true);
+    try {
+      const r = await posalji<{ novih: number; izmenjenih: number; zatvorenih: number; ukupno: number }>(
+        "/api/admin/lokali/portal",
+        "POST",
+      );
+      setPoruka(`Lokala u portalu: ${r.ukupno}. Novih ${r.novih}, izmenjenih ${r.izmenjenih}, zatvorenih ${r.zatvorenih}.`);
+      ucitaj();
+    } catch (err) {
+      setGreska((err as Error).message);
+    } finally {
+      setPreuzima(false);
+    }
+  }
 
   const ucitaj = useCallback(() => {
     api<Lokal[]>("/api/admin/lokali").then(setLokali).catch((e: Error) => setGreska(e.message));
@@ -32,7 +52,19 @@ export default function LokaliStrana() {
           <p className="eyebrow">Admin</p>
           <h1 className="h1">Lokali</h1>
         </div>
+        <button type="button" className="btn btn-gold" onClick={izPortala} disabled={preuzima}>
+          {preuzima ? "Preuzimam…" : "Preuzmi iz portala"}
+        </button>
       </div>
+      <p className="sub" style={{ marginBottom: 16 }}>
+        Lokali dolaze iz Kafeterija Portala (evidencija iz dela za recenzije) i menjaju se tamo. Ručno dodaj samo lokal kog
+        u portalu još nema; pri sledećem preuzimanju lokal istog naziva prelazi pod portal.
+      </p>
+      {poruka && (
+        <p className="note ok" role="status">
+          {poruka}
+        </p>
+      )}
       <form
         className="forma card"
         onSubmit={(e) => {
@@ -64,6 +96,8 @@ export default function LokaliStrana() {
             <tr>
               <th>Naziv</th>
               <th>Grad</th>
+              <th>Format</th>
+              <th>Izvor</th>
               <th>Status</th>
               <th />
             </tr>
@@ -73,18 +107,22 @@ export default function LokaliStrana() {
               <tr key={l.id}>
                 <td>{l.naziv}</td>
                 <td>{l.grad ?? "–"}</td>
+                <td>{l.format ?? "–"}</td>
+                <td className="mono">{l.izvor === "portal" ? "portal" : l.izvor === "demo" ? "demo" : "ručno"}</td>
                 <td>
                   <span className={`znak znak-${l.aktivan ? "aktivan" : "iskljucen"}`}>{l.aktivan ? "Aktivan" : "Zatvoren"}</span>
                 </td>
                 <td>
                   <div className="akcije">
-                    <button
-                      type="button"
-                      className="btn btn-ghost"
-                      onClick={() => sacuvaj({ naziv: l.naziv, grad: l.grad, aktivan: !l.aktivan }, l)}
-                    >
-                      {l.aktivan ? "Zatvori" : "Otvori"}
-                    </button>
+                    {l.izvor !== "portal" && (
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={() => sacuvaj({ naziv: l.naziv, grad: l.grad, aktivan: !l.aktivan }, l)}
+                      >
+                        {l.aktivan ? "Zatvori" : "Otvori"}
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
