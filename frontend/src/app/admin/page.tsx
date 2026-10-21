@@ -4,23 +4,27 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Levak, Stubici } from "@/components/admin/grafikoni";
 import { IzborLokala } from "@/components/admin/IzborLokala";
+import { upit, useAdminKurs } from "@/lib/adminKurs";
 import { api } from "@/lib/api";
 import { datumVreme } from "@/lib/format";
-import { type LokalStat, type Pregled, kratakDan, sa } from "@/lib/statistika";
+import { type LokalStat, type Pregled, kratakDan } from "@/lib/statistika";
 
 export default function PregledStrana() {
   const [lokal, setLokal] = useState("");
   const [p, setP] = useState<Pregled | null>(null);
   const [lokali, setLokali] = useState<LokalStat[] | null>(null);
   const [greska, setGreska] = useState("");
+  const kurs = useAdminKurs();
 
   useEffect(() => {
+    if (!kurs) return;
     setP(null);
-    api<Pregled>(`/api/admin/statistika/pregled${sa(lokal)}`).then(setP).catch((e: Error) => setGreska(e.message));
-  }, [lokal]);
+    api<Pregled>(`/api/admin/statistika/pregled${upit(kurs, { lokal_id: lokal })}`).then(setP).catch((e: Error) => setGreska(e.message));
+  }, [lokal, kurs]);
   useEffect(() => {
-    api<LokalStat[]>("/api/admin/statistika/lokali").then(setLokali).catch(() => {});
-  }, []);
+    if (!kurs) return;
+    api<LokalStat[]>(`/api/admin/statistika/lokali${upit(kurs)}`).then(setLokali).catch(() => {});
+  }, [kurs]);
 
   return (
     <>

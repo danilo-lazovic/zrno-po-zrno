@@ -21,7 +21,11 @@ class Kurs(Base):
         ForeignKey("sadrzaj_verzije.id", ondelete="SET NULL", use_alter=True)
     )
 
+    # kurs se otključava kad polaznik položi završni test ovog kursa (npr. srednji nivo posle osnovnog)
+    preduslov_id: Mapped[int | None] = mapped_column(ForeignKey("kursevi.id", ondelete="SET NULL"))
+
     verzija: Mapped["SadrzajVerzija | None"] = relationship(foreign_keys=[verzija_id], post_update=True)
+    preduslov: Mapped["Kurs | None"] = relationship(remote_side=[id], foreign_keys=[preduslov_id])
 
 
 class SadrzajVerzija(Base):

@@ -94,4 +94,3 @@ export const TIP_PITANJA: Record<string, string> = {
 const KRATAK_DAN = new Intl.DateTimeFormat("sr-Latn-RS", { day: "numeric", month: "numeric" });
 export const kratakDan = (iso: string) => KRATAK_DAN.format(new Date(`${iso}T12:00:00`));
 
-export const sa = (lokal: string) => (lokal ? `?lokal_id=${lokal}` : "");

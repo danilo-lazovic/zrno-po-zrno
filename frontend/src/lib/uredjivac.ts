@@ -17,17 +17,20 @@ export type NacrtOut = {
   izmene: Izmena[];
   greske: string[];
   zauzeti_id: string[];
+  /** nivoi iz objavljene verzije: ne brišu se i ne premeštaju */
+  objavljeni_nivoi: string[];
 };
 
 export type NivoUredjivanje = Kurs["nivoi"][number] & { pool: Korak[] };
 export type KursUredjivanje = Omit<Kurs, "nivoi"> & { nivoi: NivoUredjivanje[] };
 
-const URL = "/api/admin/sadrzaj/osnovni/nacrt";
-export const ucitajNacrt = () => api<NacrtOut>(URL);
-export const sacuvajNacrt = (dokument: KursUredjivanje, revizija: number) =>
-  api<NacrtOut>(URL, { method: "PUT", body: JSON.stringify({ dokument, revizija }), headers: { "content-type": "application/json" } });
-export const odbaciNacrt = () => api<void>(URL, { method: "DELETE" });
-export const objaviNacrt = (napomena: string) => posalji<{ verzija: number; izmena: number }>(`${URL}/objavi`, "POST", { napomena });
+const url = (kurs: string) => `/api/admin/sadrzaj/${encodeURIComponent(kurs)}/nacrt`;
+export const ucitajNacrt = (kurs: string) => api<NacrtOut>(url(kurs));
+export const sacuvajNacrt = (kurs: string, dokument: KursUredjivanje, revizija: number) =>
+  api<NacrtOut>(url(kurs), { method: "PUT", body: JSON.stringify({ dokument, revizija }) });
+export const odbaciNacrt = (kurs: string) => api<void>(url(kurs), { method: "DELETE" });
+export const objaviNacrt = (kurs: string, napomena: string) =>
+  posalji<{ verzija: number; izmena: number }>(`${url(kurs)}/objavi`, "POST", { napomena });
 
 export async function otpremiSliku(fajl: File): Promise<string> {
   const res = await fetch("/api/admin/sadrzaj/slike", { method: "POST", body: fajl, headers: { "content-type": fajl.type } });
@@ -97,6 +100,33 @@ export function novKorak(t: string, id: string): Korak {
     default:
       return { id, t: "sort", q: "", left: "", right: "", items: [["", 0], ["", 1]], why: "" };
   }
+}
+
+/** Nov nivo na kraju kursa; id m1, m2... nikad ne ponavlja obrisan. */
+export function novNivo(dok: KursUredjivanje, zauzeti: Set<string>): NivoUredjivanje {
+  let max = 0;
+  for (const id of [...zauzeti, ...dok.nivoi.map((n) => n.id)]) {
+    const m = id.match(/^m(\d+)$/);
+    if (m) max = Math.max(max, Number(m[1]));
+  }
+  const n = dok.nivoi.length + 1;
+  return { id: `m${max + 1}`, n, title: `Nivo ${n}`, icon: "bean", color: "#7B4A2D", min: 5, desc: "", steps: [], pool: [], swipe: [] };
+}
+
+/** Posle dodavanja, brisanja ili premeštanja nivoa: redni brojevi i delovi prate redosled nivoa, prazni delovi nestaju. */
+export function srediNivoe(d: KursUredjivanje, deoNivoa: Record<string, number> = {}): KursUredjivanje {
+  const nivoi = d.nivoi.map((n, i) => ({ ...n, n: i + 1 }));
+  const clan: Record<string, number> = {};
+  d.delovi.forEach((deo, i) => deo.nivoi.forEach((id) => (clan[id] = i)));
+  Object.assign(clan, deoNivoa);
+  const delovi = d.delovi.map((deo) => ({ ...deo, nivoi: [] as string[] }));
+  for (const n of nivoi) {
+    // nov nivo bez dela ide u poslednji deo
+    const i = clan[n.id] ?? Math.max(0, delovi.length - 1);
+    if (!delovi[i]) delovi[i] = { naziv: `Deo ${i + 1}`, nivoi: [] };
+    delovi[i].nivoi.push(n.id);
+  }
+  return { ...d, nivoi, delovi: delovi.filter((x) => x && x.nivoi.length) };
 }
 
 export function opisKoraka(k: Korak): string {

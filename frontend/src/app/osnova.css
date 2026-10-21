@@ -239,3 +239,23 @@ body:has(.adm) { background-image: none; }
 .rang-ime { overflow: hidden; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
 .rang-ime small { color: var(--ink-3); font-weight: 600; }
 .rang b { font: 800 18px var(--font-display); font-variant-numeric: tabular-nums; }
+
+/* ---------- više kurseva (Modul 6d) ---------- */
+.kurs-dugme { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; margin: 4px 0 12px; padding: 10px 14px; border: 2px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.kurs-dugme svg { width: 22px; height: 22px; color: var(--ink-2); }
+.kurs-dugme > span:nth-child(2) { display: grid; min-width: 0; }
+.kurs-dugme small { font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+.kurs-dugme b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.kurs-dugme em { font-style: normal; font-size: 13px; font-weight: 700; color: var(--mid-ink); }
+.kursevi { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.kurs-red { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 12px; width: 100%; padding: 10px; border: 2px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.kurs-red > span:last-child { display: grid; gap: 2px; min-width: 0; }
+.kurs-red small { color: var(--ink-2); font-size: 13px; }
+.kurs-red.on { border-color: var(--gold); background: var(--gold-soft); }
+.kurs-red.locked { opacity: .65; }
+.adm-kurs { display: grid; gap: 4px; margin: 0 4px 12px; }
+.adm-kurs span { font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+.adm .adm-kurs .inp { padding: 8px 10px; font-size: 14px; }
+@media (max-width: 760px) { .adm-kurs { width: 100%; } }
+.ur-sekcije .ur-nov-nivo { color: var(--mid-ink); }
+.tabela .akcije .btn-ghost:disabled { visibility: hidden; }

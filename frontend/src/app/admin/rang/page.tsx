@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { IzborLokala } from "@/components/admin/IzborLokala";
+import { useAdminKurs } from "@/lib/adminKurs";
 import { type RangLokala, opsegNedelje, ucitajRangOsoblje } from "@/lib/rang";
 
 const NEDELJE = [
@@ -18,12 +19,14 @@ export default function RangStrana() {
   const [lokal, setLokal] = useState("");
   const [lokali, setLokali] = useState<RangLokala[] | null>(null);
   const [greska, setGreska] = useState("");
+  const kurs = useAdminKurs();
 
   useEffect(() => {
-    ucitajRangOsoblje("osnovni", pomak, lokal ? Number(lokal) : undefined)
+    if (!kurs) return;
+    ucitajRangOsoblje(kurs, pomak, lokal ? Number(lokal) : undefined)
       .then(setLokali)
       .catch((e: Error) => setGreska(e.message));
-  }, [pomak, lokal]);
+  }, [pomak, lokal, kurs]);
 
   return (
     <>

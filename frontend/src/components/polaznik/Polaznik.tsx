@@ -6,7 +6,19 @@ import { api, BezMreze, posalji } from "@/lib/api";
 import { RECEPTI } from "@/lib/igre";
 import { esc, sfx } from "@/lib/jezgro";
 import { type Dobitak, type Napredak, oznaciKarticu } from "@/lib/napredak";
-import { type IgraOpis, IZAZOVI, type Kurs, type Nivo, type SadrzajOut, md, mnozina, rangZa } from "@/lib/sadrzaj";
+import {
+  type IgraOpis,
+  IZAZOVI,
+  type Kurs,
+  type KursSpisak,
+  type Nivo,
+  type SadrzajOut,
+  izaberiKurs,
+  md,
+  mnozina,
+  rangZa,
+  zapamtiKurs,
+} from "@/lib/sadrzaj";
 import type { TestStanje } from "@/lib/test";
 import { DOGADJAJ_POSLATO, DOGADJAJ_PROMENA, type Poslato, type Stavka, citajRed, dodajURed, noviKljuc, posaljiRed, postaviKorisnika } from "@/lib/red";
 import { instaliraj, pratiInstalaciju, registrujSW, sacuvajZaOffline, stanjeInstalacije } from "@/lib/pwa";
@@ -23,7 +35,6 @@ import { Test } from "./Test";
 import { Uvod } from "./Uvod";
 import { zvezdice } from "./zvezdice";
 
-const KURS = "osnovni";
 const ZVUK = "zpz-zvuk";
 
 type Tab = "put" | "igre" | "kartice" | "profil";
@@ -46,11 +57,12 @@ function citajZvuk() {
 }
 
 /** Napredak sa servera dopunjen onim što čeka u redu za slanje (nivo pređen bez mreže otključava sledeći). */
-function saRedom(n: Napredak, red: Stavka[]): Napredak {
+function saRedom(n: Napredak, red: Stavka[], kurs: string): Napredak {
   if (!red.length) return n;
   const nivoi = { ...n.nivoi };
   const kartice = { ...n.kartice };
   for (const s of red) {
+    if (s.kurs !== kurs) continue;
     if (s.tip === "nivo") {
       const bio = nivoi[s.nivo];
       nivoi[s.nivo] = { zavrsen: true, zvezdice: Math.max(bio?.zvezdice ?? 0, s.zvezdice), najbolje: bio?.najbolje ?? 0 };
@@ -61,6 +73,9 @@ function saRedom(n: Napredak, red: Stavka[]): Napredak {
 
 export function Polaznik({ me }: { me: Me }) {
   postaviKorisnika(me.korisnik.id);
+  const [kursevi, setKursevi] = useState<KursSpisak[] | null>(null);
+  const [kljuc, setKljuc] = useState<string | null>(null);
+  const [biraKurs, setBiraKurs] = useState(false);
   const [kurs, setKurs] = useState<Kurs | null>(null);
   const [napredakServer, setNapredak] = useState<Napredak | null>(null);
   const [greska, setGreska] = useState("");
@@ -77,20 +92,56 @@ export function Polaznik({ me }: { me: Me }) {
   const [uMrezi, setUMrezi] = useState(true);
   const zrnaRef = useRef(0);
 
-  const ucitajNapredak = useCallback(
+  const ucitajNapredak = useCallback(async () => {
+    if (!kljuc) return;
+    try {
+      const [n, t] = await Promise.all([api<Napredak>(`/api/napredak/${kljuc}`), api<TestStanje>(`/api/test/${kljuc}`)]);
+      zrnaRef.current = n.zrna;
+      setNapredak(n);
+      setTestStanje(t);
+    } catch (e) {
+      setGreska((e as Error).message);
+    }
+  }, [kljuc]);
+
+  const ucitajKurseve = useCallback(
     () =>
-      Promise.all([api<Napredak>(`/api/napredak/${KURS}`), api<TestStanje>(`/api/test/${KURS}`)])
-        .then(([n, t]) => {
-          zrnaRef.current = n.zrna;
-          setNapredak(n);
-          setTestStanje(t);
+      api<KursSpisak[]>("/api/kursevi")
+        .then((l) => {
+          setKursevi(l);
+          setKljuc((k) => k ?? izaberiKurs(l, me.korisnik.id));
+          if (!l.some((k) => k.otkljucan)) setGreska("Još nijedan kurs nije objavljen.");
         })
         .catch((e: Error) => setGreska(e.message)),
-    [],
+    [me.korisnik.id],
   );
 
   useEffect(() => {
-    api<SadrzajOut>(`/api/sadrzaj/${KURS}`)
+    ucitajKurseve();
+    registrujSW();
+    const z = citajZvuk();
+    setZvuk(z);
+    sfx.on = z;
+    const otkljucaj = () => sfx.unlock();
+    document.addEventListener("pointerdown", otkljucaj, { once: true });
+    return () => document.removeEventListener("pointerdown", otkljucaj);
+  }, [ucitajKurseve]);
+
+  function promeniKurs(k: string) {
+    setBiraKurs(false);
+    if (k === kljuc) return;
+    sfx.tap();
+    zapamtiKurs(me.korisnik.id, k);
+    setKurs(null);
+    setNapredak(null);
+    setTestStanje(null);
+    setTab("put");
+    setKljuc(k);
+  }
+
+  useEffect(() => {
+    if (!kljuc) return;
+    api<SadrzajOut>(`/api/sadrzaj/${kljuc}`)
       .then((r) => {
         RECEPTI.recepti = r.dokument.recepti;
         RECEPTI.polja = r.dokument.recept_polja;
@@ -102,14 +153,7 @@ export function Polaznik({ me }: { me: Me }) {
       })
       .catch((e: Error) => setGreska(e.message));
     ucitajNapredak();
-    registrujSW();
-    const z = citajZvuk();
-    setZvuk(z);
-    sfx.on = z;
-    const otkljucaj = () => sfx.unlock();
-    document.addEventListener("pointerdown", otkljucaj, { once: true });
-    return () => document.removeEventListener("pointerdown", otkljucaj);
-  }, [ucitajNapredak]);
+  }, [kljuc, ucitajNapredak]);
 
   /** Server je javio novi zbir zrna i bedževe: obaveštenja i gornja traka (artifact gain/award). */
   const dobitak = useCallback(
@@ -202,7 +246,7 @@ export function Polaznik({ me }: { me: Me }) {
   }
   if (!kurs || !napredakServer) return <div id="app" aria-busy="true" />;
 
-  const napredak = saRedom(napredakServer, red);
+  const napredak = saRedom(napredakServer, red, kurs.kurs.kljuc);
   const rang = rangZa(kurs, napredak.zrna);
   return (
     <div id="app">
@@ -236,6 +280,16 @@ export function Polaznik({ me }: { me: Me }) {
         </p>
       )}
       <main id="view" className={`view view-${tab}`}>
+        {tab === "put" && kursevi && kursevi.length > 1 && (
+          <button type="button" className="kurs-dugme" onClick={() => setBiraKurs(true)}>
+            <Ikona ime="cards" />
+            <span>
+              <small>Kurs</small>
+              <b>{kurs.kurs.naziv}</b>
+            </span>
+            <em>Promeni</em>
+          </button>
+        )}
         {tab === "put" && (
           <Put
             kurs={kurs}
@@ -277,6 +331,7 @@ export function Polaznik({ me }: { me: Me }) {
           </button>
         ))}
       </nav>
+      {biraKurs && kursevi && <IzborKursa kursevi={kursevi} trenutni={kurs.kurs.kljuc} izaberi={promeniKurs} zatvori={() => setBiraKurs(false)} />}
       {list && <NivoList nivo={list} napredak={napredak} zatvori={() => setList(null)} pokreni={pokreni} />}
       {lekcija && (
         <Lekcija
@@ -328,6 +383,8 @@ export function Polaznik({ me }: { me: Me }) {
           zatvori={() => {
             setTest(0);
             ucitajNapredak();
+            // položen test može da otključa sledeći kurs
+            ucitajKurseve();
           }}
           ponoviNivo={(id) => {
             setTest(0);
@@ -644,6 +701,7 @@ function Igre({ kurs, napredak, otvori }: { kurs: Kurs; napredak: Napredak; otvo
       <p className="eyebrow">Igraonica</p>
       <h1 className="h1">Vežbaj kroz igru</h1>
       <p className="lead">Svaka igra se otključava kad završiš nivo u kom je to gradivo. Igre donose zrna i bedževe.</p>
+      {kurs.igre.length === 0 && <p className="note">Ovaj kurs još nema igre. Igre iz drugih kurseva su tamo gde je i njihovo gradivo.</p>}
       <div className="glist">
         {kurs.igre.map((g) => {
           const nivo = kurs.nivoi.find((n) => n.id === g.after)!;
@@ -1283,6 +1341,71 @@ function RangLista({ kurs, prva, zatvori }: { kurs: Kurs; prva: Rang; zatvori: (
             </p>
           )}
           <button type="button" className="btn btn-gold btn-big" onClick={zatvori} autoFocus>
+            Zatvori
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Spisak kurseva: otključani se biraju, zaključani kažu šta ih otključava (Modul 6d). */
+function IzborKursa({
+  kursevi,
+  trenutni,
+  izaberi,
+  zatvori,
+}: {
+  kursevi: KursSpisak[];
+  trenutni: string;
+  izaberi: (k: string) => void;
+  zatvori: () => void;
+}) {
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && zatvori();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [zatvori]);
+  return (
+    <div className="sheet-wrap" onClick={(e) => e.target === e.currentTarget && zatvori()}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label="Kursevi">
+        <div className="msheet">
+          <h2 className="h2">Kursevi</h2>
+          <ul className="kursevi">
+            {kursevi.map((k) => (
+              <li key={k.kljuc}>
+                <button
+                  type="button"
+                  className={`kurs-red${k.kljuc === trenutni ? " on" : ""}${k.otkljucan ? "" : " locked"}`}
+                  aria-disabled={!k.otkljucan}
+                  aria-current={k.kljuc === trenutni ? "true" : undefined}
+                  onClick={() => {
+                    if (k.otkljucan) izaberi(k.kljuc);
+                    else {
+                      sfx.bad();
+                      toast(`Otključava se kad položiš završni test: ${esc(k.preduslov ?? "")}.`);
+                    }
+                  }}
+                >
+                  <span className="cta-ic">
+                    <Ikona ime={k.polozen ? "trophy" : k.otkljucan ? "cards" : "lock"} />
+                  </span>
+                  <span>
+                    <b>{k.naziv}</b>
+                    <small>
+                      {k.polozen
+                        ? "Test položen"
+                        : k.otkljucan
+                          ? `${k.zavrseno} od ${k.nivoa} nivoa`
+                          : `Otključava se kad položiš test: ${k.preduslov}`}
+                    </small>
+                    {k.opis && <small>{k.opis}</small>}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <button type="button" className="btn btn-ghost" onClick={zatvori}>
             Zatvori
           </button>
         </div>
