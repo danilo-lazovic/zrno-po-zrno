@@ -122,6 +122,18 @@ npm run build
 7. **Objavi…**: spisak dodatog, izmenjenog i obrisanog, napomena, pa nova verzija. Polaznik je dobija pri sledećem otvaranju; na stranici Sadržaj je nova verzija sa napomenom.
 8. Kao menadžer: Sadržaj se ne vidi u meniju, a uređivač vraća na Pregled.
 
+## Kako se testira Modul 6a (aplikacija na telefonu, bez mreže)
+
+Radi samo u produkcionom buildu (`npm run build` pa `npm start`); u `npm run dev` service worker se ne registruje.
+
+1. Na telefonu (Android Chrome) otvori aplikaciju i prijavi se. Profil → Podešavanja → „Aplikacija na telefonu” → **Instaliraj**. Na iPhone-u: Deli → Dodaj na početni ekran.
+2. Isključi mrežu (avionski režim) i otvori aplikaciju: otvara se, a gore piše „Bez mreže”.
+3. Pređi sledeći nivo: u lekciji piše da se odgovori čuvaju na telefonu, a rezultat kaže „čeka vezu”. Na Putu je nivo završen i sledeći otključan; gore piše koliko stvari čeka.
+4. Oceni karticu ili odigraj igru bez mreže: i to ide u red.
+5. Uključi mrežu: posle par sekundi stiže „Poslato sa telefona”, a sa njim zrna i bedževi. U adminu se nivo vidi kao završen.
+6. Pokreni nivo sa mrežom, pa isključi mrežu usred nivoa: nivo se završava normalno i šalje kad se veza vrati, a zrna se ne dupliraju.
+7. Na računaru: Chrome DevTools → Application → Service workers / Cache storage, i Network → Offline.
+
 ## Sadržaj
 
 Sadržaj se menja u uređivaču (Modul 5). JSON u `backend/modules/sadrzaj/data/` je prva verzija i rezervni put za veće izmene:

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zrno po zrno · bez mreže</title>
+<style>
+  :root { color-scheme: light dark; --bg: #F6F1EC; --ink: #241510; --ink-2: #6B5446; --gold: #F4AE3D; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #160E0A; --ink: #F6EDE4; --ink-2: #C8B3A3; } }
+  body { display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 16px; box-sizing: border-box; background: var(--bg); color: var(--ink); font: 17px/1.5 system-ui, sans-serif; text-align: center; }
+  main { max-width: 360px; }
+  img { width: 72px; height: 72px; }
+  h1 { margin: 12px 0 4px; font-size: 24px; }
+  p { margin: 0 0 20px; color: var(--ink-2); }
+  button { min-height: 48px; padding: 12px 22px; border: 2px solid var(--ink); border-radius: 14px; background: var(--gold); color: #241510; font: 700 16px system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<main>
+  <img src="/ikone/ikona-192.png" alt="">
+  <h1>Nema mreže</h1>
+  <p>Aplikacija se otvara bez mreže tek kad je jednom otvoriš sa mrežom. Poveži se na Wi-Fi ili mobilni internet i pokušaj ponovo.</p>
+  <button type="button" onclick="location.reload()">Pokušaj ponovo</button>
+</main>
+</body>
+</html>

@@ -14,6 +14,8 @@ import {
   zapocniNivo,
   zavrsiNivo,
 } from "@/lib/napredak";
+import { BezMreze } from "@/lib/api";
+import { dodajURed, noviKljuc, posaljiRed } from "@/lib/red";
 import { IZAZOVI, type Kurs, type Nivo, md, mnozina } from "@/lib/sadrzaj";
 import { Ikona, Svg } from "../Svg";
 import { zvezdice } from "./zvezdice";
@@ -46,6 +48,8 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci, pregled = false
   const [rezultat, setRezultat] = useState<ZavrsetakOut | null>(null);
   const [prekid, setPrekid] = useState(false);
   const [zavrsava, setZavrsava] = useState(false);
+  // bez mreže: odgovori se čuvaju na telefonu, a ceo nivo ide u red za slanje na kraju
+  const [lokalno, setLokalno] = useState(false);
 
   const korakRef = useRef<HTMLDivElement>(null);
   const teloRef = useRef<HTMLDivElement>(null);
@@ -60,6 +64,8 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci, pregled = false
   const prolazRef = useRef<Promise<number> | null>(null);
   const lanacRef = useRef<Promise<void>>(Promise.resolve());
   const neposlatiRef = useRef<Neposlat[]>([]);
+  const sviRef = useRef<Neposlat[]>([]);
+  const lokalnoRef = useRef(false);
 
   const st = koraci[i];
   const izazov = IZAZOVI.includes(st.t);
@@ -67,8 +73,14 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci, pregled = false
 
   useEffect(() => {
     if (pregled) return;
-    const p = zapocniNivo(kurs.kurs.kljuc, nivo.id).then((r) => r.prolaz_id);
-    p.catch((e: Error) => setGreska(e.message));
+    // prethodni nivo pređen bez mreže mora prvi do servera, inače je ovaj još zaključan
+    const p = posaljiRed().then(() => zapocniNivo(kurs.kurs.kljuc, nivo.id).then((r) => r.prolaz_id));
+    p.catch((e: Error) => {
+      if (e instanceof BezMreze) {
+        lokalnoRef.current = true;
+        setLokalno(true);
+      } else setGreska(e.message);
+    });
     prolazRef.current = p;
   }, [kurs.kurs.kljuc, nivo.id, pregled]);
 
@@ -86,15 +98,19 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci, pregled = false
   const posalji = useCallback(
     (o: Neposlat) => {
       if (pregled) return;
+      sviRef.current.push(o);
+      if (lokalnoRef.current) return;
       lanacRef.current = lanacRef.current.then(async () => {
         try {
           const id = await prolazRef.current!;
           const r = await posaljiOdgovor(id, o.pitanje, o.rezultat, o.vreme, o.izbor);
           nizRef.current = r.niz;
           dobitak(r);
+          setLokalno(false);
         } catch (e) {
           neposlatiRef.current.push(o);
-          setGreska(`Odgovor nije sačuvan (${(e as Error).message}). Pokušaću ponovo na kraju nivoa.`);
+          if (e instanceof BezMreze) setLokalno(true);
+          else setGreska(`Odgovor nije sačuvan (${(e as Error).message}). Pokušaću ponovo na kraju nivoa.`);
         }
       });
     },
@@ -167,25 +183,57 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci, pregled = false
     if (pregled) return zatvori();
     setZavrsava(true);
     await lanacRef.current;
-    // ponovi odgovore koji nisu stigli do servera
-    const neposlati = neposlatiRef.current.splice(0);
-    if (neposlati.length) {
-      setGreska("");
-      neposlati.forEach(posalji);
-      await lanacRef.current;
+    if (!lokalnoRef.current) {
+      // ponovi odgovore koji nisu stigli do servera
+      const neposlati = neposlatiRef.current.splice(0);
+      if (neposlati.length) {
+        setGreska("");
+        neposlati.forEach((o) => {
+          sviRef.current = sviRef.current.filter((x) => x !== o);
+          posalji(o);
+        });
+        await lanacRef.current;
+      }
+      try {
+        if (neposlatiRef.current.length) throw new BezMreze();
+        const r = await zavrsiNivo(await prolazRef.current!);
+        dobitak(r);
+        setGreska("");
+        prikaziRezultat(r);
+        return;
+      } catch (e) {
+        if (!(e instanceof BezMreze)) {
+          setGreska(`Nivo nije sačuvan: ${(e as Error).message}`);
+          setZavrsava(false);
+          return;
+        }
+      }
     }
-    try {
-      const r = await zavrsiNivo(await prolazRef.current!);
-      dobitak(r);
-      setGreska("");
-      setRezultat(r);
-      sfx.win();
-      confetti.burst(r.zvezdice === 3 ? 110 : 50);
-    } catch (e) {
-      setGreska(`Nivo nije sačuvan: ${(e as Error).message}`);
-    } finally {
-      setZavrsava(false);
-    }
+    // bez mreže: ceo nivo (i odgovori koji su možda već stigli) ide u red; server preskače već upisane
+    const prolaz = await prolazRef.current?.catch(() => undefined);
+    const odgovori = sviRef.current.map((o) => ({ pitanje: o.pitanje, rezultat: o.rezultat, vreme_ms: o.vreme, izbor: o.izbor }));
+    const tacnost = odgovori.length ? odgovori.reduce((z, o) => z + o.rezultat, 0) / odgovori.length : 1;
+    const zv = tacnost >= 0.9 ? 3 : tacnost >= 0.7 ? 2 : 1;
+    dodajURed({
+      tip: "nivo",
+      kljuc: noviKljuc(),
+      kurs: kurs.kurs.kljuc,
+      nivo: nivo.id,
+      prolaz_id: prolaz,
+      odgovori,
+      zavrseno_u: new Date().toISOString(),
+      zvezdice: zv,
+    });
+    setGreska("");
+    setLokalno(true);
+    prikaziRezultat({ tacnost: Math.round(tacnost * 100), zvezdice: zv, bonus: 0, zrna_prolaz: zrnaProlaz, ukupno_zrna: 0, niz_dana: 0, novi_bedzevi: [] });
+  }
+
+  function prikaziRezultat(r: ZavrsetakOut) {
+    setZavrsava(false);
+    setRezultat(r);
+    sfx.win();
+    confetti.burst(r.zvezdice === 3 ? 110 : 50);
   }
 
   function dalje() {
@@ -215,7 +263,7 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci, pregled = false
     };
   }, [rezultat, pregled, zatvori]);
 
-  if (rezultat) return <Rezultat kurs={kurs} nivo={nivo} r={rezultat} zatvori={zatvori} sledeci={sledeci} />;
+  if (rezultat) return <Rezultat kurs={kurs} nivo={nivo} r={rezultat} lokalno={lokalno} zatvori={zatvori} sledeci={sledeci} />;
 
   const labela = fb ? "Dalje" : izazov ? "Proveri" : i === koraci.length - 1 ? "Završi" : "Dalje";
   const klasaDugmeta = fb
@@ -252,6 +300,12 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci, pregled = false
           <div className={`step step-${st.t}`} ref={korakRef} />
         </div>
         <div className={`ls-foot${fb ? ` ${fb.klasa}` : ""}`}>
+          {lokalno && !fb && (
+            <p className="note" role="status">
+              <Ikona ime="info" />
+              Bez mreže. Odgovori se čuvaju na telefonu i šalju čim se veza vrati.
+            </p>
+          )}
           {greska && (
             <p className="note bad" role="alert">
               <Ikona ime="info" />
@@ -326,8 +380,9 @@ function pokreniIgruULekciji(
     if (!pregled) {
       posaljiRezultat(kurs.kurs.kljuc, { ...r, izvor }, "lekcija")
         .then(dobitak)
-        .catch(() => {
-          /* rezultat igre u lekciji je samo za statistiku i bedževe; odgovor lekcije ide posebno */
+        .catch((e) => {
+          // rezultat igre u lekciji je samo za statistiku i bedževe; odgovor lekcije ide posebno
+          if (e instanceof BezMreze) dodajURed({ tip: "igra", kljuc: noviKljuc(), kurs: kurs.kurs.kljuc, rezultat: { ...r, izvor }, kontekst: "lekcija" });
         });
     }
     gotovo(r);
@@ -338,12 +393,14 @@ function Rezultat({
   kurs,
   nivo,
   r,
+  lokalno,
   zatvori,
   sledeci,
 }: {
   kurs: Kurs;
   nivo: Nivo;
   r: ZavrsetakOut;
+  lokalno: boolean;
   zatvori: () => void;
   sledeci: (n: Nivo | null) => void;
 }) {
@@ -370,11 +427,26 @@ function Rezultat({
               <b>+{r.zrna_prolaz}</b>
               <span>zrna</span>
             </div>
-            <div>
-              <b>{r.niz_dana}</b>
-              <span>{mnozina(r.niz_dana, "dan", "dana", "dana")} zaredom</span>
-            </div>
+            {lokalno ? (
+              <div>
+                <b>
+                  <Ikona ime="clock" />
+                </b>
+                <span>čeka vezu</span>
+              </div>
+            ) : (
+              <div>
+                <b>{r.niz_dana}</b>
+                <span>{mnozina(r.niz_dana, "dan", "dana", "dana")} zaredom</span>
+              </div>
+            )}
           </div>
+          {lokalno && (
+            <p className="note">
+              <Ikona ime="info" />
+              Nivo je sačuvan na telefonu. Šalje se sam čim se veza vrati; tada stižu i zrna, bonus i bedževi.
+            </p>
+          )}
           <div className="res-next">
             <span>Sledeće</span>
             <b>{sled ? `Nivo ${sled.n} · ${sled.title}` : "Završni test"}</b>
