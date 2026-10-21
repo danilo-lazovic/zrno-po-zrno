@@ -318,3 +318,5 @@
   }
 
 export { icon, avatar, AV as avatars, BEAN, medal, diagram, latte, misc };
+/** imena UI ikonica (za izbor ikonice nivoa u uređivaču) */
+export const IMENA_IKONA: string[] = Object.keys(IC);

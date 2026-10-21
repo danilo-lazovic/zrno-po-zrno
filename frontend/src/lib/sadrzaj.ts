@@ -50,6 +50,42 @@ export type Kurs = {
 
 export type SadrzajOut = { kurs: string; verzija: number; dokument: Kurs };
 
+/** GET /api/kursevi: objavljeni kursevi redom, sa napretkom polaznika i otključavanjem. */
+export type KursSpisak = {
+  kljuc: string;
+  naziv: string;
+  opis: string | null;
+  verzija: number;
+  nivoa: number;
+  zavrseno: number;
+  polozen: boolean;
+  otkljucan: boolean;
+  /** naziv kursa čiji test otključava ovaj */
+  preduslov: string | null;
+};
+
+/** Poslednji izabran kurs na ovom telefonu, ako je i dalje otključan; inače prvi otključan koji nije položen. */
+export function izaberiKurs(kursevi: KursSpisak[], korisnik: number): string | null {
+  let sacuvan: string | null = null;
+  try {
+    sacuvan = localStorage.getItem(`zpz-kurs-${korisnik}`);
+  } catch {
+    /* bez skladišta */
+  }
+  const otvoreni = kursevi.filter((k) => k.otkljucan);
+  return (
+    otvoreni.find((k) => k.kljuc === sacuvan)?.kljuc ?? otvoreni.find((k) => !k.polozen)?.kljuc ?? otvoreni[0]?.kljuc ?? null
+  );
+}
+
+export function zapamtiKurs(korisnik: number, kljuc: string) {
+  try {
+    localStorage.setItem(`zpz-kurs-${korisnik}`, kljuc);
+  } catch {
+    /* bez skladišta: važi do zatvaranja */
+  }
+}
+
 export const IZAZOVI = ["mc", "tf", "num", "order", "match", "sort", "hotspot", "game"];
 
 export function rangZa(kurs: Kurs, zrna: number) {

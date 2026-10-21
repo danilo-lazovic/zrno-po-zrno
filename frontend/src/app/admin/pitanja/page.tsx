@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Procenat } from "@/components/admin/grafikoni";
 import { IzborLokala } from "@/components/admin/IzborLokala";
+import { useAdminKurs } from "@/lib/adminKurs";
 import { api } from "@/lib/api";
 import { type PitanjeStat, TIP_PITANJA } from "@/lib/statistika";
 
@@ -11,14 +12,16 @@ export default function PitanjaStrana() {
   const [kontekst, setKontekst] = useState("");
   const [lista, setLista] = useState<PitanjeStat[] | null>(null);
   const [greska, setGreska] = useState("");
+  const kurs = useAdminKurs();
 
   useEffect(() => {
-    const p = new URLSearchParams({ min_odgovora: "3" });
+    if (!kurs) return;
+    const p = new URLSearchParams({ kurs, min_odgovora: "3" });
     if (lokal) p.set("lokal_id", lokal);
     if (kontekst) p.set("kontekst", kontekst);
     setLista(null);
     api<PitanjeStat[]>(`/api/admin/statistika/pitanja?${p}`).then(setLista).catch((e: Error) => setGreska(e.message));
-  }, [lokal, kontekst]);
+  }, [lokal, kontekst, kurs]);
 
   return (
     <>

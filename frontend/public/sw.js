@@ -9,7 +9,7 @@ const VERZIJA = "zpz-1";
 const STATIKA = `zpz-statika-${VERZIJA}`;
 const STRANE = "zpz-strane";
 const API = "zpz-api";
-const API_ZA_CITANJE = [/^\/api\/me$/, /^\/api\/sadrzaj\/[^/]+$/, /^\/api\/napredak\/[^/]+$/, /^\/api\/test\/[^/]+$/];
+const API_ZA_CITANJE = [/^\/api\/me$/, /^\/api\/kursevi$/, /^\/api\/sadrzaj\/[^/]+$/, /^\/api\/napredak\/[^/]+$/, /^\/api\/test\/[^/]+$/];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(STATIKA).then((c) => c.addAll(["/offline.html", "/ikone/ikona-192.png"])).then(() => self.skipWaiting()));

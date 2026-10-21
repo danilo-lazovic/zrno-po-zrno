@@ -18,6 +18,8 @@ class Akcija(StrEnum):
     lokali_iz_portala = "lokali_iz_portala"
     sadrzaj_objavljen = "sadrzaj_objavljen"
     sertifikat_opozvan = "sertifikat_opozvan"
+    kurs_napravljen = "kurs_napravljen"
+    kurs_izmenjen = "kurs_izmenjen"
 
 
 def zapisi(

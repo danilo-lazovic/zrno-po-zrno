@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { Procenat } from "@/components/admin/grafikoni";
+import { upit, useAdminKurs } from "@/lib/adminKurs";
 import { api } from "@/lib/api";
 import { datumVreme } from "@/lib/format";
 import { type Detalj, TIP_PITANJA } from "@/lib/statistika";
@@ -19,10 +20,12 @@ export default function PolaznikDetalj({ params }: { params: Promise<{ id: strin
   const { id } = use(params);
   const [d, setD] = useState<Detalj | null>(null);
   const [greska, setGreska] = useState("");
+  const kurs = useAdminKurs();
 
   useEffect(() => {
-    api<Detalj>(`/api/admin/polaznici/${id}/detalj`).then(setD).catch((e: Error) => setGreska(e.message));
-  }, [id]);
+    if (!kurs) return;
+    api<Detalj>(`/api/admin/polaznici/${id}/detalj${upit(kurs)}`).then(setD).catch((e: Error) => setGreska(e.message));
+  }, [id, kurs]);
 
   if (greska) return <p className="note bad">{greska}</p>;
   if (!d) return <p className="sub">Učitavam…</p>;

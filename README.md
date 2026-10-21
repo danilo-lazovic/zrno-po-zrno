@@ -147,6 +147,15 @@ Radi samo u produkcionom buildu (`npm run build` pa `npm start`); u `npm run dev
 2. Kolege bez zrna te nedelje se ne vide polazniku; ispod liste piše koliko ih je.
 3. Admin → **Rang lista**: svi lokali (menadžer samo svoji), izbor nedelje do 4 unazad i lokala; klik na ime otvara detalj polaznika.
 
+## Kako se testira Modul 6d (više kurseva)
+
+1. Kao trener: Admin → Sadržaj → **Nov kurs** (npr. „Meni Kafeterije”; ključ se predloži sam) → otvara se uređivač novog kursa.
+2. Dodaj korake u prvi nivo, pa **+ Dodaj nivo**. U „O nivou” se menjaju naziv, ikonica, boja i deo kursa; nov nivo se briše i premešta dok kurs nije objavljen. U Podešavanjima su naziv i opis kursa, nazivi delova i broj pitanja na testu (bar 5, a kurs mora imati toliko pitanja).
+3. Sačuvaj pa **Objavi**. Na stranici Sadržaj kurs piše „Objavljen v1”.
+4. Kao polaznik: na Putu je dugme „Kurs · Promeni”. U spisku su oba kursa sa napretkom; izbor otvara stazu tog kursa.
+5. Preduslov: na stranici Sadržaj za nov kurs izaberi „Položen test: Osnovni nivo”. Polaznik koji nije položio osnovni vidi kurs zaključan i šta ga otključava.
+6. U adminu se u meniju bira „Statistika za kurs”: Pregled, Pitanja, Igre i Rang lista prikazuju izabrani kurs.
+
 ## Sadržaj
 
 Sadržaj se menja u uređivaču (Modul 5). JSON u `backend/modules/sadrzaj/data/` je prva verzija i rezervni put za veće izmene:

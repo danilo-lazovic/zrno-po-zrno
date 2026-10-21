@@ -44,3 +44,4 @@ class Sertifikat(Base):
     razlog_opoziva: Mapped[str | None] = mapped_column(String(300))
 
     korisnik: Mapped[Korisnik] = relationship(foreign_keys=[korisnik_id])
+    kurs: Mapped["Kurs"] = relationship(foreign_keys=[kurs_id])  # noqa: F821  (modules.sadrzaj.models)

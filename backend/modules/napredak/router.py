@@ -19,7 +19,7 @@ from core.vreme import danas, sada, vreme_od
 from modules.napredak import bodovanje as b
 from modules.napredak.models import BedzKorisnika, KarticaKorisnika, NivoKorisnika, Odgovor, ProlazNivoa, Zrno
 from modules.igre.stanje import IgraStanje, stanje_igara
-from modules.sadrzaj.kurs import objavljen_kurs
+from modules.sadrzaj.kurs import kurs_za_ucenje, objavljen_kurs
 from modules.sadrzaj.models import SadrzajVerzija
 from modules.sadrzaj.uvoz import IZAZOVI
 from modules.test.router import stanje_testa
@@ -178,7 +178,7 @@ def napredak(kurs: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Ses
 
 
 def _zapocni(db: Session, korisnik: Korisnik, kurs: str, nivo: str) -> ProlazNivoa:
-    k = objavljen_kurs(db, kurs)
+    k = kurs_za_ucenje(db, korisnik, kurs)
     nivoi = _nivoi(k.verzija.dokument)
     i = next((i for i, n in enumerate(nivoi) if n["id"] == nivo), None)
     if i is None:

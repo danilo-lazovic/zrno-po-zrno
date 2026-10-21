@@ -24,7 +24,7 @@ from core.schemas import LokalOut
 from core.vreme import sada
 from modules.napredak import bodovanje as b
 from modules.napredak.models import Odgovor
-from modules.sadrzaj.kurs import objavljen_kurs
+from modules.sadrzaj.kurs import kurs_za_ucenje, objavljen_kurs
 from modules.sadrzaj.models import SadrzajVerzija
 from modules.test.models import Sertifikat, Test
 
@@ -199,7 +199,7 @@ def stanje(kurs: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Sessi
 
 @router.post("/test/{kurs}/pokusaj", response_model=PokusajOut, status_code=status.HTTP_201_CREATED)
 def nov_pokusaj(kurs: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Session = Depends(get_db)):
-    k = objavljen_kurs(db, kurs)
+    k = kurs_za_ucenje(db, korisnik, kurs)
     dok = k.verzija.dokument
     zavrseni = b.nivoi_korisnika(db, korisnik.id, k.id)
     if not all(n["id"] in zavrseni for n in dok["nivoi"]):
@@ -294,6 +294,7 @@ class SertifikatAdminOut(BaseModel):
     prezime: str
     korisnicko_ime: str
     lokal: LokalOut | None
+    kurs: str
 
 
 class OpozivIn(BaseModel):
@@ -305,7 +306,7 @@ def _admin_out(s: Sertifikat) -> SertifikatAdminOut:
     return SertifikatAdminOut(
         id=s.id, kod=s.kod, procenat=s.procenat, izdat_u=s.izdat_u, opozvan_u=s.opozvan_u, razlog_opoziva=s.razlog_opoziva,
         ime=k.ime, prezime=k.prezime, korisnicko_ime=k.korisnicko_ime,
-        lokal=LokalOut.model_validate(k.lokal) if k.lokal else None,
+        lokal=LokalOut.model_validate(k.lokal) if k.lokal else None, kurs=s.kurs.naziv,
     )
 
 

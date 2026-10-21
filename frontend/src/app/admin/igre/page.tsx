@@ -3,18 +3,21 @@
 import { useEffect, useState } from "react";
 import { Procenat } from "@/components/admin/grafikoni";
 import { IzborLokala } from "@/components/admin/IzborLokala";
+import { upit, useAdminKurs } from "@/lib/adminKurs";
 import { api } from "@/lib/api";
-import { type IgraStat, sa } from "@/lib/statistika";
+import type { IgraStat } from "@/lib/statistika";
 
 export default function IgreStrana() {
   const [lokal, setLokal] = useState("");
   const [lista, setLista] = useState<IgraStat[] | null>(null);
   const [greska, setGreska] = useState("");
+  const kurs = useAdminKurs();
 
   useEffect(() => {
+    if (!kurs) return;
     setLista(null);
-    api<IgraStat[]>(`/api/admin/statistika/igre${sa(lokal)}`).then(setLista).catch((e: Error) => setGreska(e.message));
-  }, [lokal]);
+    api<IgraStat[]>(`/api/admin/statistika/igre${upit(kurs, { lokal_id: lokal })}`).then(setLista).catch((e: Error) => setGreska(e.message));
+  }, [lokal, kurs]);
 
   return (
     <>

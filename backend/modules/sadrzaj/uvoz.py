@@ -74,7 +74,7 @@ def greske_sadrzaja(dok: dict[str, Any]) -> list[str]:
         else:
             ids.add(i)
 
-    for kljuc in ("kurs", "podesavanja", "nivoi", "rangovi", "bedzevi", "igre", "pojmovi"):
+    for kljuc in ("kurs", "podesavanja", "nivoi", "delovi", "rangovi", "bedzevi", "igre", "pojmovi"):
         if kljuc not in dok:
             greske.append(f"nedostaje '{kljuc}'")
     if greske:
@@ -89,9 +89,21 @@ def greske_sadrzaja(dok: dict[str, Any]) -> list[str]:
         greske.append("podešavanja: dnevni cilj mora biti između 10 i 1000 zrna")
 
     nivoi = {n.get("id") for n in dok["nivoi"]}
+    if not dok["nivoi"]:
+        greske.append("kurs nema nijedan nivo")
+    # staza na telefonu crta nivoe po delovima: svaki nivo mora biti u tačno jednom delu
+    u_delovima = [i for d in dok["delovi"] for i in d.get("nivoi", [])]
+    for i in sorted(nivoi - set(u_delovima), key=str):
+        greske.append(f"{i}: nivo nije ni u jednom delu kursa")
+    for i in sorted({i for i in u_delovima if u_delovima.count(i) > 1 or i not in nivoi}, key=str):
+        greske.append(f"delovi: nivo {i} se ponavlja ili ne postoji")
+    if not dok["rangovi"]:
+        greske.append("kurs nema nijedan rang")
     za_test = 0
     for n in dok["nivoi"]:
         jedinstven(n.get("id"), "nivo")
+        if not str(n.get("title", "")).strip():
+            greske.append(f"{n.get('id')}: nivo nema naziv")
         if not n.get("steps"):
             greske.append(f"{n.get('id')}: nivo nema nijedan korak")
         for k in n.get("steps", []):

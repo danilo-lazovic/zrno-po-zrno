@@ -127,7 +127,7 @@ Modul 5:
 | 6a | Aplikacija na telefonu: instalacija na početni ekran, otvaranje i lekcije, igre i kartice bez mreže, red za slanje | gotovo |
 | 6b | Podsetnici u aplikaciji (bez push, SMS i Vibera) | gotovo |
 | 6c | Nedeljna rang lista po lokalu | gotovo |
-| 6d | Više kurseva: infrastruktura (izbor kursa, nov kurs iz uređivača) i jedan probni kurs | sledeće |
+| 6d | Više kurseva: nov kurs iz admina, uređivanje nivoa dok kurs nije objavljen, preduslov, izbor kursa u aplikaciji, statistika po kursu | gotovo |
 
 Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 
@@ -223,6 +223,16 @@ Kad su svi nivoi gotovi, nema posebnog podsetnika za test: Put tada ionako ima v
 - U listi su aktivni polaznici iz istog lokala sa postavljenim PIN-om. Isti broj zrna daje isto mesto (1, 1, 3).
 - Polaznik vidi kolege koje su te nedelje zaradile zrna i sebe, sa imenom i inicijalom prezimena, ovu i prošlu nedelju. Polaznik bez lokala nema rang listu.
 - Osoblje (Admin → Rang lista) vidi ceo lokal sa punim imenima i polaznike bez zrna, do 4 nedelje unazad; menadžer samo svoje lokale.
+
+## Više kurseva (Modul 6d)
+
+- Kurs pravi admin ili trener (Admin → Sadržaj → Nov kurs): ključ (u adresi), naziv, opis i preduslov. Nov kurs počinje kao nacrt sa jednim praznim nivoom; rangovi i bedževi su kao u osnovnom, bez bedževa igara. Polaznici ga vide tek posle prve objave.
+- Dok kurs nije objavljen, nivoi se slobodno dodaju, brišu i premeštaju. Posle objave objavljeni nivoi ostaju gde jesu, a nov nivo se dodaje na kraj. Delovi kursa (grupe nivoa na stazi) prate redosled nivoa; svaki nivo mora biti u tačno jednom delu.
+- Preduslov: kurs se otključava kad polaznik ima važeći sertifikat drugog kursa (opoziv ga ponovo zaključava). Server to proverava pri početku nivoa i testa; zaključan kurs se vidi u spisku sa porukom šta ga otključava. Lanac preduslova ne sme da se zatvori u krug.
+- Kurs se može sakriti (ne vidi se polaznicima, napredak ostaje) i premeštati u spisku.
+- Polaznik: kad ima više objavljenih kurseva, na Putu bira kurs. Izbor se pamti na telefonu, a ako taj kurs više nije otključan, otvara se prvi otključan koji nije položen. Zrna, nivoi, bedževi, test, sertifikat, rang lista i podsetnici su po kursu.
+- Admin: kad ima više objavljenih kurseva, u meniju se bira kurs za statistiku (Pregled, Pitanja, Igre, Rang lista, detalj polaznika). Sertifikati imaju kolonu Kurs.
+- Igre su vezane za gradivo osnovnog kursa; nov kurs ih zasad nema.
 
 ## Otvorena pitanja
 

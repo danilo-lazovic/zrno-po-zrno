@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Lekcija } from "@/components/polaznik/Lekcija";
 import { datumVreme } from "@/lib/format";
+import { IMENA_IKONA } from "@/lib/art";
 import { RECEPTI } from "@/lib/igre";
 import { type Korak, type Kurs, type Nivo, mnozina } from "@/lib/sadrzaj";
 import {
@@ -13,12 +14,14 @@ import {
   TIPOVI,
   TIPOVI_BANKE,
   novKorak,
+  novNivo,
   noviId,
   noviIdPojma,
   odbaciNacrt,
   objaviNacrt,
   opisKoraka,
   sacuvajNacrt,
+  srediNivoe,
   ucitajNacrt,
 } from "@/lib/uredjivac";
 import { FormaKoraka } from "./forme";
@@ -33,7 +36,7 @@ const DELOVI: { id: Deo; naziv: string }[] = [
 ];
 
 /** Uređivač kursa: radi na nacrtu, polaznici vide objavljenu verziju dok se nacrt ne objavi. */
-export function Uredjivac() {
+export function Uredjivac({ kurs }: { kurs: string }) {
   const [nacrt, setNacrt] = useState<NacrtOut | null>(null);
   const [dok, setDok] = useState<KursUredjivanje | null>(null);
   const [prljavo, setPrljavo] = useState(false);
@@ -50,16 +53,16 @@ export function Uredjivac() {
 
   const ucitaj = useCallback(async () => {
     try {
-      const n = await ucitajNacrt();
+      const n = await ucitajNacrt(kurs);
       setNacrt(n);
       setDok(n.dokument);
       setPrljavo(false);
       setGreska("");
-      setSekcija((s) => s || n.dokument.nivoi[0].id);
+      setSekcija((s) => s || n.dokument.nivoi[0]?.id || "podesavanja");
     } catch (e) {
       setGreska((e as Error).message);
     }
-  }, []);
+  }, [kurs]);
 
   useEffect(() => {
     ucitaj();
@@ -96,7 +99,7 @@ export function Uredjivac() {
     setCuva(true);
     setGreska("");
     try {
-      const n = await sacuvajNacrt(poslat, nacrt!.revizija);
+      const n = await sacuvajNacrt(kurs, poslat, nacrt!.revizija);
       setNacrt(n);
       if (dokRef.current === poslat) setPrljavo(false);
       setPoruka(n.greske.length ? "Sačuvano, ali nacrt ima greške koje treba ispraviti pre objave." : "Nacrt je sačuvan.");
@@ -110,7 +113,7 @@ export function Uredjivac() {
   async function odbaci() {
     if (!confirm("Odbaciti nacrt? Sve nesačuvane i sačuvane izmene se brišu i vraća se objavljena verzija.")) return;
     try {
-      if (nacrt!.revizija > 0) await odbaciNacrt();
+      if (nacrt!.revizija > 0) await odbaciNacrt(kurs);
       await ucitaj();
       setIzabran(null);
       setPoruka("Nacrt je odbačen.");
@@ -128,6 +131,15 @@ export function Uredjivac() {
 
   const nivo = dok.nivoi.find((n) => n.id === sekcija);
   const sacuvan = nacrt.revizija > 0;
+  const nov = nacrt.osnova === 0;
+
+  function dodajNivo() {
+    const n = novNivo(dok!, zauzeti);
+    menjaj((d) => srediNivoe({ ...d, nivoi: [...d.nivoi, n] }));
+    setSekcija(n.id);
+    setDeo("nivo");
+    setIzabran(null);
+  }
 
   return (
     <>
@@ -139,7 +151,13 @@ export function Uredjivac() {
           <h1 className="h1">Uređivač</h1>
         </div>
         <div className="ur-akcije">
-          <button type="button" className="btn btn-ghost" onClick={odbaci} disabled={!sacuvan && !prljavo}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={odbaci}
+            disabled={nov || (!sacuvan && !prljavo)}
+            title={nov ? "Kurs još nije objavljen; nacrt je jedini sadržaj" : undefined}
+          >
             Odbaci nacrt
           </button>
           <button type="button" className="btn" onClick={sacuvaj} disabled={!prljavo || cuva}>
@@ -158,7 +176,11 @@ export function Uredjivac() {
       </div>
 
       <div className="ur-stanje" aria-live="polite">
-        {sacuvan ? (
+        {nov ? (
+          <span>
+            Nov kurs, još nije objavljen. Polaznici ga ne vide dok ga ne objaviš; do tada se nivoi slobodno dodaju, brišu i premeštaju.
+          </span>
+        ) : sacuvan ? (
           <span>
             Nacrt na osnovu <b>v{nacrt.osnova}</b> · {nacrt.izmene.length} {mnozina(nacrt.izmene.length, "izmena", "izmene", "izmena")} · sačuvao {nacrt.izmenio} {datumVreme(nacrt.izmenjen_u)}
           </span>
@@ -210,6 +232,9 @@ export function Uredjivac() {
               <span className="mono">{n.n}</span> {n.title}
             </button>
           ))}
+          <button type="button" className="ur-nov-nivo" onClick={dodajNivo}>
+            + Dodaj nivo
+          </button>
           <button type="button" aria-current={sekcija === "pojmovi" ? "true" : undefined} onClick={() => setSekcija("pojmovi")}>
             Pojmovi
           </button>
@@ -261,7 +286,20 @@ export function Uredjivac() {
               {deo === "runda" && (
                 <BrzaRunda nivo={nivo} menjaj={(swipe) => menjajNivo(nivo.id, (n) => ({ ...n, swipe }))} noviId={() => noviId(nivo.id, "s", zauzeti)} />
               )}
-              {deo === "nivo" && <ONivou nivo={nivo} menjaj={(f) => menjajNivo(nivo.id, f)} />}
+              {deo === "nivo" && (
+                <ONivou
+                  nivo={nivo}
+                  dok={dok}
+                  objavljen={nacrt.objavljeni_nivoi.includes(nivo.id)}
+                  objavljeni={nacrt.objavljeni_nivoi}
+                  menjaj={(f) => menjajNivo(nivo.id, f)}
+                  menjajKurs={menjaj}
+                  obrisan={() => {
+                    setSekcija(dok.nivoi.find((x) => x.id !== nivo.id)?.id ?? "podesavanja");
+                    setDeo("koraci");
+                  }}
+                />
+              )}
             </>
           )}
           {sekcija === "pojmovi" && <Pojmovi dok={dok} menjaj={menjaj} zauzeti={zauzeti} />}
@@ -271,6 +309,7 @@ export function Uredjivac() {
 
       {objava && (
         <Objava
+          kurs={kurs}
           nacrt={nacrt}
           zatvori={() => setObjava(false)}
           objavljeno={async (v) => {
@@ -472,10 +511,41 @@ function BrzaRunda({
   );
 }
 
-function ONivou({ nivo, menjaj }: { nivo: NivoUredjivanje; menjaj: (f: (n: NivoUredjivanje) => NivoUredjivanje) => void }) {
+function ONivou({
+  nivo,
+  dok,
+  objavljen,
+  objavljeni,
+  menjaj,
+  menjajKurs,
+  obrisan,
+}: {
+  nivo: NivoUredjivanje;
+  dok: KursUredjivanje;
+  objavljen: boolean;
+  objavljeni: string[];
+  menjaj: (f: (n: NivoUredjivanje) => NivoUredjivanje) => void;
+  menjajKurs: (f: (d: KursUredjivanje) => KursUredjivanje) => void;
+  obrisan: () => void;
+}) {
+  const i = dok.nivoi.findIndex((n) => n.id === nivo.id);
+  const deoNivoa = dok.delovi.findIndex((d) => d.nivoi.includes(nivo.id));
+  // objavljeni nivoi stoje gde jesu; novi se premeštaju samo među novima
+  const pomeriSe = (j: number) => !objavljen && j >= 0 && j < dok.nivoi.length && !objavljeni.includes(dok.nivoi[j].id);
+  const pomeri = (j: number) =>
+    menjajKurs((d) => {
+      const nivoi = [...d.nivoi];
+      [nivoi[i], nivoi[j]] = [nivoi[j], nivoi[i]];
+      return srediNivoe({ ...d, nivoi });
+    });
+
   return (
     <div className="ur-forma">
-      <p className="sub">Nivoi se ne dodaju, ne brišu i ne premeštaju: na njih su vezani napredak polaznika i test.</p>
+      <p className="sub">
+        {objavljen
+          ? "Nivo je objavljen: ne briše se i ne premešta, jer su na njega vezani napredak polaznika i test."
+          : "Nivo još nije objavljen: može da se obriše ili premesti među novim nivoima."}
+      </p>
       <Tekst naziv="Naziv" vrednost={nivo.title} promeni={(v) => menjaj((n) => ({ ...n, title: v }))} />
       <Tekst naziv="Opis" vrednost={nivo.desc} promeni={(v) => menjaj((n) => ({ ...n, desc: v }))} vise />
       <div className="ur-niz">
@@ -484,7 +554,64 @@ function ONivou({ nivo, menjaj }: { nivo: NivoUredjivanje; menjaj: (f: (n: NivoU
           <span>Boja</span>
           <input className="inp" type="color" value={nivo.color} onChange={(e) => menjaj((n) => ({ ...n, color: e.target.value }))} />
         </label>
+        <label className="ur-polje ur-kratko">
+          <span>Ikonica</span>
+          <select className="inp" value={nivo.icon} onChange={(e) => menjaj((n) => ({ ...n, icon: e.target.value }))}>
+            {IMENA_IKONA.map((x) => (
+              <option key={x} value={x}>
+                {x}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="ur-polje ur-kratko">
+          <span>Deo kursa</span>
+          <select
+            className="inp"
+            value={deoNivoa}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              menjajKurs((d) => {
+                const delovi = v === d.delovi.length ? [...d.delovi, { naziv: `Deo ${v + 1}`, nivoi: [] }] : d.delovi;
+                return srediNivoe({ ...d, delovi }, { [nivo.id]: v });
+              });
+            }}
+          >
+            {dok.delovi.map((d, k) => (
+              <option key={k} value={k}>
+                {d.naziv}
+              </option>
+            ))}
+            <option value={dok.delovi.length}>+ Nov deo</option>
+          </select>
+        </label>
       </div>
+      {!objavljen && (
+        <div className="ur-forma-akcije">
+          <span className="ur-dugmici">
+            <button type="button" className="btn" disabled={!pomeriSe(i - 1)} onClick={() => pomeri(i - 1)}>
+              ↑ Ranije
+            </button>
+            <button type="button" className="btn" disabled={!pomeriSe(i + 1)} onClick={() => pomeri(i + 1)}>
+              ↓ Kasnije
+            </button>
+          </span>
+          <button
+            type="button"
+            className="btn btn-ghost ur-brisi"
+            disabled={dok.nivoi.length < 2}
+            onClick={() => {
+              if (!confirm(`Obrisati nivo „${nivo.title}“ sa svim koracima i pitanjima?`)) return;
+              menjajKurs((d) =>
+                srediNivoe({ ...d, nivoi: d.nivoi.filter((n) => n.id !== nivo.id), pojmovi: d.pojmovi.filter((p) => p.nivo !== nivo.id) }),
+              );
+              obrisan();
+            }}
+          >
+            Obriši nivo
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -588,6 +715,24 @@ function Podesavanja({ dok, menjaj }: { dok: KursUredjivanje; menjaj: (f: (d: Ku
   return (
     <div className="ur-forma">
       <h2 className="sec-adm">Podešavanja</h2>
+      <Tekst naziv="Naziv kursa" vrednost={dok.kurs.naziv} promeni={(v) => menjaj((d) => ({ ...d, kurs: { ...d.kurs, naziv: v } }))} />
+      <Tekst
+        naziv="Opis kursa"
+        vrednost={dok.kurs.opis}
+        promeni={(v) => menjaj((d) => ({ ...d, kurs: { ...d.kurs, opis: v } }))}
+        vise
+        pomoc="Polaznik ga vidi kad bira kurs."
+      />
+      <div className="ur-niz">
+        {dok.delovi.map((deo, k) => (
+          <Tekst
+            key={k}
+            naziv={`Deo ${k + 1} (${deo.nivoi.length} ${deo.nivoi.length === 1 ? "nivo" : "nivoa"})`}
+            vrednost={deo.naziv}
+            promeni={(v) => menjaj((d) => ({ ...d, delovi: d.delovi.map((x, j) => (j === k ? { ...x, naziv: v } : x)) }))}
+          />
+        ))}
+      </div>
       <div className="ur-niz">
         <Broj naziv="Prag za prolaz testa (0.5–1)" vrednost={p.prag} promeni={set("prag")} korak={0.05} />
         <Broj naziv="Pitanja na testu (5–50)" vrednost={p.test_pitanja} promeni={set("test_pitanja")} korak={1} />
@@ -601,7 +746,17 @@ function Podesavanja({ dok, menjaj }: { dok: KursUredjivanje; menjaj: (f: (d: Ku
   );
 }
 
-function Objava({ nacrt, zatvori, objavljeno }: { nacrt: NacrtOut; zatvori: () => void; objavljeno: (v: number) => void }) {
+function Objava({
+  kurs,
+  nacrt,
+  zatvori,
+  objavljeno,
+}: {
+  kurs: string;
+  nacrt: NacrtOut;
+  zatvori: () => void;
+  objavljeno: (v: number) => void;
+}) {
   const [napomena, setNapomena] = useState("");
   const [salje, setSalje] = useState(false);
   const [greska, setGreska] = useState("");
@@ -616,7 +771,7 @@ function Objava({ nacrt, zatvori, objavljeno }: { nacrt: NacrtOut; zatvori: () =
           setSalje(true);
           setGreska("");
           try {
-            objavljeno((await objaviNacrt(napomena.trim())).verzija);
+            objavljeno((await objaviNacrt(kurs, napomena.trim())).verzija);
           } catch (err) {
             setGreska((err as Error).message);
             setSalje(false);

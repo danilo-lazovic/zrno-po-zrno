@@ -16,6 +16,7 @@ type SertifikatAdmin = {
   prezime: string;
   korisnicko_ime: string;
   lokal: Lokal | null;
+  kurs: string;
 };
 
 export default function SertifikatiStrana() {
@@ -98,7 +99,7 @@ export default function SertifikatiStrana() {
             {nadjen.ime} {nadjen.prezime}
           </h2>
           <p className="sub">
-            {nadjen.lokal?.naziv ?? "Bez lokala"} · {nadjen.korisnicko_ime} · položeno {nadjen.procenat}% ·{" "}
+            {nadjen.kurs} · {nadjen.lokal?.naziv ?? "Bez lokala"} · {nadjen.korisnicko_ime} · položeno {nadjen.procenat}% ·{" "}
             {datumVreme(nadjen.izdat_u)}
           </p>
           {nadjen.opozvan_u && (
@@ -116,6 +117,7 @@ export default function SertifikatiStrana() {
             <tr>
               <th>Polaznik</th>
               <th>Lokal</th>
+              <th>Kurs</th>
               <th>Kod</th>
               <th>Rezultat</th>
               <th>Izdat</th>
@@ -130,6 +132,7 @@ export default function SertifikatiStrana() {
                   {s.ime} {s.prezime}
                 </td>
                 <td>{s.lokal?.naziv ?? "–"}</td>
+                <td>{s.kurs}</td>
                 <td className="mono">{s.kod}</td>
                 <td className="mono">{s.procenat}%</td>
                 <td className="mono">{datumVreme(s.izdat_u)}</td>
