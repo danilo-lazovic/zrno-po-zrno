@@ -6,11 +6,12 @@ import { api, posalji } from "@/lib/api";
 import { RECEPTI } from "@/lib/igre";
 import { esc, sfx } from "@/lib/jezgro";
 import { type Dobitak, type Napredak, oznaciKarticu } from "@/lib/napredak";
-import { IZAZOVI, type Kurs, type Nivo, type SadrzajOut, md, mnozina, rangZa } from "@/lib/sadrzaj";
+import { type IgraOpis, IZAZOVI, type Kurs, type Nivo, type SadrzajOut, md, mnozina, rangZa } from "@/lib/sadrzaj";
 import { toast } from "@/lib/toast";
 import type { Me } from "@/lib/types";
 import { Odjava } from "../Odjava";
 import { Ikona, Svg } from "../Svg";
+import { Igra } from "./Igra";
 import { Lekcija } from "./Lekcija";
 import { Uvod } from "./Uvod";
 import { zvezdice } from "./zvezdice";
@@ -44,6 +45,7 @@ export function Polaznik({ me }: { me: Me }) {
   const [tab, setTab] = useState<Tab>("put");
   const [list, setList] = useState<Nivo | null>(null);
   const [lekcija, setLekcija] = useState<{ nivo: Nivo; kljuc: number } | null>(null);
+  const [igra, setIgra] = useState<IgraOpis | null>(null);
   const [av, setAv] = useState(me.korisnik.avatar);
   const [zvuk, setZvuk] = useState(true);
   const zrnaRef = useRef(0);
@@ -163,7 +165,7 @@ export function Polaznik({ me }: { me: Me }) {
       </header>
       <main id="view" className={`view view-${tab}`}>
         {tab === "put" && <Put kurs={kurs} me={me} napredak={napredak} otvori={setList} pokreni={pokreni} />}
-        {tab === "igre" && <Igre kurs={kurs} napredak={napredak} />}
+        {tab === "igre" && <Igre kurs={kurs} napredak={napredak} otvori={setIgra} />}
         {tab === "kartice" && <Kartice kurs={kurs} napredak={napredak} setNapredak={setNapredak} dobitak={dobitak} />}
         {tab === "profil" && (
           <Profil kurs={kurs} me={me} napredak={napredak} av={av} zvuk={zvuk} prebaciZvuk={prebaciZvuk} sacuvajAvatar={sacuvajAvatar} />
@@ -198,6 +200,18 @@ export function Polaznik({ me }: { me: Me }) {
             ucitajNapredak();
             if (n) pokreni(n);
             else setLekcija(null);
+          }}
+        />
+      )}
+      {igra && (
+        <Igra
+          kurs={kurs}
+          igra={igra}
+          napredak={napredak}
+          dobitak={dobitak}
+          zatvori={() => {
+            setIgra(null);
+            ucitajNapredak();
           }}
         />
       )}
@@ -486,7 +500,7 @@ function NivoList({
 
 /* ---------- IGRE ---------- */
 
-function Igre({ kurs, napredak }: { kurs: Kurs; napredak: Napredak }) {
+function Igre({ kurs, napredak, otvori }: { kurs: Kurs; napredak: Napredak; otvori: (g: IgraOpis) => void }) {
   return (
     <section className="igre">
       <p className="eyebrow">Igraonica</p>
@@ -496,6 +510,8 @@ function Igre({ kurs, napredak }: { kurs: Kurs; napredak: Napredak }) {
         {kurs.igre.map((g) => {
           const nivo = kurs.nivoi.find((n) => n.id === g.after)!;
           const otvorena = !!napredak.nivoi[g.after]?.zavrsen;
+          const rekord = napredak.igre[g.id];
+          const stanje = !rekord ? "Nova igra" : g.id === "swipe" ? `Rekord: ${rekord.najbolje} poena` : `Najbolje: ${rekord.najbolje}%`;
           return (
             <button
               key={g.id}
@@ -503,8 +519,13 @@ function Igre({ kurs, napredak }: { kurs: Kurs; napredak: Napredak }) {
               className={`gcard${otvorena ? "" : " locked"}`}
               aria-disabled={!otvorena}
               onClick={() => {
-                sfx.tap();
-                toast(otvorena ? "Igraonica stiže uskoro." : `Igra se otključava posle nivoa ${nivo.n}.`);
+                if (otvorena) {
+                  sfx.tap();
+                  otvori(g);
+                } else {
+                  sfx.bad();
+                  toast(`Igra se otključava posle nivoa ${nivo.n}.`);
+                }
               }}
             >
               <span className="gcard-art" style={{ "--gc": g.color } as React.CSSProperties}>
@@ -515,7 +536,7 @@ function Igre({ kurs, napredak }: { kurs: Kurs; napredak: Napredak }) {
                 <span>{g.d}</span>
                 <small>
                   {otvorena ? (
-                    "Nova igra"
+                    stanje
                   ) : (
                     <>
                       <Ikona ime="lock" />
@@ -524,6 +545,7 @@ function Igre({ kurs, napredak }: { kurs: Kurs; napredak: Napredak }) {
                   )}
                 </small>
               </span>
+              {rekord && rekord.zvezdice > 0 && <Svg html={zvezdice(rekord.zvezdice)} />}
             </button>
           );
         })}
