@@ -34,7 +34,7 @@ class RezultatIn(BaseModel):
     poeni: int = Field(ge=0, le=10_000)
     trajanje_ms: int = Field(ge=0, le=3_600_000)
     detalji: dict[str, Any] = {}
-    izvor: Literal["js", "unity"] = "js"
+    izvor: Literal["js", "3d", "unity"] = "js"
     kontekst: Literal["igraonica", "lekcija"] = "igraonica"
 
     @field_validator("detalji")

@@ -60,7 +60,7 @@ def test_izmena_pravi_verziju_i_cuva_istoriju_pitanja(db, dokument):
         (lambda d: d["nivoi"][0]["steps"][2].__setitem__("a", 9), "van ponuđenih"),
         (lambda d: d["nivoi"][0]["steps"][0].__setitem__("t", "video"), "nepoznat tip"),
         (lambda d: d["igre"][0].__setitem__("after", "m99"), "nepoznatog nivoa"),
-        (lambda d: d["igre"][0].__setitem__("implementacija", "flash"), "js ili unity"),
+        (lambda d: d["igre"][0].__setitem__("implementacija", "flash"), "js, 3d ili unity"),
         (lambda d: d.pop("pojmovi"), "nedostaje"),
     ],
 )

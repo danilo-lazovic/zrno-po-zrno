@@ -8,7 +8,8 @@
 
 export type IgraId = "swipe" | "dialin" | "recipe" | "milk" | "latte";
 
-export type Implementacija = "js" | "unity";
+/** js: canvas iz artifacta; 3d: three.js u pregledaču (proba); unity: Unity WebGL */
+export type Implementacija = "js" | "3d" | "unity";
 
 export type UlazIgre = {
   igra_id: IgraId;

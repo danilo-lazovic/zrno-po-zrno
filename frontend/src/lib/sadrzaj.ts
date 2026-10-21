@@ -32,7 +32,7 @@ export type IgraOpis = {
   /** otključava se posle ovog nivoa */
   after: string;
   color: string;
-  implementacija: "js" | "unity";
+  implementacija: "js" | "3d" | "unity";
 };
 
 export type Kurs = {

@@ -43,6 +43,7 @@ export type IgraStat = {
   tri_zvezdice: number;
   iz_lekcija: number;
   unity: number;
+  tri_d: number;
 };
 
 export type LokalStat = {

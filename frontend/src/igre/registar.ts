@@ -53,6 +53,54 @@ function jsIgra(id: IgraId): PokreniIgru {
 }
 
 /**
+ * 3D verzije u three.js (proba). Modul se učitava tek kad se igra otvori; bez WebGL-a ili ako učitavanje
+ * ne uspe, igra se pokreće u klasičnoj verziji.
+ */
+const TRI_D: Partial<Record<IgraId, () => Promise<(host: HTMLElement, opt: object) => { destroy(): void }>>> = {
+  milk: () => import("./mleko3d").then((m) => m.mleko3d),
+};
+
+/** WebGL postoji? Bez njega se igra pokreće u klasičnoj verziji (i tako se i beleži). */
+function imaWebGL() {
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    return false;
+  }
+}
+
+export const ima3D = (igra: IgraId) => igra in TRI_D && imaWebGL();
+
+function triDIgra(id: IgraId): PokreniIgru {
+  return (host, ulaz, gotovo) => {
+    const pocetak = Date.now();
+    sfx.on = ulaz.podesavanja.zvuk;
+    let inst: { destroy(): void } | null = null;
+    let ugasena = false;
+    host.innerHTML = '<p class="m3-ucitava">Učitavam 3D igru…</p>';
+    const onDone = (r: RezultatArtifacta) => {
+      const rezultat = Math.max(0, Math.min(1, r.score));
+      gotovo({ igra_id: id, rezultat, zvezdice: zvezdiceZa(rezultat), poeni: Math.round(rezultat * 100), trajanje_ms: Date.now() - pocetak, detalji: {} });
+    };
+    TRI_D[id]!()
+      .then((pokreni) => {
+        if (!ugasena) inst = pokreni(host, { onDone, smanjenoKretanje: ulaz.podesavanja.smanjeno_kretanje });
+      })
+      .catch(() => {
+        // modul nije stigao (npr. bez mreže pre prvog učitavanja): ista igra u klasičnoj verziji
+        if (!ugasena) inst = { destroy: jsIgra(id)(host, ulaz, gotovo).unisti };
+      });
+    return {
+      unisti: () => {
+        ugasena = true;
+        inst?.destroy();
+      },
+    };
+  };
+}
+
+/**
  * Unity WebGL igre: kad igra prođe proveru na telefonima (veličina builda, učitavanje, iOS Safari),
  * ovde se upisuje njen pokretač (react-unity-webgl + JS bridge koji na kraju zove `gotovo` sa istim rezultatom).
  * Dok igre nema u ovoj mapi, sadržaj sa `implementacija: "unity"` koristi JS verziju.
@@ -61,7 +109,9 @@ const UNITY: Partial<Record<IgraId, PokreniIgru>> = {};
 
 export function pokretac(igra: IgraId, implementacija: Implementacija = "js"): { pokreni: PokreniIgru; izvor: Implementacija } {
   const unity = implementacija === "unity" ? UNITY[igra] : undefined;
-  return unity ? { pokreni: unity, izvor: "unity" } : { pokreni: jsIgra(igra), izvor: "js" };
+  if (unity) return { pokreni: unity, izvor: "unity" };
+  if (implementacija === "3d" && ima3D(igra)) return { pokreni: triDIgra(igra), izvor: "3d" };
+  return { pokreni: jsIgra(igra), izvor: "js" };
 }
 
 /** Podešavanja za ulaz igre iz trenutnog stanja aplikacije. */
