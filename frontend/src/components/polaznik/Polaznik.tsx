@@ -10,6 +10,7 @@ import { type IgraOpis, IZAZOVI, type Kurs, type Nivo, type SadrzajOut, md, mnoz
 import type { TestStanje } from "@/lib/test";
 import { DOGADJAJ_POSLATO, DOGADJAJ_PROMENA, type Poslato, type Stavka, citajRed, dodajURed, noviKljuc, posaljiRed, postaviKorisnika } from "@/lib/red";
 import { instaliraj, pratiInstalaciju, registrujSW, sacuvajZaOffline, stanjeInstalacije } from "@/lib/pwa";
+import { type Podsetnik, odlozeni, odlozi, podsetnici } from "@/lib/podsetnici";
 import { toast } from "@/lib/toast";
 import type { Me } from "@/lib/types";
 import { Odjava } from "../Odjava";
@@ -235,7 +236,15 @@ export function Polaznik({ me }: { me: Me }) {
       )}
       <main id="view" className={`view view-${tab}`}>
         {tab === "put" && (
-          <Put kurs={kurs} me={me} napredak={napredak} otvori={setList} pokreni={pokreni} test={() => setUvodTesta(true)} />
+          <Put
+            kurs={kurs}
+            me={me}
+            napredak={napredak}
+            otvori={setList}
+            pokreni={pokreni}
+            test={() => setUvodTesta(true)}
+            idi={idi}
+          />
         )}
         {tab === "igre" && <Igre kurs={kurs} napredak={napredak} otvori={setIgra} />}
         {tab === "kartice" && <Kartice kurs={kurs} napredak={napredak} setNapredak={setNapredak} dobitak={dobitak} />}
@@ -351,6 +360,7 @@ function Put({
   otvori,
   pokreni,
   test,
+  idi,
 }: {
   kurs: Kurs;
   me: Me;
@@ -358,6 +368,7 @@ function Put({
   otvori: (n: Nivo) => void;
   pokreni: (n: Nivo) => void;
   test: () => void;
+  idi: (t: Tab) => void;
 }) {
   const staza = useRef<HTMLDivElement>(null);
   const linija = useRef<SVGSVGElement>(null);
@@ -467,6 +478,13 @@ function Put({
           · {danaTxt(napredak.niz_dana)} zaredom
         </p>
       </div>
+
+      <KarticaPodsetnika
+        kurs={kurs}
+        me={me}
+        napredak={napredak}
+        uradi={(a) => (a.tip === "nivo" ? pokreni(a.nivo) : idi(a.tip))}
+      />
 
       {tekuciNivo ? (
         <button type="button" className="btn btn-gold btn-big" onClick={() => pokreni(tekuciNivo)}>
@@ -1125,6 +1143,61 @@ function Instalacija() {
         Aplikacija na telefonu
       </span>
       <b>{stanje === "instalirana" ? "Instalirana" : "Deli → Dodaj na početni ekran"}</b>
+    </div>
+  );
+}
+
+/** Najvažniji podsetnik danas (Modul 6b); "Kasnije" ga sklanja do sutra i prikazuje sledeći. */
+function KarticaPodsetnika({
+  kurs,
+  me,
+  napredak,
+  uradi,
+}: {
+  kurs: Kurs;
+  me: Me;
+  napredak: Napredak;
+  uradi: (a: Podsetnik["akcija"]) => void;
+}) {
+  const [skriveni, setSkriveni] = useState<Set<string> | null>(null);
+  useEffect(() => setSkriveni(odlozeni(me.korisnik.id)), [me.korisnik.id]);
+  // localStorage se čita tek u pregledaču, pa se kartica ne pojavi pa nestane
+  if (!skriveni) return null;
+  const svi = podsetnici(kurs, napredak).filter((p) => !skriveni.has(p.id));
+  const p = svi[0];
+  if (!p) return null;
+  return (
+    <div className="card podsetnik" role="status">
+      <span className="cta-ic">
+        <Ikona ime={p.ikona} />
+      </span>
+      <div>
+        <b>{p.naslov}</b>
+        <p>{p.tekst}</p>
+      </div>
+      <div className="podsetnik-akcije">
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => {
+            odlozi(me.korisnik.id, p.id);
+            setSkriveni(new Set([...skriveni, p.id]));
+          }}
+        >
+          Kasnije
+        </button>
+        <button
+          type="button"
+          className="btn btn-gold"
+          onClick={() => {
+            sfx.tap();
+            uradi(p.akcija);
+          }}
+        >
+          {p.akcija.naziv}
+        </button>
+      </div>
+      {svi.length > 1 && <small className="podsetnik-jos">još {svi.length - 1}</small>}
     </div>
   );
 }

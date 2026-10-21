@@ -13,6 +13,10 @@ export type Napredak = {
   /** najbolje: poeni za Brzu rundu, procenat za ostale */
   igre: Record<string, { najbolje: number; zvezdice: number; igranja: number }>;
   test: { najbolje: number; polozen: boolean };
+  /** poslednji dan sa zrnima (YYYY-MM-DD, Beograd), za podsetnike */
+  poslednji_dan: string | null;
+  /** nivo započet u poslednjih 7 dana i ostavljen na pola */
+  nedovrsen: { nivo: string; odgovoreno: number; pocetak: string } | null;
 };
 
 export type OdgovorOut = { zrna: number; niz: number; ukupno_zrna: number; novi_bedzevi: string[] };

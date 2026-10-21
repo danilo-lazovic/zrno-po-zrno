@@ -125,8 +125,8 @@ Modul 5:
 | 4 | Admin statistika: Pregled (aktivnost, levak, zapeli, lokali), Pitanja (najteža, najčešći pogrešan odgovor), Igre, detalj polaznika | gotovo |
 | 5 | Uređivač sadržaja: nacrt, forme za svaki tip koraka, banka pitanja, Brza runda, pojmovi, podešavanja, slike, pregled kao polaznik, objava nove verzije sa spiskom izmena | gotovo |
 | 6a | Aplikacija na telefonu: instalacija na početni ekran, otvaranje i lekcije, igre i kartice bez mreže, red za slanje | gotovo |
-| 6b | Podsetnici u aplikaciji (bez push, SMS i Vibera) | sledeće |
-| 6c | Nedeljna rang lista po lokalu | |
+| 6b | Podsetnici u aplikaciji (bez push, SMS i Vibera) | gotovo |
+| 6c | Nedeljna rang lista po lokalu | sledeće |
 | 6d | Više kurseva: infrastruktura (izbor kursa, nov kurs iz uređivača) i jedan probni kurs | |
 
 Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
@@ -203,6 +203,19 @@ Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 - Do slanja aplikacija prikazuje nivo kao završen (sledeći se otključava), a zrna, bonus i bedževi stižu sa servera posle slanja.
 - Završni test traži mrežu (pitanja izvlači i proverava server).
 - Odjava briše sačuvane stranice i podatke iz keša. Red ostaje na telefonu i šalje se kad se isti polaznik ponovo prijavi.
+
+## Podsetnici (Modul 6b)
+
+Vide se kad polaznik otvori aplikaciju, kao kartica na Putu ispod pozdrava. Prikazuje se jedan, najvažniji; „Kasnije” ga sklanja do sutra (po danu u Beogradu, na tom telefonu) i pokazuje sledeći. Pravila (`frontend/src/lib/podsetnici.ts`), po važnosti:
+
+1. Niz u opasnosti: niz od 2+ dana, a danas još nema zrna.
+2. Nivo ostavljen na pola: započet u poslednjih 7 dana i nije završen.
+3. Povratak posle pauze: poslednji dan sa zrnima pre 3+ dana.
+4. Kartice za ponavljanje: 3+ pojma iz završenih nivoa označena sa „Ponovi”.
+5. Nivo sa jednom zvezdicom, dok test nije položen.
+6. Dnevni cilj: danas ima zrna, ali manje od cilja.
+
+Kad su svi nivoi gotovi, nema posebnog podsetnika za test: Put tada ionako ima veliko dugme za test. Server za ovo daje `poslednji_dan` i `nedovrsen` u napretku.
 
 ## Otvorena pitanja
 

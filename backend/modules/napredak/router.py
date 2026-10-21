@@ -4,7 +4,7 @@ Klijent javlja šta je polaznik uradio (rezultat izazova 0–1), a server račun
 po pravilima iz bodovanje.py.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -41,6 +41,12 @@ class TestStanje(BaseModel):
     polozen: bool
 
 
+class Nedovrsen(BaseModel):
+    nivo: str
+    odgovoreno: int
+    pocetak: datetime
+
+
 class NapredakOut(BaseModel):
     zrna: int
     danas_zrna: int
@@ -51,6 +57,9 @@ class NapredakOut(BaseModel):
     kartice: dict[str, bool]
     igre: dict[str, IgraStanje]
     test: TestStanje
+    # za podsetnike u aplikaciji: poslednji dan sa zrnima i nivo započet a nezavršen (poslednjih 7 dana)
+    poslednji_dan: date | None
+    nedovrsen: Nedovrsen | None
 
 
 class ProlazOut(BaseModel):
@@ -125,7 +134,16 @@ def _nivo_iz_verzije(db: Session, p: ProlazNivoa) -> tuple[list[dict[str, Any]],
 def napredak(kurs: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Session = Depends(get_db)):
     k = objavljen_kurs(db, kurs)
     kid, uid = k.id, korisnik.id
-    niz, najduzi = b.dani_zaredom(b.dani_sa_zrnima(db, uid, kid), danas())
+    dani = b.dani_sa_zrnima(db, uid, kid)
+    niz, najduzi = b.dani_zaredom(dani, danas())
+    zavrseni = b.nivoi_korisnika(db, uid, kid)
+    p = db.scalar(
+        select(ProlazNivoa)
+        .where(ProlazNivoa.korisnik_id == uid, ProlazNivoa.kurs_id == kid, ProlazNivoa.kraj.is_(None),
+               ProlazNivoa.pocetak >= sada() - timedelta(days=7), ProlazNivoa.nivo.not_in(zavrseni or [""]))
+        .order_by(ProlazNivoa.pocetak.desc())
+        .limit(1)
+    )
     _, najbolje_test, polozen_test = stanje_testa(db, uid, kid)
     danas_zrna = db.scalar(
         select(func.coalesce(func.sum(Zrno.iznos), 0)).where(Zrno.korisnik_id == uid, Zrno.kurs_id == kid, Zrno.dan == danas())
@@ -137,7 +155,7 @@ def napredak(kurs: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Ses
         najduzi_niz=najduzi,
         nivoi={
             n.nivo: NivoStanje(zavrsen=True, zvezdice=n.zvezdice, najbolje=n.najbolje)
-            for n in b.nivoi_korisnika(db, uid, kid).values()
+            for n in zavrseni.values()
         },
         bedzevi=list(
             db.scalars(
@@ -154,6 +172,8 @@ def napredak(kurs: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Ses
         },
         igre=stanje_igara(db, uid, kid),
         test=TestStanje(najbolje=najbolje_test, polozen=polozen_test),
+        poslednji_dan=max(dani) if dani else None,
+        nedovrsen=Nedovrsen(nivo=p.nivo, odgovoreno=p.izazova, pocetak=p.pocetak) if p else None,
     )
 
 

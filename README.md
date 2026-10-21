@@ -134,6 +134,13 @@ Radi samo u produkcionom buildu (`npm run build` pa `npm start`); u `npm run dev
 6. Pokreni nivo sa mrežom, pa isključi mrežu usred nivoa: nivo se završava normalno i šalje kad se veza vrati, a zrna se ne dupliraju.
 7. Na računaru: Chrome DevTools → Application → Service workers / Cache storage, i Network → Offline.
 
+## Kako se testira Modul 6b (podsetnici)
+
+1. Prijavi se kao demo polaznik koji danas nije učio (npr. `sara.lazic`, PIN iz demo podataka). Na Putu je ispod pozdrava kartica sa podsetnikom; u uglu piše koliko ih još ima.
+2. „Kasnije” sklanja podsetnik do sutra i pokazuje sledeći, i posle osvežavanja.
+3. Započni nivo pa izađi na pola: posle osvežavanja podsetnik je „Nivo N je ostao na pola”, a dugme „Nastavi” otvara taj nivo.
+4. Polaznik sa nizom od 2+ dana koji danas nema zrna dobija „Sačuvaj niz”. Posle prve zarade zrna podsetnik prelazi na dnevni cilj.
+
 ## Sadržaj
 
 Sadržaj se menja u uređivaču (Modul 5). JSON u `backend/modules/sadrzaj/data/` je prva verzija i rezervni put za veće izmene:
