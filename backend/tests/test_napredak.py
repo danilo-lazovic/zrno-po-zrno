@@ -63,7 +63,7 @@ def test_prazan_napredak(prijavi):
     n = prijavi("ana.a").get("/api/napredak/osnovni").json()
     assert n == {
         "zrna": 0, "danas_zrna": 0, "niz_dana": 0, "najduzi_niz": 0, "nivoi": {}, "bedzevi": [], "kartice": {}, "igre": {},
-        "test": {"najbolje": 0, "polozen": False},
+        "test": {"najbolje": 0, "polozen": False}, "poslednji_dan": None, "nedovrsen": None,
     }
 
 
@@ -193,3 +193,21 @@ def test_admin_vidi_napredak(prijavi, client, dokument):
     c = prijavi("menadzer@test.rs")
     ana = next(p for p in c.get("/api/admin/polaznici").json() if p["korisnicko_ime"] == "ana.a")
     assert ana["nivoa"] == 1 and ana["zrna"] == kraj["ukupno_zrna"] and ana["poslednja_aktivnost"]
+
+
+def test_podaci_za_podsetnike(prijavi, dokument):
+    c = prijavi("ana.a")
+    n = c.get("/api/napredak/osnovni").json()
+    assert (n["poslednji_dan"], n["nedovrsen"]) == (None, None)
+
+    # započet pa ostavljen nivo
+    pid = c.post("/api/napredak/osnovni/nivoi/m1/prolaz").json()["prolaz_id"]
+    c.post(f"/api/napredak/prolazi/{pid}/odgovor", json={"pitanje": izazovi(dokument, "m1")[0], "rezultat": 1})
+    n = c.get("/api/napredak/osnovni").json()
+    assert n["nedovrsen"]["nivo"] == "m1" and n["nedovrsen"]["odgovoreno"] == 1
+    assert n["poslednji_dan"] is not None
+
+    # završen nivo više nije nedovršen, ni kad se ponavljanje ostavi na pola
+    prodji(c, dokument, "m1")
+    c.post("/api/napredak/osnovni/nivoi/m1/prolaz")
+    assert c.get("/api/napredak/osnovni").json()["nedovrsen"] is None

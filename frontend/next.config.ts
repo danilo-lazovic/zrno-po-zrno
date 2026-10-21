@@ -11,7 +11,11 @@ const nextConfig: NextConfig = {
     return [{ source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }] }];
   },
   async rewrites() {
-    return [{ source: "/api/:path*", destination: `${backendUrl}/api/:path*` }];
+    return [
+      { source: "/api/:path*", destination: `${backendUrl}/api/:path*` },
+      // pregledači i dalje traže /favicon.ico mimo <link rel="icon">
+      { source: "/favicon.ico", destination: "/ikone/ikona-192.png" },
+    ];
   },
 };
 
