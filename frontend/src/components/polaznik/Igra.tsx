@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { podesavanja, pokretac } from "@/igre/registar";
+import { ima3D, podesavanja, pokretac } from "@/igre/registar";
 import { type RezultatOut, posaljiRezultat } from "@/igre/rezultat";
 import type { IgraId, RezultatIgre } from "@/igre/ugovor";
 import { BezMreze } from "@/lib/api";
@@ -10,6 +10,17 @@ import type { Dobitak, Napredak } from "@/lib/napredak";
 import { dodajURed, noviKljuc } from "@/lib/red";
 import type { IgraOpis, Kurs } from "@/lib/sadrzaj";
 import { Ikona } from "../Svg";
+
+const KLJUC_3D = "zpz-3d";
+
+/** 3D verzija je podrazumevana gde postoji; polaznik može da se vrati na klasičnu (pamti se na telefonu). */
+function citaj3D() {
+  try {
+    return localStorage.getItem(KLJUC_3D) !== "0";
+  } catch {
+    return true;
+  }
+}
 
 /** Igre koje imaju dugme "Igraj ponovo" (ostale same nude novu rundu, kao u artifactu). */
 const PONOVO: IgraId[] = ["swipe", "dialin", "recipe"];
@@ -34,6 +45,8 @@ export function Igra({
   const [greska, setGreska] = useState("");
   const [naCekanju, setNaCekanju] = useState(false);
   const id = igra.id as IgraId;
+  const moze3D = ima3D(id);
+  const [triD, setTriD] = useState(citaj3D);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -44,7 +57,7 @@ export function Igra({
     // Brza runda pita samo iz nivoa koje je polaznik završio (bar prvi)
     const zavrseni = kurs.nivoi.filter((n) => napredak.nivoi[n.id]?.zavrsen);
     const pitanja = (zavrseni.length ? zavrseni : kurs.nivoi.slice(0, 1)).flatMap((n) => n.swipe);
-    const { pokreni, izvor } = pokretac(id, igra.implementacija);
+    const { pokreni, izvor } = pokretac(id, moze3D && triD ? "3d" : igra.implementacija);
     const inst = pokreni(
       host,
       { igra_id: id, konfiguracija: { mod: "igraonica", pitanja }, podesavanja: podesavanja() },
@@ -66,7 +79,7 @@ export function Igra({
     return () => inst.unisti();
     // napredak se ne prati: nova runda kreće samo na "Igraj ponovo"
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runda, id]);
+  }, [runda, id, triD]);
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) => e.key === "Escape" && zatvori();
@@ -88,6 +101,24 @@ export function Igra({
             <Ikona ime="close" />
           </button>
           <h2 className="gv-title">{igra.t}</h2>
+          {moze3D && (
+            <button
+              type="button"
+              className="znak gv-3d"
+              aria-pressed={triD}
+              onClick={() => {
+                const v = !triD;
+                setTriD(v);
+                try {
+                  localStorage.setItem(KLJUC_3D, v ? "1" : "0");
+                } catch {
+                  /* bez skladišta: važi do zatvaranja */
+                }
+              }}
+            >
+              {triD ? "3D" : "Klasično"}
+            </button>
+          )}
           <span className="ls-xp">
             <Ikona ime="bean" />
             <b>{napredak.zrna}</b>

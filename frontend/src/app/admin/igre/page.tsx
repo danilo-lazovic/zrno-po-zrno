@@ -31,7 +31,7 @@ export default function IgreStrana() {
         </div>
       </div>
       <p className="sub" style={{ marginBottom: 16 }}>
-        Igranja iz igraonice i iz lekcija. Kolona Unity broji igranja Unity verzije, za poređenje sa JS verzijom.
+        Igranja iz igraonice i iz lekcija. Kolone 3D i Unity broje igranja tih verzija, za poređenje sa klasičnom.
       </p>
       {greska && <p className="note bad">{greska}</p>}
       {lista && (
@@ -44,6 +44,7 @@ export default function IgreStrana() {
               <th>Prosečan rezultat</th>
               <th>Tri zvezdice</th>
               <th>Iz lekcija</th>
+              <th>3D</th>
               <th>Unity</th>
             </tr>
           </thead>
@@ -56,6 +57,7 @@ export default function IgreStrana() {
                 <td>{g.igranja ? <Procenat v={g.prosek} /> : "–"}</td>
                 <td className="mono">{g.igranja ? `${g.tri_zvezdice}%` : "–"}</td>
                 <td className="mono">{g.iz_lekcija}</td>
+                <td className="mono">{g.tri_d}</td>
                 <td className="mono">{g.unity}</td>
               </tr>
             ))}

@@ -97,7 +97,7 @@ self.addEventListener("fetch", (e) => {
   }
 
   if (url.pathname.startsWith("/_next/static/")) return e.respondWith(prvoKes(req));
-  if (/^\/(img|ikone|brand)\//.test(url.pathname) || url.pathname.startsWith("/api/slike/") || url.pathname === "/icon.png") {
+  if (/^\/(img|ikone|brand|modeli)\//.test(url.pathname) || url.pathname.startsWith("/api/slike/") || url.pathname === "/icon.png") {
     return e.respondWith(kesPaMreza(req, e));
   }
   if (API_ZA_CITANJE.some((r) => r.test(url.pathname))) {

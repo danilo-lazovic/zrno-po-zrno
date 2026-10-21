@@ -106,6 +106,8 @@ def test_izvor_unity_isti_api(otkljucano, db):
 
     assert posalji(otkljucano, "milk", 0.7, 70, izvor="unity").status_code == 200
     assert db.scalar(select(RezultatIgre.izvor).order_by(RezultatIgre.id.desc())) == "unity"
+    assert posalji(otkljucano, "milk", 0.7, 70, izvor="3d").status_code == 200
+    assert db.scalar(select(RezultatIgre.izvor).order_by(RezultatIgre.id.desc())) == "3d"
     assert posalji(otkljucano, "milk", 0.7, 70, izvor="flash").status_code == 422
 
 
