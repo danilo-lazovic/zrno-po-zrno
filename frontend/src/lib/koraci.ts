@@ -23,9 +23,11 @@ export function postaviKontekst(k: KontekstKoraka) {
 }
 
 /* ---------- prikaz koraka ---------- */
+/** img/kaldi.jpg iz public/ i /api/slike/... iz uređivača; relativna putanja ne sme da zavisi od stranice (pregled u adminu) */
+const src = (p) => (/^(\/|https?:)/.test(p) ? p : "/" + p);
 function mediaHTML(st) {
-  if (st.img) return '<figure class="media' + (st.fit === "contain" ? " contain" : "") + '"' + (st.bg ? ' style="--mbg:' + st.bg + '"' : "") + '><img src="' + st.img + '" alt="' + esc(st.title || "") + '" decoding="async"></figure>';
-  if (st.gallery) return '<div class="gal" style="--n:' + st.gallery.length + '">' + st.gallery.map((g) => '<figure><span class="gal-img"><img src="' + g.img + '" alt="' + esc(g.cap) + '" loading="lazy"></span><figcaption>' + esc(g.cap) + "</figcaption></figure>").join("") + "</div>";
+  if (st.img) return '<figure class="media' + (st.fit === "contain" ? " contain" : "") + '"' + (st.bg ? ' style="--mbg:' + st.bg + '"' : "") + '><img src="' + src(st.img) + '" alt="' + esc(st.title || "") + '" decoding="async"></figure>';
+  if (st.gallery) return '<div class="gal" style="--n:' + st.gallery.length + '">' + st.gallery.map((g) => '<figure><span class="gal-img"><img src="' + src(g.img) + '" alt="' + esc(g.cap) + '" loading="lazy"></span><figcaption>' + esc(g.cap) + "</figcaption></figure>").join("") + "</div>";
   if (st.art) return '<div class="art plate">' + A.misc(st.art) + "</div>";
   return "";
 }

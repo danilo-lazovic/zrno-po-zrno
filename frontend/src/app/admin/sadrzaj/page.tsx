@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { datumVreme } from "@/lib/format";
@@ -20,10 +21,13 @@ export default function SadrzajStrana() {
           <p className="eyebrow">Admin</p>
           <h1 className="h1">Sadržaj</h1>
         </div>
+        <Link href="/admin/sadrzaj/uredi" className="btn btn-gold">
+          Uredi sadržaj
+        </Link>
       </div>
       <p className="sub" style={{ marginBottom: 16 }}>
-        Svaka izmena sadržaja pravi novu verziju kursa; polaznici dobijaju objavljenu. Uređivač stiže u Modulu 5, do tada se
-        sadržaj menja u <code>backend/modules/sadrzaj/data</code> i uvozi sa <code>python seed.py --samo-sadrzaj</code>.
+        Izmene se prave u nacrtu i ne vide se polaznicima dok se ne objave. Svaka objava pravi novu verziju kursa sa napomenom
+        šta je promenjeno; polaznici dobijaju poslednju objavljenu.
       </p>
       {greska && <p className="note bad">{greska}</p>}
       {verzije && (

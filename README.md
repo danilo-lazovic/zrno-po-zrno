@@ -111,9 +111,20 @@ npm run build
 4. **Polaznici** → klik na ime: detalj (nivoi sa zvezdicama i tačnošću, najslabija pitanja, test, rekordi u igrama, vremenska linija).
 5. Kao menadžer: sve isto, ali samo za polaznike svojih lokala.
 
+## Kako se testira Modul 5
+
+1. Kao trener ili admin: Admin → Sadržaj → **Uredi sadržaj**. Levo su nivoi, pojmovi i podešavanja; za nivo tabovi Koraci, Banka za test, Brza runda, O nivou.
+2. Klik na korak otvara formu za njegov tip (izmeni pitanje, ponuđene odgovore i tačan, objašnjenje). Strelice menjaju redosled, „Dodaj korak posle izabranog” dodaje nov.
+3. U priči „Otpremi sliku” (JPG, PNG, WebP do 5 MB).
+4. **Sačuvaj**: nacrt se čuva, polaznici ga još ne vide. Prazno pitanje se čuva, ali se pojavi spisak grešaka i „Objavi” je zaključano dok se ne ispravi.
+5. **Pregled kao polaznik** ili „Pregled od ovog koraka”: lekcija kako je polaznik vidi, ništa se ne upisuje.
+6. Dva urednika: ako drugi sačuva u međuvremenu, tvoje čuvanje kaže ko je sačuvao; „Učitaj najnoviji nacrt” učitava njegovu verziju.
+7. **Objavi…**: spisak dodatog, izmenjenog i obrisanog, napomena, pa nova verzija. Polaznik je dobija pri sledećem otvaranju; na stranici Sadržaj je nova verzija sa napomenom.
+8. Kao menadžer: Sadržaj se ne vidi u meniju, a uređivač vraća na Pregled.
+
 ## Sadržaj
 
-Kurs je JSON dokument u `backend/modules/sadrzaj/data/`. Posle izmene:
+Sadržaj se menja u uređivaču (Modul 5). JSON u `backend/modules/sadrzaj/data/` je prva verzija i rezervni put za veće izmene:
 
 ```powershell
 cd backend

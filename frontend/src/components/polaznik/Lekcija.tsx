@@ -32,9 +32,11 @@ type Props = {
   zatvori: () => void;
   /** sledeći nivo posle ekrana rezultata (null: završni test) */
   sledeci: (nivo: Nivo | null) => void;
+  /** uređivač: polaznikov prikaz nacrta, bez ijednog poziva serveru */
+  pregled?: boolean;
 };
 
-export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
+export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci, pregled = false }: Props) {
   const koraci = nivo.steps;
   const [i, setI] = useState(0);
   const [spremno, setSpremno] = useState(false);
@@ -64,10 +66,11 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
   const bezDugmeta = BEZ_DUGMETA.includes(st.t);
 
   useEffect(() => {
+    if (pregled) return;
     const p = zapocniNivo(kurs.kurs.kljuc, nivo.id).then((r) => r.prolaz_id);
     p.catch((e: Error) => setGreska(e.message));
     prolazRef.current = p;
-  }, [kurs.kurs.kljuc, nivo.id]);
+  }, [kurs.kurs.kljuc, nivo.id, pregled]);
 
   const ugasi = () => {
     pospremiRef.current.forEach((f) => {
@@ -82,6 +85,7 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
 
   const posalji = useCallback(
     (o: Neposlat) => {
+      if (pregled) return;
       lanacRef.current = lanacRef.current.then(async () => {
         try {
           const id = await prolazRef.current!;
@@ -94,7 +98,7 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
         }
       });
     },
-    [dobitak],
+    [dobitak, pregled],
   );
 
   odgovoriRef.current = (frac, extra) => {
@@ -140,10 +144,10 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
     postaviKontekst({
       odgovoreno: () => odgovorenoRef.current,
       pospremi: (f) => pospremiRef.current.push(f),
-      igra: (igra, host, gotovo) => pokreniIgruULekciji(kurs, igra as IgraId, host, gotovo, dobitak),
+      igra: (igra, host, gotovo) => pokreniIgruULekciji(kurs, igra as IgraId, host, gotovo, dobitak, pregled),
     });
     const R = RENDER[st.t](st);
-    const crumb = `<p class="crumb">Nivo ${nivo.n} · ${md(nivo.title)}</p>`;
+    const crumb = `<p class="crumb">${pregled ? "Pregled · " : ""}Nivo ${nivo.n} · ${md(nivo.title)}</p>`;
     el.innerHTML = crumb + R.html;
     R.mount?.(el, {
       ready: (on) => setSpremno(on),
@@ -160,6 +164,7 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
   }, [i, fb, bezDugmeta]);
 
   async function zavrsi() {
+    if (pregled) return zatvori();
     setZavrsava(true);
     await lanacRef.current;
     // ponovi odgovore koji nisu stigli do servera
@@ -197,7 +202,10 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPrekid((p) => !p && !rezultat);
+      if (e.key === "Escape") {
+        if (pregled) zatvori();
+        else setPrekid((p) => !p && !rezultat);
+      }
     };
     window.addEventListener("keydown", esc);
     document.body.classList.add("ov-open");
@@ -205,7 +213,7 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
       window.removeEventListener("keydown", esc);
       document.body.classList.remove("ov-open");
     };
-  }, [rezultat]);
+  }, [rezultat, pregled, zatvori]);
 
   if (rezultat) return <Rezultat kurs={kurs} nivo={nivo} r={rezultat} zatvori={zatvori} sledeci={sledeci} />;
 
@@ -222,7 +230,7 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
     <div id="ov">
       <div className="ls" style={{ "--mc": nivo.color } as React.CSSProperties}>
         <div className="ls-top">
-          <button type="button" className="icon-btn" aria-label="Prekini" onClick={() => setPrekid(true)}>
+          <button type="button" className="icon-btn" aria-label={pregled ? "Zatvori pregled" : "Prekini"} onClick={() => (pregled ? zatvori() : setPrekid(true))}>
             <Ikona ime="close" />
           </button>
           <div
@@ -310,15 +318,18 @@ function pokreniIgruULekciji(
   host: HTMLElement,
   gotovo: (r: RezultatIgre) => void,
   dobitak: (d: Dobitak) => void,
+  pregled: boolean,
 ) {
   const opis = kurs.igre.find((g) => g.id === igra);
   const { pokreni, izvor } = pokretac(igra, opis?.implementacija);
   return pokreni(host, { igra_id: igra, konfiguracija: { mod: "lekcija" }, podesavanja: podesavanja() }, (r) => {
-    posaljiRezultat(kurs.kurs.kljuc, { ...r, izvor }, "lekcija")
-      .then(dobitak)
-      .catch(() => {
-        /* rezultat igre u lekciji je samo za statistiku i bedževe; odgovor lekcije ide posebno */
-      });
+    if (!pregled) {
+      posaljiRezultat(kurs.kurs.kljuc, { ...r, izvor }, "lekcija")
+        .then(dobitak)
+        .catch(() => {
+          /* rezultat igre u lekciji je samo za statistiku i bedževe; odgovor lekcije ide posebno */
+        });
+    }
     gotovo(r);
   });
 }

@@ -7,6 +7,7 @@ from modules.osoblje import router as osoblje
 from modules.sadrzaj import router as sadrzaj
 from modules.statistika import router as statistika
 from modules.test import router as test
+from modules.uredjivac import router as uredjivac
 
 app = FastAPI(
     title="Zrno po zrno",
@@ -23,6 +24,7 @@ app.include_router(igre.router)
 app.include_router(test.router)
 app.include_router(statistika.router)
 app.include_router(statistika.detalj_router)
+app.include_router(uredjivac.router)
 
 
 @app.get("/api/health")
