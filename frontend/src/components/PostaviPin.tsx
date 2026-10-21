@@ -49,9 +49,9 @@ export function PostaviPin({ token, info }: { token: string; info: Info }) {
   );
 
   return (
-    <div className="card">
-      <p className="eyebrow">Dobrodošao{info.lokal ? ` · ${info.lokal}` : ""}</p>
-      <h1 className="h2">Zdravo, {info.ime}!</h1>
+    <>
+      <p className="label">Dobrodošao{info.lokal ? ` · ${info.lokal}` : ""}</p>
+      <h1 className="h1">Zdravo, {info.ime}!</h1>
       <p className="sub">Postavi PIN i krećeš. Zapamti i korisničko ime, trebaće ti za prijavu na drugom telefonu.</p>
       <p className="ko">
         Korisničko ime: <b>{info.korisnicko_ime}</b>
@@ -70,6 +70,6 @@ export function PostaviPin({ token, info }: { token: string; info: Info }) {
           Kreni
         </button>
       </form>
-    </div>
+    </>
   );
 }

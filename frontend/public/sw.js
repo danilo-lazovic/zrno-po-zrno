@@ -5,7 +5,7 @@
  * - početna strana i API koji polaznik čita (sadržaj, napredak, test, me): prvo mreža, bez nje poslednji sačuvan
  * - POST zahtevi nikad ne idu u keš; ono što polaznik uradi bez mreže čuva aplikacija (lib/red.ts)
  */
-const VERZIJA = "zpz-1";
+const VERZIJA = "zpz-2";
 const STATIKA = `zpz-statika-${VERZIJA}`;
 const STRANE = "zpz-strane";
 const API = "zpz-api";
@@ -97,7 +97,7 @@ self.addEventListener("fetch", (e) => {
   }
 
   if (url.pathname.startsWith("/_next/static/")) return e.respondWith(prvoKes(req));
-  if (/^\/(img|ikone)\//.test(url.pathname) || url.pathname.startsWith("/api/slike/") || url.pathname === "/icon.svg") {
+  if (/^\/(img|ikone|brand)\//.test(url.pathname) || url.pathname.startsWith("/api/slike/") || url.pathname === "/icon.png") {
     return e.respondWith(kesPaMreza(req, e));
   }
   if (API_ZA_CITANJE.some((r) => r.test(url.pathname))) {
