@@ -8,34 +8,51 @@ Stack: FastAPI + SQLAlchemy + Alembic + Postgres (backend), Next.js + TypeScript
 
 ## Pokretanje (lokalno, Windows PowerShell ili WSL)
 
-Potrebno: Docker Desktop, Python 3.12+, Node 22+.
+Potrebno: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (pokrenut), Python 3.12+, Node 22+, Git.
+
+Prvi put:
 
 ```powershell
-copy .env.example .env          # pa popuni SECRET_KEY i SEED_LOZINKA
+git clone https://github.com/danilo-lazovic/zrno-po-zrno.git
+cd zrno-po-zrno
+copy .env.example .env          # za lokalno radi bez izmena
 docker compose up -d db         # Postgres na portu 5433
 
 cd backend
 python -m venv .venv
 .venv\Scripts\pip install -r requirements-dev.txt
 .venv\Scripts\alembic upgrade head
-.venv\Scripts\python seed.py --demo     # sadržaj kursa + demo nalozi
+.venv\Scripts\python seed.py --demo     # kurs, demo nalozi i 12 demo polaznika sa napretkom (~20 s)
 .venv\Scripts\uvicorn main:app --reload --port 8001
+```
 
-cd ..\frontend                  # u drugom terminalu
+U drugom terminalu:
+
+```powershell
+cd zrno-po-zrno\frontend
 npm install
 npm run dev                     # http://localhost:3001
 ```
 
-(WSL/Linux: `.venv/bin/...` umesto `.venv\Scripts\...`.)
+Sledeći put je dovoljno: Docker Desktop upaljen, `docker compose up -d db`, pa `uvicorn` u `backend` i `npm run dev` u `frontend`. Posle `git pull` pokreni još `.venv\Scripts\pip install -r requirements-dev.txt`, `.venv\Scripts\alembic upgrade head` i `npm install`, za slučaj da ima nečeg novog.
+
+(WSL/Linux: `.venv/bin/...` umesto `.venv\Scripts\...`, `cp` umesto `copy`.)
 
 Demo nalozi posle `seed.py --demo`:
 
 | Ko | Prijava | Tajna |
 |---|---|---|
-| admin | `admin@kafeterija.test` | `SEED_LOZINKA` |
-| trener | `trener@kafeterija.test` | `SEED_LOZINKA` |
-| menadžer (Demo lokal) | `menadzer@kafeterija.test` | `SEED_LOZINKA` |
-| polaznik (Demo lokal) | `demo.polaznik` | PIN `2580` |
+| admin | `admin@kafeterija.test` | `SEED_LOZINKA` iz `.env` (`lozinka-za-razvoj`) |
+| trener | `trener@kafeterija.test` | isto |
+| menadžer (Demo lokal) | `menadzer@kafeterija.test` | isto |
+| polaznik bez napretka (Demo lokal) | `demo.polaznik` | PIN `2580` |
+| 11 polaznika sa napretkom (Demo lokal i Demo Ušće), npr. `jelena.ilic` (sve položila), `luka.djordjevic` (4 nivoa), `sara.lazic` (1 nivo) | ime.prezime | PIN `2580` |
+
+Osoblje bira „Prijava za osoblje” na `/prijava`; polaznik upisuje korisničko ime i PIN. Demo polaznici bez napretka: `--bez-polaznika`.
+
+Ispočetka (briše bazu): `docker compose down -v`, pa ponovo od `docker compose up -d db`.
+
+Instalacija na telefon i rad bez mreže rade samo u produkcionom buildu: u `frontend` pokreni `npm run build` pa `npm start` (isti port 3001).
 
 Portovi su 3001 (frontend), 8001 (backend) i 5433 (baza), da zrno radi pored Kafeterija Portala (3000, 8000, 5432).
 
@@ -54,6 +71,8 @@ cd backend
 Ponovno preuzimanje ažurira nazive i zatvara lokale kojih više nema u portalu.
 
 ## Testovi
+
+CI (GitHub Actions, `.github/workflows/ci.yml`) na svakom PR-u i na `main` pušta migracije unapred i unazad, `seed.py --demo`, backend testove na SQLite i Postgresu, frontend typecheck i build. Lokalno isto:
 
 ```powershell
 cd backend
@@ -136,7 +155,7 @@ Radi samo u produkcionom buildu (`npm run build` pa `npm start`); u `npm run dev
 
 ## Kako se testira Modul 6b (podsetnici)
 
-1. Prijavi se kao demo polaznik koji danas nije učio (npr. `sara.lazic`, PIN iz demo podataka). Na Putu je ispod pozdrava kartica sa podsetnikom; u uglu piše koliko ih još ima.
+1. Prijavi se kao demo polaznik koji danas nije učio (npr. `luka.djordjevic`, PIN `2580`). Na Putu je ispod pozdrava kartica sa podsetnikom; u uglu piše koliko ih još ima.
 2. „Kasnije” sklanja podsetnik do sutra i pokazuje sledeći, i posle osvežavanja.
 3. Započni nivo pa izađi na pola: posle osvežavanja podsetnik je „Nivo N je ostao na pola”, a dugme „Nastavi” otvara taj nivo.
 4. Polaznik sa nizom od 2+ dana koji danas nema zrna dobija „Sačuvaj niz”. Posle prve zarade zrna podsetnik prelazi na dnevni cilj.

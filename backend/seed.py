@@ -1,6 +1,7 @@
-"""Lokalni razvoj: sadržaj kursa, admin nalog i (uz --demo) demo lokal sa trenerom, menadžerom i polaznikom.
+"""Lokalni razvoj: sadržaj kursa, admin nalog i (uz --demo) demo lokal sa trenerom, menadžerom i polaznikom,
+plus 12 demo polaznika sa napretkom u dva lokala (scripts/demo_podaci.py; bez njih: --bez-polaznika).
 
-Pokretanje iz backend/:  python seed.py [--demo]
+Pokretanje iz backend/:  python seed.py [--demo] [--bez-polaznika]
 Sadržaj (data/*.json) se uvozi i u produkciji: `python seed.py --samo-sadrzaj`.
 Lozinka osoblja je SEED_LOZINKA iz .env, PIN demo polaznika 2580. Skripta je idempotentna.
 """
@@ -65,6 +66,12 @@ def main() -> None:
                 _korisnik(db, "demo.polaznik", ime="Demo", prezime="Polaznik", uloga=Uloga.polaznik,
                           lokal_id=lokal.id, pin_hash=hash_tajne(DEMO_PIN))
         db.commit()
+
+    if "--demo" in sys.argv and "--bez-polaznika" not in sys.argv:
+        # posle commit-a: demo polaznici idu kroz pravi API, kao da su sami učili
+        from scripts.demo_podaci import napravi
+
+        napravi(settings.seed_lozinka, DEMO_PIN)
 
 
 if __name__ == "__main__":

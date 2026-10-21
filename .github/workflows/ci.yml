@@ -1,0 +1,74 @@
+# Provera na svakom PR-u i na main: backend testovi (SQLite i Postgres, uz migracije) i frontend typecheck i build.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: zrno
+          POSTGRES_PASSWORD: zrno_dev
+          POSTGRES_DB: zrno
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U zrno -d zrno"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://zrno:zrno_dev@127.0.0.1:5432/zrno
+      SECRET_KEY: ci-samo-za-testove-0123456789-0123456789
+      SEED_LOZINKA: lozinka-za-ci-test
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Migracije na praznoj bazi, unazad i ponovo unapred
+        run: |
+          alembic upgrade head
+          alembic downgrade base
+          alembic upgrade head
+      - name: Seed sa demo podacima (isti put kao lokalno pokretanje)
+        run: python seed.py --demo
+      - name: Testovi (SQLite)
+        run: python -m pytest -q
+      - name: Testovi (Postgres)
+        run: |
+          psql postgresql://zrno:zrno_dev@127.0.0.1:5432/zrno -c "CREATE DATABASE zrno_test"
+          python -m pytest -q
+        env:
+          TEST_DATABASE_URL: postgresql+psycopg://zrno:zrno_dev@127.0.0.1:5432/zrno_test
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
