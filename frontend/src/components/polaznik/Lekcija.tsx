@@ -5,7 +5,7 @@ import { confetti, sfx } from "@/lib/jezgro";
 import { pokretac, podesavanja } from "@/igre/registar";
 import { posaljiRezultat } from "@/igre/rezultat";
 import type { IgraId, RezultatIgre } from "@/igre/ugovor";
-import { RENDER, postaviKontekst } from "@/lib/koraci";
+import { type Ishod, RENDER, postaviKontekst } from "@/lib/koraci";
 import {
   type Dobitak,
   type ZavrsetakOut,
@@ -23,7 +23,7 @@ const BEZ_DUGMETA = ["tf", "match", "sort", "hotspot", "game"];
 const POHVALE = ["Tačno!", "Bravo!", "Tako je!", "Odlično!", "Pravi barista!"];
 
 type Povratna = { klasa: "is-ok" | "is-mid" | "is-bad"; ikona: string; naslov: string; zrna: number; tacno: string; zasto: string };
-type Neposlat = { pitanje: string; rezultat: number; vreme: number };
+type Neposlat = { pitanje: string; rezultat: number; vreme: number; izbor?: number | boolean };
 
 type Props = {
   kurs: Kurs;
@@ -49,8 +49,8 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
   const teloRef = useRef<HTMLDivElement>(null);
   const dugmeRef = useRef<HTMLButtonElement>(null);
   const odgovorenoRef = useRef(false);
-  const proveraRef = useRef<(() => { frac: number; correct?: string } | undefined) | null>(null);
-  const odgovoriRef = useRef<(frac: number, extra?: { correct?: string }) => void>(() => {});
+  const proveraRef = useRef<(() => ({ frac: number } & Ishod) | undefined) | null>(null);
+  const odgovoriRef = useRef<(frac: number, extra?: Ishod) => void>(() => {});
   const pospremiRef = useRef<(() => void)[]>([]);
   const nizRef = useRef(0);
   const pocetakRef = useRef(Date.now());
@@ -85,7 +85,7 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
       lanacRef.current = lanacRef.current.then(async () => {
         try {
           const id = await prolazRef.current!;
-          const r = await posaljiOdgovor(id, o.pitanje, o.rezultat, o.vreme);
+          const r = await posaljiOdgovor(id, o.pitanje, o.rezultat, o.vreme, o.izbor);
           nizRef.current = r.niz;
           dobitak(r);
         } catch (e) {
@@ -124,7 +124,7 @@ export function Lekcija({ kurs, nivo, dobitak, zatvori, sledeci }: Props) {
       zasto: typeof st.why === "string" ? md(st.why) : "",
     });
     setZrnaProlaz((z) => z + p.zrna);
-    posalji({ pitanje: st.id, rezultat: frac, vreme: Date.now() - pocetakRef.current });
+    posalji({ pitanje: st.id, rezultat: frac, vreme: Date.now() - pocetakRef.current, izbor: extra?.izbor });
   };
 
   // korak se crta kao u artifactu: html + mount(root, api), van React-ovog stabla

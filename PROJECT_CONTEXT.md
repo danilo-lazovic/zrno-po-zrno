@@ -97,6 +97,9 @@ Modul 3:
 - `odgovori.test_id`: odgovori na test idu u istu tabelu (kontekst `test`), pa statistika po pitanju vidi i lekcije i test.
 - `sertifikati`: jedan po polazniku i kursu (kod `ZP-XXXX-XXXX`, procenat, izdat, opozvan, ko i zašto).
 
+Modul 4:
+- `odgovori.izbor`: šta je polaznik izabrao (mc: indeks ponuđenog odgovora, tf, num), za „najčešći pogrešan odgovor”. Odgovori iz lekcija pre Modula 4 ga nemaju.
+
 ## Admin deo (šta pratimo)
 
 - Pregled: aktivni polaznici danas i ove nedelje, završeni nivoi, položeni testovi, ko je zapeo (bez aktivnosti 7 dana)
@@ -115,8 +118,8 @@ Modul 3:
 | 1 | Polaznička aplikacija: lekcije (svih 11 tipova koraka, klipovi i igre unutar lekcija), ekran rezultata, uvod sa avatarom, kartice za okretanje, zvuk; napredak, zrna, niz dana i bedževi na serveru; lokali iz portala; napredak u adminu | gotovo |
 | 2 | Igraonica: Brza runda, Uštimaj mlin, Složi recept, Kralj pare, Sipaj srce po ugovoru igre (registar JS/Unity); rezultati igraonice i igara iz lekcija na serveru, rekordi, zrna, bedževi igara | gotovo |
 | 3 | Završni test i sertifikat: izvlačenje i provera na serveru, sertifikat sa kodom, provera i opoziv koda u adminu, procenat u tabeli polaznika (i za menadžera) | gotovo |
-| 4 | Admin statistika: pregled, polaznici, pitanja, igre, lokali | sledeće |
-| 5 | Uređivač sadržaja: nacrt, pregled kao polaznik, objava nove verzije, slike | |
+| 4 | Admin statistika: Pregled (aktivnost, levak, zapeli, lokali), Pitanja (najteža, najčešći pogrešan odgovor), Igre, detalj polaznika | gotovo |
+| 5 | Uređivač sadržaja: nacrt, pregled kao polaznik, objava nove verzije, slike | sledeće |
 | 6 | Kasnije: novi kursevi, PWA (instalacija na telefon, rad bez mreže za lekcije), podsetnici, rang lista po lokalu | |
 
 Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
@@ -149,6 +152,16 @@ Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 - Sertifikat: jedan po polazniku i kursu. Bolji rezultat menja procenat, kod ostaje isti. Trener ili admin može da opozove sertifikat (sa razlogom, u audit logu); posle opoziva nov položen test daje nov kod.
 - Kod `ZP-XXXX-XXXX` (bez slova koja se mešaju: 0/O, 1/I/L, U/V) trener proverava u Admin → Sertifikati; unos prašta mala slova, razmake i izostavljene crtice. Menadžer proverava i vidi samo polaznike svojih lokala.
 - Javna provera koda bez prijave i PDF/slika za deljenje: kasnije, ako zatreba (sada polaznik šalje screenshot iz profila).
+
+## Statistika (Modul 4)
+
+- Računa se samo nad aktivnim nalozima polaznika koje korisnik sme da vidi; menadžer vidi samo svoje lokale (i filter po lokalu mu ne otvara tuđe).
+- Aktivan dan: dan (Beograd) sa bar jednim odgovorom, igrom ili zrnom. „Aktivnih 7 dana”: bar jedan takav dan u poslednjih 7.
+- Zapeo: postavio PIN, nije položio test i nema aktivnosti 7+ dana (računa se i od prijave ili otvaranja naloga ako nikad nije učio).
+- Levak: koliko polaznika je postavilo PIN, završilo svaki nivo i položilo test; procenat je u odnosu na prvi red.
+- Pitanja: tačnost je prosek rezultata (0–1) svih odgovora; prikazuju se pitanja sa bar 3 odgovora, najteža prva. Najčešći pogrešan odgovor se vidi za izbor i klizač.
+- Igre: igranja iz igraonice i iz lekcija, prosečan rezultat, udeo igranja sa 3 zvezdice, broj igranja Unity verzije.
+- Grafikoni: jedna serija u boji `--graf` (#2D6FD6 svetlo, #5A92EC tamno; provereno validatorom palete), broj na najvišem i poslednjem stubiću, ostalo u oblačiću, „Tabela” za iste brojeve kao tekst.
 
 ## Otvorena pitanja
 

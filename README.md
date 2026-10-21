@@ -103,6 +103,14 @@ npm run build
 5. Kao trener: Admin → Sertifikati → upiši kod (mala slova i razmaci rade) → ime, lokal, procenat, datum. „Opozovi” traži razlog; polaznik tada u profilu vidi da mora ponovo da položi test i dobija nov kod.
 6. Kao menadžer: Polaznici prikazuje procenat i da li je test položen; Sertifikati samo za svoje lokale.
 
+## Kako se testira Modul 4
+
+1. Prijava kao trener ili admin otvara Admin → **Pregled**: broj polaznika, aktivni danas i u 7 dana, završili sve nivoe, položili test; aktivni po danu (prelaz mišem daje broj i zrna, „Tabela” iste brojeve); „Dokle su stigli” po nivoima; zapeli 7+ dana; poređenje lokala (klik na lokal filtrira pregled).
+2. **Pitanja**: najteža pitanja prva, sa najčešćim pogrešnim odgovorom; filter lekcije/test i lokal.
+3. **Igre**: igranja, igrači, prosečan rezultat, tri zvezdice, igranja iz lekcija i Unity verzije.
+4. **Polaznici** → klik na ime: detalj (nivoi sa zvezdicama i tačnošću, najslabija pitanja, test, rekordi u igrama, vremenska linija).
+5. Kao menadžer: sve isto, ali samo za polaznike svojih lokala.
+
 ## Sadržaj
 
 Kurs je JSON dokument u `backend/modules/sadrzaj/data/`. Posle izmene:

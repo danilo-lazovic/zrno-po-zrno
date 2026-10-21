@@ -6,9 +6,14 @@ import { NAZIV_ULOGE, type Me, type Uloga } from "@/lib/types";
 import { Odjava } from "../Odjava";
 import { Ikona } from "../Svg";
 
+const SVI: Uloga[] = ["admin", "trener", "menadzer"];
+
 const STAVKE: { href: string; naziv: string; uloge: Uloga[] }[] = [
-  { href: "/admin/polaznici", naziv: "Polaznici", uloge: ["admin", "trener", "menadzer"] },
-  { href: "/admin/sertifikati", naziv: "Sertifikati", uloge: ["admin", "trener", "menadzer"] },
+  { href: "/admin", naziv: "Pregled", uloge: SVI },
+  { href: "/admin/polaznici", naziv: "Polaznici", uloge: SVI },
+  { href: "/admin/sertifikati", naziv: "Sertifikati", uloge: SVI },
+  { href: "/admin/pitanja", naziv: "Pitanja", uloge: SVI },
+  { href: "/admin/igre", naziv: "Igre", uloge: SVI },
   { href: "/admin/sadrzaj", naziv: "Sadržaj", uloge: ["admin", "trener"] },
   { href: "/admin/lokali", naziv: "Lokali", uloge: ["admin"] },
   { href: "/admin/osoblje", naziv: "Osoblje", uloge: ["admin"] },
@@ -23,7 +28,7 @@ export function AdminNav({ me }: { me: Me }) {
         Zrno po zrno
       </div>
       {STAVKE.filter((s) => s.uloge.includes(me.korisnik.uloga)).map((s) => (
-        <Link key={s.href} href={s.href} aria-current={putanja.startsWith(s.href) ? "page" : undefined}>
+        <Link key={s.href} href={s.href} aria-current={(s.href === "/admin" ? putanja === s.href : putanja.startsWith(s.href)) ? "page" : undefined}>
           {s.naziv}
         </Link>
       ))}

@@ -60,6 +60,8 @@ class OdgovorIn(BaseModel):
     pitanje: str = Field(min_length=1, max_length=40)
     rezultat: float = Field(ge=0, le=1)
     vreme_ms: int | None = Field(default=None, ge=0, le=3_600_000)
+    # mc: indeks izabranog ponuđenog odgovora, tf: true/false, num: broj (za statistiku pogrešnih odgovora)
+    izbor: bool | int | float | None = None
 
 
 class OdgovorOut(BaseModel):
@@ -185,7 +187,7 @@ def odgovor(prolaz_id: int, body: OdgovorIn, korisnik: Korisnik = Depends(trenut
     p.greske += int(greska)
     p.zrna += zrna
     db.add(Odgovor(korisnik_id=korisnik.id, kurs_id=p.kurs_id, verzija_id=p.verzija_id, pitanje=body.pitanje, nivo=p.nivo,
-                   kontekst="lekcija", prolaz_id=p.id, rezultat=body.rezultat, vreme_ms=body.vreme_ms, u=sada()))
+                   kontekst="lekcija", prolaz_id=p.id, rezultat=body.rezultat, izbor=body.izbor, vreme_ms=body.vreme_ms, u=sada()))
     novi: list[str] = []
     if p.niz >= 5:
         b.dodeli_bedz(db, korisnik.id, p.kurs_id, "combo5", novi)

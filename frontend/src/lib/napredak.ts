@@ -35,8 +35,8 @@ export type Dobitak = { ukupno_zrna: number; novi_bedzevi: string[] };
 export const zapocniNivo = (kurs: string, nivo: string) =>
   posalji<{ prolaz_id: number }>(`/api/napredak/${kurs}/nivoi/${nivo}/prolaz`, "POST");
 
-export const posaljiOdgovor = (prolaz: number, pitanje: string, rezultat: number, vreme_ms: number) =>
-  posalji<OdgovorOut>(`/api/napredak/prolazi/${prolaz}/odgovor`, "POST", { pitanje, rezultat, vreme_ms });
+export const posaljiOdgovor = (prolaz: number, pitanje: string, rezultat: number, vreme_ms: number, izbor?: number | boolean) =>
+  posalji<OdgovorOut>(`/api/napredak/prolazi/${prolaz}/odgovor`, "POST", { pitanje, rezultat, vreme_ms, izbor });
 
 export const zavrsiNivo = (prolaz: number) => posalji<ZavrsetakOut>(`/api/napredak/prolazi/${prolaz}/zavrsi`, "POST");
 

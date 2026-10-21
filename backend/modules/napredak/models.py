@@ -1,9 +1,10 @@
 from datetime import date, datetime
+from typing import Any
 
 from sqlalchemy import Boolean, Date, Float, ForeignKey, Integer, String, UniqueConstraint, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from core.models import Base, UtcDateTime
+from core.models import Base, Json, UtcDateTime
 
 
 class ProlazNivoa(Base):
@@ -48,6 +49,8 @@ class Odgovor(Base):
     prolaz_id: Mapped[int | None] = mapped_column(ForeignKey("prolazi_nivoa.id", ondelete="CASCADE"), index=True)
     test_id: Mapped[int | None] = mapped_column(ForeignKey("testovi.id", ondelete="CASCADE"), index=True)
     rezultat: Mapped[float] = mapped_column(Float)
+    # šta je polaznik izabrao (mc: indeks ponuđenog odgovora, tf: true/false, num: broj); za "najčešći pogrešan odgovor"
+    izbor: Mapped[Any] = mapped_column(Json, nullable=True)
     vreme_ms: Mapped[int | None] = mapped_column(Integer)
     u: Mapped[datetime] = mapped_column(UtcDateTime(), server_default=func.now())
 

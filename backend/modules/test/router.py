@@ -226,7 +226,7 @@ def odgovor(test_id: int, body: OdgovorIn, korisnik: Korisnik = Depends(trenutni
     nivo, k = pitanja_za_test(db.get(SadrzajVerzija, t.verzija_id).dokument)[body.pitanje]
     rezultat = oceni(k, body.odgovor)
     db.add(Odgovor(korisnik_id=korisnik.id, kurs_id=t.kurs_id, verzija_id=t.verzija_id, pitanje=body.pitanje, nivo=nivo,
-                   kontekst="test", test_id=t.id, rezultat=rezultat, vreme_ms=body.vreme_ms, u=sada()))
+                   kontekst="test", test_id=t.id, rezultat=rezultat, izbor=body.odgovor, vreme_ms=body.vreme_ms, u=sada()))
     db.commit()
     return OdgovorOut(rezultat=rezultat, resenje=k["a"], zasto=k.get("why"))
 
