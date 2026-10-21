@@ -17,7 +17,9 @@ from core.models import Korisnik
 from core.vreme import danas, sada
 from modules.napredak import bodovanje as b
 from modules.napredak.models import BedzKorisnika, KarticaKorisnika, NivoKorisnika, Odgovor, ProlazNivoa, Zrno
-from modules.sadrzaj.models import Kurs, SadrzajVerzija
+from modules.igre.stanje import IgraStanje, stanje_igara
+from modules.sadrzaj.kurs import objavljen_kurs
+from modules.sadrzaj.models import SadrzajVerzija
 from modules.sadrzaj.uvoz import IZAZOVI
 
 router = APIRouter(prefix="/api/napredak")
@@ -45,6 +47,7 @@ class NapredakOut(BaseModel):
     nivoi: dict[str, NivoStanje]
     bedzevi: list[str]
     kartice: dict[str, bool]
+    igre: dict[str, IgraStanje]
     test: TestStanje
 
 
@@ -88,13 +91,6 @@ class KarticaOut(BaseModel):
 # ---------- pomoćne ----------
 
 
-def _kurs(db: Session, kljuc: str) -> Kurs:
-    k = db.scalar(select(Kurs).where(Kurs.kljuc == kljuc, Kurs.aktivan.is_(True)))
-    if k is None or k.verzija is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Kurs ne postoji ili još nije objavljen.")
-    return k
-
-
 def _nivoi(dok: dict[str, Any]) -> list[dict[str, Any]]:
     return dok["nivoi"]
 
@@ -123,7 +119,7 @@ def _nivo_iz_verzije(db: Session, p: ProlazNivoa) -> tuple[list[dict[str, Any]],
 
 @router.get("/{kurs}", response_model=NapredakOut)
 def napredak(kurs: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Session = Depends(get_db)):
-    k = _kurs(db, kurs)
+    k = objavljen_kurs(db, kurs)
     kid, uid = k.id, korisnik.id
     niz, najduzi = b.dani_zaredom(b.dani_sa_zrnima(db, uid, kid), danas())
     danas_zrna = db.scalar(
@@ -151,6 +147,7 @@ def napredak(kurs: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Ses
                 select(KarticaKorisnika).where(KarticaKorisnika.korisnik_id == uid, KarticaKorisnika.kurs_id == kid)
             )
         },
+        igre=stanje_igara(db, uid, kid),
         # završni test stiže u Modulu 3
         test=TestStanje(najbolje=0, polozen=False),
     )
@@ -158,7 +155,7 @@ def napredak(kurs: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Ses
 
 @router.post("/{kurs}/nivoi/{nivo}/prolaz", response_model=ProlazOut, status_code=status.HTTP_201_CREATED)
 def novi_prolaz(kurs: str, nivo: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Session = Depends(get_db)):
-    k = _kurs(db, kurs)
+    k = objavljen_kurs(db, kurs)
     nivoi = _nivoi(k.verzija.dokument)
     i = next((i for i, n in enumerate(nivoi) if n["id"] == nivo), None)
     if i is None:
@@ -239,7 +236,7 @@ def zavrsi(prolaz_id: int, korisnik: Korisnik = Depends(trenutni_korisnik), db: 
 
 @router.post("/{kurs}/kartice/{pojam}", response_model=KarticaOut)
 def kartica(kurs: str, pojam: str, body: KarticaIn, korisnik: Korisnik = Depends(trenutni_korisnik), db: Session = Depends(get_db)):
-    k = _kurs(db, kurs)
+    k = objavljen_kurs(db, kurs)
     if pojam not in {x["id"] for x in k.verzija.dokument["pojmovi"]}:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Pojam ne postoji.")
     c = db.get(KarticaKorisnika, (korisnik.id, k.id, pojam))

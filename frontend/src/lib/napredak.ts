@@ -10,6 +10,8 @@ export type Napredak = {
   nivoi: Record<string, { zavrsen: boolean; zvezdice: number; najbolje: number }>;
   bedzevi: string[];
   kartice: Record<string, boolean>;
+  /** najbolje: poeni za Brzu rundu, procenat za ostale */
+  igre: Record<string, { najbolje: number; zvezdice: number; igranja: number }>;
   test: { najbolje: number; polozen: boolean };
 };
 

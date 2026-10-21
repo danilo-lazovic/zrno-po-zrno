@@ -1,6 +1,7 @@
 // @ts-nocheck -- preneto iz artifacta (design/artifact/app.js, "prikaz koraka"); tipovi se dodaju postepeno.
 // Svaki tip koraka vraća { html, mount(root, api) }. api: ready(on), check(fn), answer(rezultat, { correct }).
 import * as A from "./art";
+import type { InstancaIgre, RezultatIgre } from "@/igre/ugovor";
 import * as G from "./igre";
 import * as U from "./jezgro";
 import { sfx } from "./jezgro";
@@ -12,11 +13,11 @@ const icon = A.icon;
 export type KontekstKoraka = {
   odgovoreno: () => boolean;
   pospremi: (fn: () => void) => void;
-  /** igra unutar lekcije javlja rezultat (Modul 2: upis u igre_rezultati, bedževi) */
-  igra?: (igra: string, rezultat: unknown) => void;
+  /** pokreće igru unutar lekcije po ugovoru; lekcija šalje rezultat serveru i dobija ga ovde za odgovor */
+  igra: (igra: string, host: HTMLElement, gotovo: (r: RezultatIgre) => void) => InstancaIgre;
 };
 
-let K: KontekstKoraka = { odgovoreno: () => false, pospremi: () => {} };
+let K: KontekstKoraka = { odgovoreno: () => false, pospremi: () => {}, igra: () => ({ unisti() {} }) };
 export function postaviKontekst(k: KontekstKoraka) {
   K = k;
 }
@@ -74,13 +75,11 @@ export const RENDER: Record<string, (st: any) => Prikaz> = {
     return {
       html: '<p class="eyebrow q-k">Igra</p><h2 class="st-title">' + esc(st.title) + '</h2><p class="st-text">' + esc(st.text) + '</p><div class="game-host"></div>',
       mount(root, api) {
-        const fn = { dialin: "dialin", milk: "milk", latte: "latte", recipe: "recipe" }[st.game];
-        const inst = G[fn](root.querySelector(".game-host"), {
-          mode: "lesson",
-          onWin: () => K.igra && K.igra(st.game, "pobeda"),
-          onDone: (r) => { K.igra && K.igra(st.game, r); if (!K.odgovoreno()) api.answer(r.score, { correct: "" }); }
+        // igra ide kroz ugovor (igre/registar.ts), pa lekcija radi isto sa JS i sa Unity verzijom
+        const inst = K.igra(st.game, root.querySelector(".game-host"), (r) => {
+          if (!K.odgovoreno()) api.answer(r.rezultat, { correct: "" });
         });
-        K.pospremi(() => inst.destroy());
+        K.pospremi(() => inst.unisti());
       }
     };
   },
