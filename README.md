@@ -141,6 +141,12 @@ Radi samo u produkcionom buildu (`npm run build` pa `npm start`); u `npm run dev
 3. Započni nivo pa izađi na pola: posle osvežavanja podsetnik je „Nivo N je ostao na pola”, a dugme „Nastavi” otvara taj nivo.
 4. Polaznik sa nizom od 2+ dana koji danas nema zrna dobija „Sačuvaj niz”. Posle prve zarade zrna podsetnik prelazi na dnevni cilj.
 
+## Kako se testira Modul 6c (rang lista)
+
+1. Polaznik: na Putu je kartica „N. mesto u lokalu”. Dodir otvara listu kolega iz lokala (ova i prošla nedelja); svoj red je istaknut.
+2. Kolege bez zrna te nedelje se ne vide polazniku; ispod liste piše koliko ih je.
+3. Admin → **Rang lista**: svi lokali (menadžer samo svoji), izbor nedelje do 4 unazad i lokala; klik na ime otvara detalj polaznika.
+
 ## Sadržaj
 
 Sadržaj se menja u uređivaču (Modul 5). JSON u `backend/modules/sadrzaj/data/` je prva verzija i rezervni put za veće izmene:

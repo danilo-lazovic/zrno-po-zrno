@@ -4,6 +4,7 @@ from core import auth
 from modules.igre import router as igre
 from modules.napredak import router as napredak
 from modules.osoblje import router as osoblje
+from modules.rang import router as rang
 from modules.sadrzaj import router as sadrzaj
 from modules.statistika import router as statistika
 from modules.test import router as test
@@ -25,6 +26,7 @@ app.include_router(test.router)
 app.include_router(statistika.router)
 app.include_router(statistika.detalj_router)
 app.include_router(uredjivac.router)
+app.include_router(rang.router)
 
 
 @app.get("/api/health")

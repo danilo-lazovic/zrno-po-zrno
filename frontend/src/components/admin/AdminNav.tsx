@@ -14,6 +14,7 @@ const STAVKE: { href: string; naziv: string; uloge: Uloga[] }[] = [
   { href: "/admin/sertifikati", naziv: "Sertifikati", uloge: SVI },
   { href: "/admin/pitanja", naziv: "Pitanja", uloge: SVI },
   { href: "/admin/igre", naziv: "Igre", uloge: SVI },
+  { href: "/admin/rang", naziv: "Rang lista", uloge: SVI },
   { href: "/admin/sadrzaj", naziv: "Sadržaj", uloge: ["admin", "trener"] },
   { href: "/admin/lokali", naziv: "Lokali", uloge: ["admin"] },
   { href: "/admin/osoblje", naziv: "Osoblje", uloge: ["admin"] },
