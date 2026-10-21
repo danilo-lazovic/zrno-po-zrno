@@ -36,10 +36,12 @@ const fmtV = (v, step) => U.num(v, step < 1 ? 1 : 0);
 
 /** Tipovi koraka: story, explore, clip, game, mc, tf, num, order, match, sort, hotspot. */
 export type Prikaz = { html: string; mount?: (root: HTMLElement, api: ApiKoraka) => void };
+/** izbor: šta je polaznik izabrao (mc indeks, tf, num), za statistiku najčešćeg pogrešnog odgovora */
+export type Ishod = { correct?: string; izbor?: number | boolean };
 export type ApiKoraka = {
   ready: (on: boolean) => void;
-  check: (fn: () => { frac: number; correct?: string } | undefined) => void;
-  answer: (frac: number, extra?: { correct?: string }) => void;
+  check: (fn: () => ({ frac: number } & Ishod) | undefined) => void;
+  answer: (frac: number, extra?: Ishod) => void;
 };
 
 export const RENDER: Record<string, (st: any) => Prikaz> = {
@@ -98,7 +100,7 @@ export const RENDER: Record<string, (st: any) => Prikaz> = {
         });
         api.check(() => {
           root.querySelectorAll(".opt").forEach((x) => { const i = Number(x.dataset.i); if (i === st.a) x.classList.add("ok"); else if (i === sel) x.classList.add("bad"); x.disabled = true; });
-          return { frac: sel === st.a ? 1 : 0, correct: sel === st.a ? "" : "Tačan odgovor: <b>" + esc(st.opts[st.a]) + "</b>" };
+          return { frac: sel === st.a ? 1 : 0, izbor: sel, correct: sel === st.a ? "" : "Tačan odgovor: <b>" + esc(st.opts[st.a]) + "</b>" };
         });
       }
     };
@@ -112,7 +114,7 @@ export const RENDER: Record<string, (st: any) => Prikaz> = {
           const v = b.dataset.v === "1", ok = v === st.a;
           b.classList.add(ok ? "ok" : "bad");
           root.querySelectorAll(".tfb").forEach((x) => (x.disabled = true));
-          api.answer(ok ? 1 : 0, { correct: ok ? "" : "Tačan odgovor: <b>" + (st.a ? "Tačno" : "Netačno") + "</b>" });
+          api.answer(ok ? 1 : 0, { izbor: v, correct: ok ? "" : "Tačan odgovor: <b>" + (st.a ? "Tačno" : "Netačno") + "</b>" });
         });
       }
     };
@@ -137,7 +139,7 @@ export const RENDER: Record<string, (st: any) => Prikaz> = {
           const near = Math.min(Math.abs(v - lo), Math.abs(v - hi)) <= (st.max - st.min) * 0.06;
           root.querySelector(".num").classList.add(okv ? "ok" : near ? "mid" : "bad");
           const ans = (lo === hi ? fmtV(lo, st.step) : fmtV(lo, st.step) + "–" + fmtV(hi, st.step)) + " " + st.unit;
-          return { frac: okv ? 1 : near ? 0.5 : 0, correct: okv ? "" : "Tačno je: <b>" + esc(ans) + "</b>" };
+          return { frac: okv ? 1 : near ? 0.5 : 0, izbor: v, correct: okv ? "" : "Tačno je: <b>" + esc(ans) + "</b>" };
         });
       }
     };

@@ -63,3 +63,57 @@ body:has(.adm) { background-image: none; }
   .adm-main { padding: 18px 16px 48px; }
   .tabela { display: block; overflow-x: auto; }
 }
+
+/* ---------- statistika ---------- */
+:root { --graf: #2D6FD6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --graf: #5A92EC; } }
+:root[data-theme="dark"] { --graf: #5A92EC; }
+
+.kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.kpi div { display: grid; gap: 2px; padding: 14px 16px; border: 2px solid var(--stroke); border-radius: var(--r); background: var(--surface); }
+.kpi b { font: 900 34px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.kpi span { font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+.kpi small { font-size: 12px; color: var(--ink-3); }
+
+.mreza2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.panel { padding: 16px; border: 2px solid var(--stroke); border-radius: var(--r); background: var(--surface); min-width: 0; }
+.panel-glava { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.panel-glava h2 { margin: 0; font: 800 20px var(--font-display); text-transform: uppercase; letter-spacing: .03em; }
+.panel-glava .linkish { margin: 0; padding: 0; }
+.sec-adm { margin: 22px 0 10px; font: 800 22px var(--font-display); text-transform: uppercase; letter-spacing: .03em; }
+
+/* stubići: jedna serija, vrednost na najvišem i poslednjem, ostalo u tooltipu */
+.stubici { position: relative; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 2px; align-items: end; height: 180px; padding-top: 22px; border-bottom: 1px solid var(--line); }
+.stub { position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; padding: 0; border: 0; background: none; cursor: default; }
+.stub i { display: block; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--graf); }
+.stub.prazan i { background: var(--line); }
+.stub:hover i, .stub:focus-visible i { filter: brightness(1.15); }
+.stub em { position: absolute; left: 50%; transform: translate(-50%, -100%); margin-top: -4px; font: 600 11px var(--font-mono); font-style: normal; color: var(--ink); white-space: nowrap; }
+.stubici-ose { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 2px; margin-top: 4px; font: 600 10px var(--font-mono); color: var(--ink-3); text-align: center; }
+.tooltip { position: absolute; z-index: 5; padding: 8px 10px; border-radius: 10px; background: var(--ink); color: var(--bg); font-size: 12px; line-height: 1.4; white-space: nowrap; pointer-events: none; transform: translateX(-50%); }
+.tooltip b { font-family: var(--font-mono); }
+
+/* levak: vodoravni stubići sa brojem i procentom */
+.levak { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.levak li { display: grid; grid-template-columns: minmax(120px, 210px) minmax(0, 1fr) 76px; align-items: center; gap: 10px; font-size: 13px; }
+.levak li > span:first-child { overflow: hidden; color: var(--ink-2); white-space: nowrap; text-overflow: ellipsis; }
+.levak .traka { height: 14px; border-radius: 0 4px 4px 0; background: var(--surface-2); overflow: hidden; }
+.levak .traka i { display: block; height: 100%; border-radius: 0 4px 4px 0; background: var(--graf); }
+.levak b { font: 600 12px var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; }
+
+.procenat { display: grid; grid-template-columns: 44px 1fr; align-items: center; gap: 8px; min-width: 120px; }
+.procenat b { font: 600 13px var(--font-mono); text-align: right; }
+.procenat .traka { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.procenat .traka i { display: block; height: 100%; border-radius: 4px; background: var(--graf); }
+
+.filteri { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.filteri .inp { width: auto; }
+.linija { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.linija li { display: grid; grid-template-columns: 170px 1fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.linija time { white-space: nowrap; }
+.panel.linija { padding-block: 4px; }
+.eyebrow a { color: inherit; text-underline-offset: 3px; }
+.linija li:last-child { border-bottom: 0; }
+.linija time { font: 600 12px var(--font-mono); color: var(--ink-2); }
+.tabela a { color: inherit; font-weight: 600; text-underline-offset: 3px; }
+.zv { color: var(--gold-2); letter-spacing: 1px; }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { api, posalji } from "@/lib/api";
 import { datumVreme } from "@/lib/format";
@@ -148,7 +149,9 @@ export function Polaznici() {
             {polaznici.map((p) => (
               <tr key={p.id}>
                 <td>
-                  {p.ime} {p.prezime}
+                  <Link href={`/admin/polaznici/${p.id}`}>
+                    {p.ime} {p.prezime}
+                  </Link>
                 </td>
                 <td className="mono">{p.korisnicko_ime}</td>
                 <td>{p.lokal?.naziv ?? "–"}</td>
