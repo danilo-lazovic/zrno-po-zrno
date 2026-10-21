@@ -11,6 +11,7 @@ import type { TestStanje } from "@/lib/test";
 import { DOGADJAJ_POSLATO, DOGADJAJ_PROMENA, type Poslato, type Stavka, citajRed, dodajURed, noviKljuc, posaljiRed, postaviKorisnika } from "@/lib/red";
 import { instaliraj, pratiInstalaciju, registrujSW, sacuvajZaOffline, stanjeInstalacije } from "@/lib/pwa";
 import { type Podsetnik, odlozeni, odlozi, podsetnici } from "@/lib/podsetnici";
+import { type Rang, opsegNedelje, ucitajRang } from "@/lib/rang";
 import { toast } from "@/lib/toast";
 import type { Me } from "@/lib/types";
 import { Odjava } from "../Odjava";
@@ -485,6 +486,7 @@ function Put({
         napredak={napredak}
         uradi={(a) => (a.tip === "nivo" ? pokreni(a.nivo) : idi(a.tip))}
       />
+      <RangKartica kurs={kurs} zrna={napredak.zrna} />
 
       {tekuciNivo ? (
         <button type="button" className="btn btn-gold btn-big" onClick={() => pokreni(tekuciNivo)}>
@@ -1198,6 +1200,93 @@ function KarticaPodsetnika({
         </button>
       </div>
       {svi.length > 1 && <small className="podsetnik-jos">još {svi.length - 1}</small>}
+    </div>
+  );
+}
+
+/** Mesto u lokalu ove nedelje; dodir otvara listu kolega (Modul 6c). Bez mreže ili bez lokala se ne prikazuje. */
+function RangKartica({ kurs, zrna }: { kurs: Kurs; zrna: number }) {
+  const [rang, setRang] = useState<Rang | null>(null);
+  const [otvoren, setOtvoren] = useState(false);
+  useEffect(() => {
+    ucitajRang(kurs.kurs.kljuc)
+      .then(setRang)
+      .catch(() => setRang(null));
+  }, [kurs.kurs.kljuc, zrna]);
+  if (!rang?.lokal) return null;
+  const ja = rang.redovi.find((x) => x.ja);
+  return (
+    <>
+      <button type="button" className="card rang-kartica" onClick={() => setOtvoren(true)}>
+        <span className="cta-ic">
+          <Ikona ime="trophy" />
+        </span>
+        <span>
+          <b>{ja && ja.zrna > 0 ? `${ja.mesto}. mesto u lokalu` : "Rang lista lokala"}</b>
+          <small>
+            {rang.lokal} · ove nedelje {ja ? zrnaTxt(ja.zrna) : ""}
+          </small>
+        </span>
+        <Ikona ime="next" />
+      </button>
+      {otvoren && <RangLista kurs={kurs} prva={rang} zatvori={() => setOtvoren(false)} />}
+    </>
+  );
+}
+
+function RangLista({ kurs, prva, zatvori }: { kurs: Kurs; prva: Rang; zatvori: () => void }) {
+  const [pomak, setPomak] = useState(0);
+  const [rang, setRang] = useState<Rang>(prva);
+  useEffect(() => {
+    if (pomak === 0) setRang(prva);
+    else ucitajRang(kurs.kurs.kljuc, pomak).then(setRang).catch(() => {});
+  }, [pomak, prva, kurs.kurs.kljuc]);
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && zatvori();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [zatvori]);
+  const bez = rang.polaznika - rang.redovi.filter((x) => x.zrna > 0).length;
+  return (
+    <div className="sheet-wrap" onClick={(e) => e.target === e.currentTarget && zatvori()}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label="Rang lista">
+        <div className="msheet">
+          <p className="eyebrow">{rang.lokal}</p>
+          <h2 className="h2">Rang lista</h2>
+          <div className="seg" role="group" aria-label="Nedelja">
+            <button type="button" className={pomak === 0 ? "on" : ""} aria-pressed={pomak === 0} onClick={() => setPomak(0)}>
+              Ova nedelja
+            </button>
+            <button type="button" className={pomak === -1 ? "on" : ""} aria-pressed={pomak === -1} onClick={() => setPomak(-1)}>
+              Prošla
+            </button>
+          </div>
+          <p className="msheet-d">
+            Zrna od ponedeljka do nedelje ({opsegNedelje(rang)}). Svakog ponedeljka svi kreću od nule.
+          </p>
+          <ol className="rang">
+            {rang.redovi.map((x) => (
+              <li key={x.korisnik_id} className={x.ja ? "ja" : ""}>
+                <span className={`rang-mesto m${x.mesto}`}>{x.zrna > 0 ? x.mesto : "–"}</span>
+                <Svg html={avatar(x.avatar ?? "zrno")} />
+                <span className="rang-ime">
+                  {x.ime}
+                  {x.ja && <small> (ti)</small>}
+                </span>
+                <b>{x.zrna}</b>
+              </li>
+            ))}
+          </ol>
+          {bez > 0 && (
+            <p className="msheet-d">
+              Još {bez} {mnozina(bez, "kolega", "kolege", "kolega")} iz lokala {pomak === 0 ? "ove" : "te"} nedelje nema zrna.
+            </p>
+          )}
+          <button type="button" className="btn btn-gold btn-big" onClick={zatvori} autoFocus>
+            Zatvori
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

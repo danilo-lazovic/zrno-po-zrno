@@ -126,8 +126,8 @@ Modul 5:
 | 5 | Uređivač sadržaja: nacrt, forme za svaki tip koraka, banka pitanja, Brza runda, pojmovi, podešavanja, slike, pregled kao polaznik, objava nove verzije sa spiskom izmena | gotovo |
 | 6a | Aplikacija na telefonu: instalacija na početni ekran, otvaranje i lekcije, igre i kartice bez mreže, red za slanje | gotovo |
 | 6b | Podsetnici u aplikaciji (bez push, SMS i Vibera) | gotovo |
-| 6c | Nedeljna rang lista po lokalu | sledeće |
-| 6d | Više kurseva: infrastruktura (izbor kursa, nov kurs iz uređivača) i jedan probni kurs | |
+| 6c | Nedeljna rang lista po lokalu | gotovo |
+| 6d | Više kurseva: infrastruktura (izbor kursa, nov kurs iz uređivača) i jedan probni kurs | sledeće |
 
 Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 
@@ -216,6 +216,13 @@ Vide se kad polaznik otvori aplikaciju, kao kartica na Putu ispod pozdrava. Prik
 6. Dnevni cilj: danas ima zrna, ali manje od cilja.
 
 Kad su svi nivoi gotovi, nema posebnog podsetnika za test: Put tada ionako ima veliko dugme za test. Server za ovo daje `poslednji_dan` i `nedovrsen` u napretku.
+
+## Rang lista (Modul 6c)
+
+- Nedelja je od ponedeljka do nedelje po Beogradu; poredi se zbir zrna iz te nedelje (lekcije, igre, kartice, test). Svakog ponedeljka svi kreću od nule.
+- U listi su aktivni polaznici iz istog lokala sa postavljenim PIN-om. Isti broj zrna daje isto mesto (1, 1, 3).
+- Polaznik vidi kolege koje su te nedelje zaradile zrna i sebe, sa imenom i inicijalom prezimena, ovu i prošlu nedelju. Polaznik bez lokala nema rang listu.
+- Osoblje (Admin → Rang lista) vidi ceo lokal sa punim imenima i polaznike bez zrna, do 4 nedelje unazad; menadžer samo svoje lokale.
 
 ## Otvorena pitanja
 

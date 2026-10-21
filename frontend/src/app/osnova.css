@@ -223,3 +223,19 @@ body:has(.adm) { background-image: none; }
 .podsetnik-akcije { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
 .podsetnik-jos { position: absolute; top: 10px; right: 12px; font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); }
 .podsetnik > div > b { display: block; padding-right: 48px; }
+
+/* ---------- rang lista (Modul 6c) ---------- */
+.rang-kartica { display: grid; grid-template-columns: 48px minmax(0, 1fr) 20px; align-items: center; gap: 12px; width: 100%; margin-top: 14px; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.rang-kartica > span:nth-child(2) { display: grid; gap: 2px; min-width: 0; }
+.rang-kartica small { overflow: hidden; color: var(--ink-2); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
+.rang-kartica > span:last-child svg { width: 20px; height: 20px; color: var(--ink-3); }
+.rang { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.rang li { display: grid; grid-template-columns: 32px 36px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 6px 10px; border: 2px solid transparent; border-radius: 14px; background: var(--surface-2); }
+.rang li.ja { border-color: var(--gold); background: var(--gold-soft); }
+.rang li svg { width: 36px; height: 36px; }
+.rang-mesto { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; font: 800 17px var(--font-display); color: var(--ink-2); }
+.rang-mesto.m1 { background: var(--gold); color: #241510; }
+.rang-mesto.m2, .rang-mesto.m3 { background: var(--surface); color: var(--ink); }
+.rang-ime { overflow: hidden; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+.rang-ime small { color: var(--ink-3); font-weight: 600; }
+.rang b { font: 800 18px var(--font-display); font-variant-numeric: tabular-nums; }
