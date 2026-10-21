@@ -21,6 +21,7 @@ from modules.igre.stanje import IgraStanje, stanje_igara
 from modules.sadrzaj.kurs import objavljen_kurs
 from modules.sadrzaj.models import SadrzajVerzija
 from modules.sadrzaj.uvoz import IZAZOVI
+from modules.test.router import stanje_testa
 
 router = APIRouter(prefix="/api/napredak")
 
@@ -122,6 +123,7 @@ def napredak(kurs: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Ses
     k = objavljen_kurs(db, kurs)
     kid, uid = k.id, korisnik.id
     niz, najduzi = b.dani_zaredom(b.dani_sa_zrnima(db, uid, kid), danas())
+    _, najbolje_test, polozen_test = stanje_testa(db, uid, kid)
     danas_zrna = db.scalar(
         select(func.coalesce(func.sum(Zrno.iznos), 0)).where(Zrno.korisnik_id == uid, Zrno.kurs_id == kid, Zrno.dan == danas())
     )
@@ -148,8 +150,7 @@ def napredak(kurs: str, korisnik: Korisnik = Depends(trenutni_korisnik), db: Ses
             )
         },
         igre=stanje_igara(db, uid, kid),
-        # završni test stiže u Modulu 3
-        test=TestStanje(najbolje=0, polozen=False),
+        test=TestStanje(najbolje=najbolje_test, polozen=polozen_test),
     )
 
 

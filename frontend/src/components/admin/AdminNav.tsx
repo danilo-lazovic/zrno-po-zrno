@@ -8,6 +8,7 @@ import { Ikona } from "../Svg";
 
 const STAVKE: { href: string; naziv: string; uloge: Uloga[] }[] = [
   { href: "/admin/polaznici", naziv: "Polaznici", uloge: ["admin", "trener", "menadzer"] },
+  { href: "/admin/sertifikati", naziv: "Sertifikati", uloge: ["admin", "trener", "menadzer"] },
   { href: "/admin/sadrzaj", naziv: "Sadržaj", uloge: ["admin", "trener"] },
   { href: "/admin/lokali", naziv: "Lokali", uloge: ["admin"] },
   { href: "/admin/osoblje", naziv: "Osoblje", uloge: ["admin"] },

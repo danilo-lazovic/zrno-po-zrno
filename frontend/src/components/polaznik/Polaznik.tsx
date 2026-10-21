@@ -7,12 +7,15 @@ import { RECEPTI } from "@/lib/igre";
 import { esc, sfx } from "@/lib/jezgro";
 import { type Dobitak, type Napredak, oznaciKarticu } from "@/lib/napredak";
 import { type IgraOpis, IZAZOVI, type Kurs, type Nivo, type SadrzajOut, md, mnozina, rangZa } from "@/lib/sadrzaj";
+import type { TestStanje } from "@/lib/test";
 import { toast } from "@/lib/toast";
 import type { Me } from "@/lib/types";
 import { Odjava } from "../Odjava";
 import { Ikona, Svg } from "../Svg";
 import { Igra } from "./Igra";
 import { Lekcija } from "./Lekcija";
+import { SertifikatKartica } from "./SertifikatKartica";
+import { Test } from "./Test";
 import { Uvod } from "./Uvod";
 import { zvezdice } from "./zvezdice";
 
@@ -46,16 +49,20 @@ export function Polaznik({ me }: { me: Me }) {
   const [list, setList] = useState<Nivo | null>(null);
   const [lekcija, setLekcija] = useState<{ nivo: Nivo; kljuc: number } | null>(null);
   const [igra, setIgra] = useState<IgraOpis | null>(null);
+  const [testStanje, setTestStanje] = useState<TestStanje | null>(null);
+  const [uvodTesta, setUvodTesta] = useState(false);
+  const [test, setTest] = useState(0);
   const [av, setAv] = useState(me.korisnik.avatar);
   const [zvuk, setZvuk] = useState(true);
   const zrnaRef = useRef(0);
 
   const ucitajNapredak = useCallback(
     () =>
-      api<Napredak>(`/api/napredak/${KURS}`)
-        .then((n) => {
+      Promise.all([api<Napredak>(`/api/napredak/${KURS}`), api<TestStanje>(`/api/test/${KURS}`)])
+        .then(([n, t]) => {
           zrnaRef.current = n.zrna;
           setNapredak(n);
+          setTestStanje(t);
         })
         .catch((e: Error) => setGreska(e.message)),
     [],
@@ -164,11 +171,23 @@ export function Polaznik({ me }: { me: Me }) {
         </div>
       </header>
       <main id="view" className={`view view-${tab}`}>
-        {tab === "put" && <Put kurs={kurs} me={me} napredak={napredak} otvori={setList} pokreni={pokreni} />}
+        {tab === "put" && (
+          <Put kurs={kurs} me={me} napredak={napredak} otvori={setList} pokreni={pokreni} test={() => setUvodTesta(true)} />
+        )}
         {tab === "igre" && <Igre kurs={kurs} napredak={napredak} otvori={setIgra} />}
         {tab === "kartice" && <Kartice kurs={kurs} napredak={napredak} setNapredak={setNapredak} dobitak={dobitak} />}
         {tab === "profil" && (
-          <Profil kurs={kurs} me={me} napredak={napredak} av={av} zvuk={zvuk} prebaciZvuk={prebaciZvuk} sacuvajAvatar={sacuvajAvatar} />
+          <Profil
+            kurs={kurs}
+            me={me}
+            napredak={napredak}
+            testStanje={testStanje}
+            av={av}
+            zvuk={zvuk}
+            prebaciZvuk={prebaciZvuk}
+            sacuvajAvatar={sacuvajAvatar}
+            test={() => setUvodTesta(true)}
+          />
         )}
       </main>
       <nav className="tabs" aria-label="Glavni meni">
@@ -215,6 +234,36 @@ export function Polaznik({ me }: { me: Me }) {
           }}
         />
       )}
+      {uvodTesta && testStanje && (
+        <UvodTesta
+          stanje={testStanje}
+          zatvori={() => setUvodTesta(false)}
+          kreni={() => {
+            setUvodTesta(false);
+            sfx.tap();
+            setTest(Date.now());
+          }}
+        />
+      )}
+      {test > 0 && (
+        <Test
+          key={test}
+          kurs={kurs}
+          ime={`${me.korisnik.ime} ${me.korisnik.prezime}`}
+          av={av}
+          dobitak={dobitak}
+          zatvori={() => {
+            setTest(0);
+            ucitajNapredak();
+          }}
+          ponoviNivo={(id) => {
+            setTest(0);
+            ucitajNapredak();
+            const n = kurs.nivoi.find((x) => x.id === id);
+            if (n) pokreni(n);
+          }}
+        />
+      )}
       {!av && (
         <Uvod
           ime={me.korisnik.ime}
@@ -238,12 +287,14 @@ function Put({
   napredak,
   otvori,
   pokreni,
+  test,
 }: {
   kurs: Kurs;
   me: Me;
   napredak: Napredak;
   otvori: (n: Nivo) => void;
   pokreni: (n: Nivo) => void;
+  test: () => void;
 }) {
   const staza = useRef<HTMLDivElement>(null);
   const linija = useRef<SVGSVGElement>(null);
@@ -359,8 +410,8 @@ function Put({
           {gotovo ? "Nastavi" : "Počni"} · Nivo {tekuciNivo.n}
         </button>
       ) : (
-        <button type="button" className="btn btn-gold btn-big" onClick={() => toast("Završni test stiže uskoro.")}>
-          Završni test
+        <button type="button" className={`btn btn-big${napredak.test.polozen ? "" : " btn-gold"}`} onClick={test}>
+          {napredak.test.polozen ? "Pogledaj sertifikat" : "Završni test"}
         </button>
       )}
 
@@ -423,9 +474,13 @@ function Put({
             type="button"
             className={`node node-final ${napredak.test.polozen ? "is-done" : sviGotovi ? "is-current" : "is-locked"}`}
             aria-label="Završni test"
-            onClick={() =>
-              toast(sviGotovi ? "Završni test stiže uskoro." : "Završni test se otključava posle svih 8 nivoa.")
-            }
+            onClick={() => {
+              if (sviGotovi) test();
+              else {
+                sfx.bad();
+                toast(`Završni test se otključava posle svih ${nivoi.length} nivoa.`);
+              }
+            }}
           >
             <Ikona ime={sviGotovi ? "trophy" : "lock"} />
           </button>
@@ -748,18 +803,22 @@ function Profil({
   kurs,
   me,
   napredak,
+  testStanje,
   av,
   zvuk,
   prebaciZvuk,
   sacuvajAvatar,
+  test,
 }: {
   kurs: Kurs;
   me: Me;
   napredak: Napredak;
+  testStanje: TestStanje | null;
   av: string | null;
   zvuk: boolean;
   prebaciZvuk: () => void;
   sacuvajAvatar: (a: string) => Promise<void>;
+  test: () => void;
 }) {
   const [biram, setBiram] = useState(false);
   const rang = rangZa(kurs, napredak.zrna);
@@ -800,6 +859,38 @@ function Profil({
           <span>test</span>
         </div>
       </div>
+      {testStanje?.sertifikat && !testStanje.sertifikat.opozvan ? (
+        <>
+          <h2 className="h2 sec-h">Sertifikat</h2>
+          <SertifikatKartica
+            ime={`${me.korisnik.ime} ${me.korisnik.prezime}`}
+            av={av}
+            s={testStanje.sertifikat}
+            nivoa={kurs.nivoi.length}
+          />
+        </>
+      ) : (
+        <div className="card cta-exam">
+          <span className="cta-ic">
+            <Ikona ime="trophy" />
+          </span>
+          <div>
+            <b>Sertifikat čeka</b>
+            <p>
+              {testStanje?.sertifikat?.opozvan
+                ? "Trener je poništio sertifikat. Položi završni test ponovo i dobićeš nov kod."
+                : gotovo === kurs.nivoi.length
+                  ? `Svi nivoi su gotovi. Položi završni test (${testStanje?.prag ?? 80}%) i dobij kod za trenera.`
+                  : `Završi još ${kurs.nivoi.length - gotovo} ${mnozina(kurs.nivoi.length - gotovo, "nivo", "nivoa", "nivoa")}, pa položi završni test (${testStanje?.prag ?? 80}%).`}
+            </p>
+          </div>
+          {gotovo === kurs.nivoi.length && (
+            <button type="button" className="btn btn-gold" onClick={test}>
+              Na test
+            </button>
+          )}
+        </div>
+      )}
       <h2 className="h2 sec-h">
         Bedževi{" "}
         <small>
@@ -885,5 +976,56 @@ function Profil({
         </div>
       )}
     </section>
+  );
+}
+
+/* ---------- UVOD U ZAVRŠNI TEST (artifact app.js examIntro) ---------- */
+
+function UvodTesta({ stanje, zatvori, kreni }: { stanje: TestStanje; zatvori: () => void; kreni: () => void }) {
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && zatvori();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [zatvori]);
+
+  return (
+    <div className="sheet-wrap" onClick={(e) => e.target === e.currentTarget && zatvori()}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label="Završni test">
+        <div className="msheet" style={{ "--mc": "var(--gold)" } as React.CSSProperties}>
+          <div className="msheet-band">
+            <Ikona ime="trophy" />
+            <span>Finale</span>
+          </div>
+          <h2 className="h2">Završni test</h2>
+          <p className="msheet-d">
+            {stanje.pitanja} pitanja iz svih nivoa, nasumično. Za prolaz ti treba <b>{stanje.prag}%</b>. Posle prolaza dobijaš
+            sertifikat sa kodom za trenera.
+          </p>
+          <ul className="meta">
+            <li>
+              <Ikona ime="clock" />~8 min
+            </li>
+            <li>Najbolje: {stanje.najbolje}%</li>
+            <li>Pokušaja: {stanje.pokusaja}</li>
+          </ul>
+          {stanje.polozen && (
+            <p className="note ok">
+              <Ikona ime="check" />
+              Već si položio sa {stanje.najbolje}%. Možeš da popraviš rezultat.
+            </p>
+          )}
+          {stanje.otkljucan ? (
+            <button type="button" className="btn btn-gold btn-big" onClick={kreni} autoFocus>
+              Kreni na test
+            </button>
+          ) : (
+            <p className="note">
+              <Ikona ime="lock" />
+              Test se otključava posle svih nivoa.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

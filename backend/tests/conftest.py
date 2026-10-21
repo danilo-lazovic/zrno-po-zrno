@@ -14,6 +14,7 @@ from sqlalchemy.pool import StaticPool
 import modules.igre.models  # noqa: F401
 import modules.napredak.models  # noqa: F401
 import modules.sadrzaj.models  # noqa: F401
+import modules.test.models  # noqa: F401
 from core.auth import login_limiter
 from core.db import get_db
 from core.models import Base, Korisnik, Lokal, Uloga
