@@ -34,7 +34,7 @@ npm install
 npm run dev                     # http://localhost:3001
 ```
 
-Na telefonu (isti Wi-Fi kao računar): `http://<IP računara>:3001`, IP piše u `ipconfig` (IPv4). Ako Windows pita za firewall, dozvoli Node.js za privatnu mrežu. Dev server pušta samo adrese iz lokalne mreže (`192.168.*`, `10.*`, `172.*`, `*.local`); drugu adresu dodaj u `.env` kao `DEV_ORIGINS=ime-racunara.lan`.
+Na telefonu (isti Wi-Fi kao računar): `http://<IP računara>:3001`, IP piše u `ipconfig` (IPv4). Ako Windows pita za firewall, dozvoli Node.js za privatnu mrežu. Dev server pušta samo adrese iz lokalne mreže (`192.168.*`, `10.*`, `172.*`, `*.local`); drugu adresu dodaj u `frontend/.env.local` kao `DEV_ORIGINS=ime-racunara.lan`.
 
 Sledeći put je dovoljno: Docker Desktop upaljen, `docker compose up -d db`, pa `uvicorn` u `backend` i `npm run dev` u `frontend`. Posle `git pull` pokreni još `.venv\Scripts\pip install -r requirements-dev.txt`, `.venv\Scripts\alembic upgrade head`, `.venv\Scripts\python seed.py --samo-sadrzaj` i `npm install`, za slučaj da ima nečeg novog.
 
