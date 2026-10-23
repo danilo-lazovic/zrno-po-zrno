@@ -334,6 +334,21 @@ export function para(): string {
     <circle cx="32" cy="32" r="32" fill="url(#p)"/>`);
 }
 
+/** Srce za zadovoljnog gosta, 48 × 44. */
+export function srce(): string {
+  return svg(48, 44, `<path d="M24 40 C8 28 4 20 4 13 C4 7 9 3 14 3 C19 3 22 6 24 10 C26 6 29 3 34 3 C39 3 44 7 44 13 C44 20 40 28 24 40 Z" fill="${B.pink2}" stroke="${B.ink}" stroke-width="4" stroke-linejoin="round"/>`);
+}
+
+/** Mrvica mlevene kafe, 10 × 10. */
+export function mrvica(): string {
+  return svg(10, 10, `<circle cx="5" cy="5" r="4" fill="${B.coffee}"/>`);
+}
+
+/** Oblačić ljutnje iznad gosta, 56 × 40. */
+export function ljutnja(): string {
+  return svg(56, 40, `<path d="M6 30 L16 8 L26 26 L36 6 L48 30" fill="none" stroke="${B.red}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`);
+}
+
 /** Zrno kafe (za napojnice i konfete). */
 export function zrno(): string {
   return svg(48, 48, `<g transform="rotate(-30 24 24)"><ellipse cx="24" cy="24" rx="15" ry="20" fill="${B.coffee}" stroke="${B.ink}" stroke-width="4"/>
