@@ -53,6 +53,7 @@ Pravila koja se ne krše:
 - Gost ocenjuje po stanicama (`model.ts`, `oceni`): doza, tamp, šot (prinos i vreme), procedura (tara), šolja, mleko (vrsta, temperatura, pena, spajanje, mehurići), sipanje (puno, crtež), čekanje. Prosek se umanjuje prema najslabijoj stanici; pogrešna vrsta mleka obara piće. Napojnica raste sa ocenom; +20 din za piće bez otvaranja recepta.
 - Rezultat po ugovoru igre: `rezultat` je prosek gostiju, `poeni` su napojnice, `detalji.kategorije` su proseci po stanici. Statistika (Admin → Igre) iz njih pravi prosek po stanici, da trener vidi šta se vežba za šankom.
 - Crteži su SVG iz koda (`crtezi.ts`) u Kafeterija stilu: ravne boje, debela crna ivica, tvrda senka; logo iz `public/brand/`. Gosti se slažu iz delova (koža, kosa, frizura, majica, naočare, kapa, brada) sa četiri raspoloženja.
+- Vođena smena (od 23.10.2026.): prvi put se nudi kao glavno dugme; jedan gost, bez žurbe, kartica sa uputstvom i žuti krug za svaki korak, ciljne vrednosti vidljive. Rezultat se ne šalje; pamti se na telefonu (`zpz-smena-obuka`). Oprema je u razmeri (`crtezi.PX_CM`, 13 px/cm: šolje po zapremini, korpa 58 mm), mleko je uveličano radi preglednosti.
 - Meni je deo sadržaja kursa (`meni`: pića, šolje, vrste mleka; svako piće se otključava posle svog nivoa). Server proverava meni pri objavi. Trenutni meni je privremen dok ne stignu recepture Kafeterije.
 
 ## Uloge

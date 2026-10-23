@@ -12,7 +12,7 @@ import { sfx } from "@/lib/jezgro";
 import { type PokreniIgru, type RezultatIgre, zvezdiceZa } from "../ugovor";
 import * as C from "./crtezi";
 import { B } from "./crtezi";
-import { type Meni, PENA_OPSEG, type Pice, dostupnaPica, receptRedovi } from "./meni";
+import { type Meni, PENA_OPSEG, type Pice, dostupnaPica, opseg, receptRedovi } from "./meni";
 import * as M from "./model";
 
 export type KonfiguracijaSmene = {
@@ -30,6 +30,18 @@ const VRH = 360;
 const VIS = 1360;
 const PLOCA = 1000;
 const DUGMAD_Y = 1170;
+const KLJUC_OBUKA = "zpz-smena-obuka";
+
+/**
+ * Raspored opreme u razmeri (crtezi.PX_CM): korpa portafiltera ima gornju ivicu na (245, 10) u crtežu.
+ * Na mlinu korpa stoji ispod izliva (300, 786), na podlozi za tamp na (830, 926); u aparatu ispod glave grupe.
+ */
+const PF_KORPA = { x: 245, y: 10 };
+const MLIN_PF = { x: 300 - PF_KORPA.x, y: 786 - PF_KORPA.y };
+const PODLOGA_PF = { x: 830 - PF_KORPA.x, y: 926 - PF_KORPA.y };
+const APARAT_Y = 230;
+const GRUPA_DNO = APARAT_Y + 470;
+const RESETKA = APARAT_Y + 720;
 
 type StanicaId = "kasa" | "mlin" | "aparat" | "mleko" | "sank";
 const STANICE: { id: StanicaId; naziv: string }[] = [
@@ -54,6 +66,15 @@ const SAVETI: Record<M.Kategorija, string> = {
 const boja = (h: string) => parseInt(h.slice(1), 16);
 const zarez = (x: number, d = 1) => x.toFixed(d).replace(".", ",");
 const k01 = (x: number) => Math.max(0, Math.min(1, x));
+
+type KorakObuke = {
+  /** stanica na kojoj se korak radi */
+  st: StanicaId;
+  tekst: () => string;
+  /** gde da tapne (koordinate igre), ili null */
+  gde: () => [number, number] | null;
+  gotovo: () => boolean;
+};
 
 type Porudzbina = {
   gost: M.Gost;
@@ -235,15 +256,39 @@ class Smena extends Phaser.Scene {
   private dugmeRecept!: Dugme;
   private obavestenje!: Phaser.GameObjects.Text;
 
-  constructor(private konf: KonfiguracijaSmene, private mirno: boolean, private kraj: (r: Omit<RezultatIgre, "trajanje_ms">) => void) {
+  constructor(
+    konf: KonfiguracijaSmene,
+    private mirno: boolean,
+    /** vođena smena: jedan gost, bez žurbe, uputstvo za svaki korak; rezultat se ne šalje */
+    private obuka: boolean,
+    private kraj: (r: Omit<RezultatIgre, "trajanje_ms">) => void,
+    private ponovo: (obuka: boolean) => void,
+  ) {
     super("smena");
     this.meni = konf.meni;
     this.pica = dostupnaPica(konf.meni, konf.zavrseni);
     const r = M.seme(Date.now() & 0xffffffff);
-    this.gosti = M.gostiSmene(this.pica, konf.meni.mleka, konf.gostiju ?? 5, r);
-    // mlin je ujutru retko savršeno uštiman: polaznik vidi po prvom šotu da li da melje sitnije ili krupnije
     this.idealna = 6;
-    this.granulacija = 6 + [0, 0, 1, -1, 2, -2][Math.floor(r() * 6)];
+    if (obuka) {
+      // piće sa mlekom, da obuka prođe kroz svih pet stanica; mlin je uštiman
+      const pice = this.pica.find((p) => p.mleko) ?? this.pica[0];
+      this.gosti = [{ id: 1, ime: "Ana", izgled: M.noviIzgled(r), pice, mleko: pice.mleko ? konf.meni.mleka[0] : null, dolazak: 1 }];
+      this.granulacija = this.idealna;
+    } else {
+      this.gosti = M.gostiSmene(this.pica, konf.meni.mleka, konf.gostiju ?? 5, r);
+      // mlin je ujutru retko savršeno uštiman: polaznik vidi po prvom šotu da li da melje sitnije ili krupnije
+      this.granulacija = this.idealna + [0, 0, 1, -1, 2, -2][Math.floor(r() * 6)];
+    }
+  }
+
+  /** Strpljenje gosta; u vođenoj smeni gost čeka koliko treba. */
+  private strpljenje(p: Pice) {
+    return this.obuka ? 1e9 : M.strpljenje(p);
+  }
+
+  /** Ciljne vrednosti iz recepta se vide u vođenoj smeni i kad polaznik otvori recept. */
+  private vidiCilj(p: Porudzbina | null) {
+    return !!p && (this.obuka || p.n.recept);
   }
 
   preload() {
@@ -271,7 +316,6 @@ class Smena extends Phaser.Scene {
       ucitajSvg(this, "mlin", C.mlin()),
       ucitajSvg(this, "aparat", C.aparat()),
       ucitajSvg(this, "stimer", C.stimer()),
-      ucitajSvg(this, "frizider", C.frizider()),
       ucitajSvg(this, "portafilter", C.portafilter()),
       ucitajSvg(this, "tamper", C.tamper()),
       ucitajSvg(this, "latijera", C.latijera()),
@@ -287,7 +331,8 @@ class Smena extends Phaser.Scene {
       ucitava.destroy();
       this.izgradi();
       this.spremno = true;
-      this.uvod();
+      if (this.obuka) this.uvodObuke();
+      else this.uvod();
     });
   }
 
@@ -318,6 +363,7 @@ class Smena extends Phaser.Scene {
     this.gradiSank();
     this.gradiVrh();
     this.gradiTabove();
+    if (this.obuka) this.gradiVodic();
     this.obavestenje = this.naslov(W / 2, VRH + PLOCA - 20, "", 34, { backgroundColor: B.ink, color: B.bg, padding: { x: 28, y: 14 } })
       .setOrigin(0.5, 1)
       .setDepth(50)
@@ -340,11 +386,11 @@ class Smena extends Phaser.Scene {
     g.lineStyle(6, boja(B.chromeD), 1);
     g.lineBetween(0, 128, W, 128);
     this.sat = this.naslov(30, 50, "08:00", 46).setOrigin(0, 0.5).setDepth(11);
-    this.brojGostiju = this.tekst(W / 2, 50, "", 34).setOrigin(0.5).setDepth(11);
+    this.brojGostiju = this.tekst(390, 50, "", 34).setOrigin(0.5).setDepth(11);
     this.add.image(W - 250, 50, "zrno").setDepth(11).setScale(0.9);
     this.novac = this.naslov(W - 30, 50, "0 din", 42).setOrigin(1, 0.5).setDepth(11);
     this.traka = this.add.container(0, 0).setDepth(11);
-    this.dugmeRecept = new Dugme(this, W - 110, VRH + 64, 180, 84, "Recept", {
+    this.dugmeRecept = new Dugme(this, 640, 50, 170, 70, "Recept", {
       velicina: 32,
       boja: B.yellow,
       tap: () => this.aktivna && this.recept(this.aktivna),
@@ -421,7 +467,7 @@ class Smena extends Phaser.Scene {
 
   private osveziStrpljenje() {
     for (const { por, strp } of this.karte) {
-      const ostalo = k01(1 - (this.t - por.pogled.dosao) / M.strpljenje(por.gost.pice));
+      const ostalo = k01(1 - (this.t - por.pogled.dosao) / this.strpljenje(por.gost.pice));
       strp.clear();
       strp.fillStyle(boja(B.sand), 1);
       strp.fillRoundedRect(16, 186, 212, 14, 7);
@@ -469,8 +515,8 @@ class Smena extends Phaser.Scene {
   private sledecaStanica(): StanicaId | null {
     const p = this.aktivna;
     if (!p) return this.red.length ? "kasa" : null;
-    if (p.n.sot == null && (p.n.tamp == null || p.n.doza === 0) && !(p.grupa != null && this.grupe[p.grupa].pf)) return "mlin";
-    if (p.n.sot == null || !this.naSanku(p)) return "aparat";
+    if (p.n.sot == null && (p.n.tamp == null || p.n.doza === 0) && !(p.grupa != null && this.grupe[p.grupa].por === p && this.grupe[p.grupa].pf)) return "mlin";
+    if (p.n.sot == null) return "aparat";
     if (p.gost.pice.mleko && (!p.n.mleko || p.n.mleko.temp < 40)) return "mleko";
     return "sank";
   }
@@ -536,6 +582,7 @@ class Smena extends Phaser.Scene {
       posle?.();
     };
     gradi(c, zatvori, sir);
+    this.osveziVodic();
     if (!this.mirno) {
       c.setScale(0.92).setAlpha(0);
       this.tweens.add({ targets: c, scale: 1, alpha: 1, duration: 180, ease: "Back.Out" });
@@ -544,7 +591,13 @@ class Smena extends Phaser.Scene {
 
   private uvod() {
     const imena = this.pica.map((p) => p.naziv).join(", ");
-    this.prozor(1180, (c, zatvori, sir) => {
+    let prviPut = true;
+    try {
+      prviPut = localStorage.getItem(KLJUC_OBUKA) !== "1";
+    } catch {
+      /* bez skladišta: nudi se vođena smena */
+    }
+    this.prozor(1320, (c, zatvori, sir) => {
       c.add(this.naslov(sir / 2, 70, "Smena u Kafeteriji", 64).setOrigin(0.5, 0));
       c.add(this.tekst(sir / 2, 170, `Danas na meniju: ${imena}.`, 34, { color: B.text2, align: "center", wordWrap: { width: sir - 120 } }).setOrigin(0.5, 0));
       const koraci: [StanicaId, string][] = [
@@ -570,7 +623,33 @@ class Smena extends Phaser.Scene {
           wordWrap: { width: sir - 120 },
         }).setOrigin(0.5, 0),
       );
-      c.add(new Dugme(this, sir / 2, 1070, 520, 130, "Otvori kafić", { boja: B.green, tekstBoja: "#fff", velicina: 46, tap: zatvori }));
+      // prvi put je vođena smena glavno dugme; posle je sporedno
+      const vodjena = new Dugme(this, sir / 2, prviPut ? 1050 : 1200, 620, prviPut ? 130 : 100, prviPut ? "Vođena smena" : "Ponovi vođenu smenu", {
+        boja: prviPut ? B.yellow : B.card,
+        velicina: prviPut ? 44 : 34,
+        tap: () => this.ponovo(true),
+      });
+      const otvori = new Dugme(this, sir / 2, prviPut ? 1200 : 1060, 620, prviPut ? 100 : 130, "Otvori kafić", {
+        boja: B.green,
+        tekstBoja: "#fff",
+        velicina: prviPut ? 34 : 46,
+        tap: zatvori,
+      });
+      c.add([vodjena, otvori]);
+    });
+  }
+
+  private uvodObuke() {
+    this.prozor(760, (c, zatvori, sir) => {
+      c.add(this.naslov(sir / 2, 70, "Vođena smena", 64).setOrigin(0.5, 0));
+      c.add(
+        this.tekst(sir / 2, 180, "Jedan gost i jedno piće, bez žurbe. Žuta kartica kaže šta je sledeće, a žuti krug pokazuje gde da tapneš.", 36, {
+          color: B.text2,
+          align: "center",
+          wordWrap: { width: sir - 120 },
+        }).setOrigin(0.5, 0),
+      );
+      c.add(new Dugme(this, sir / 2, 600, 520, 130, "Kreni", { boja: B.yellow, velicina: 46, tap: zatvori }));
     });
   }
 
@@ -728,6 +807,7 @@ class Smena extends Phaser.Scene {
   // ---------- mlin ----------
 
   private mlinEkran!: Phaser.GameObjects.Text;
+  private mlinCilj!: Phaser.GameObjects.Text;
   private mlinBroj!: Phaser.GameObjects.Text;
   private mlinKazaljka!: Phaser.GameObjects.Graphics;
   private mlinKafa!: Phaser.GameObjects.Graphics;
@@ -753,11 +833,12 @@ class Smena extends Phaser.Scene {
     // podloga za tampovanje
     const pod = this.add.graphics();
     pod.fillStyle(boja(B.ink), 1);
-    pod.fillRoundedRect(650, 980, 360, 24, 10);
+    pod.fillRoundedRect(690, 980, 300, 22, 10);
     k.add(pod);
     k.add(this.tekst(300, 404, "DOZA", 22, { color: "#7cf0a9" }).setOrigin(0.5));
-    this.mlinEkran = this.naslov(300, 456, "0,0 g", 66, { color: "#7cf0a9" }).setOrigin(0.5);
-    k.add(this.mlinEkran);
+    this.mlinEkran = this.naslov(300, 448, "0,0 g", 62, { color: "#7cf0a9" }).setOrigin(0.5);
+    this.mlinCilj = this.tekst(300, 490, "", 20, { color: "#7cf0a9" }).setOrigin(0.5);
+    k.add([this.mlinEkran, this.mlinCilj]);
     this.mlinKazaljka = this.add.graphics();
     k.add(this.mlinKazaljka);
     this.mlinBroj = this.tekst(300, 519, "", 19, { color: B.bg }).setOrigin(0.5);
@@ -768,8 +849,8 @@ class Smena extends Phaser.Scene {
     k.add(this.tekst(160, 662, "sitnije", 22, { color: B.chrome }).setOrigin(0.5));
     k.add(this.tekst(440, 662, "krupnije", 22, { color: B.chrome }).setOrigin(0.5));
     this.mlinKafa = this.add.graphics();
-    this.mlinPF = this.add.image(20, 760, "portafilter").setOrigin(0);
-    this.mlinTamper = this.add.image(930, 985, "tamper").setOrigin(0.5, 1);
+    this.mlinPF = this.add.image(MLIN_PF.x, MLIN_PF.y, "portafilter").setOrigin(0);
+    this.mlinTamper = this.add.image(940, 980, "tamper").setOrigin(0.5, 1);
     k.add([this.mlinPF, this.mlinKafa, this.mlinTamper]);
     this.mlinMerac = this.add.graphics();
     this.mlinKg = this.naslov(990, 500, "", 34).setOrigin(0.5);
@@ -790,7 +871,7 @@ class Smena extends Phaser.Scene {
   /** Porudžbina čiju kafu mlin sme da dira: aktivna, bez gotovog šota i bez portafiltera u aparatu. */
   private zaMlin(): Porudzbina | null {
     const p = this.aktivna;
-    if (!p || p.n.sot || (p.grupa != null && this.grupe[p.grupa].pf)) return null;
+    if (!p || p.n.sot || (p.grupa != null && this.grupe[p.grupa].por === p && this.grupe[p.grupa].pf)) return null;
     return p;
   }
 
@@ -844,8 +925,7 @@ class Smena extends Phaser.Scene {
   private postaviPF(naPodlozi: boolean) {
     if (this.pfNaPodlozi === naPodlozi) return;
     this.pfNaPodlozi = naPodlozi;
-    const x = naPodlozi ? 550 : 20;
-    const y = naPodlozi ? 897 : 760;
+    const { x, y } = naPodlozi ? PODLOGA_PF : MLIN_PF;
     this.tweens.killTweensOf(this.mlinPF);
     if (this.mirno) this.mlinPF.setPosition(x, y);
     else this.tweens.add({ targets: this.mlinPF, x, y, duration: 260, ease: "Sine.InOut" });
@@ -860,6 +940,7 @@ class Smena extends Phaser.Scene {
     this.mlinBroj.setText(`granulacija ${this.granulacija}`);
     const doza = p?.n.doza ?? 0;
     this.mlinEkran.setText(`${zarez(doza)} g`);
+    this.mlinCilj.setText(p && this.vidiCilj(p) ? `cilj ${opseg(p.gost.pice.espreso.doza, " g")}` : "");
     this.postaviPF(!!p && (p.n.tamp != null || this.tampuje));
     this.mlinPF.setVisible(!!p || !this.aktivna);
     const sadrzaj = this.aktivna && !p;
@@ -891,30 +972,31 @@ class Smena extends Phaser.Scene {
     if (this.stanica !== "mlin") return;
     const doza = p?.n.doza ?? 0;
     this.mlinEkran.setText(`${zarez(doza)} g`);
-    const bx = this.mlinPF.x + 280;
-    const by = this.mlinPF.y + 26;
+    const bx = this.mlinPF.x + PF_KORPA.x;
+    const by = this.mlinPF.y + PF_KORPA.y;
     const g = this.mlinKafa;
     g.clear();
+    const h = Math.min(56, (doza / 22) * 44);
     if (this.melje) {
       g.fillStyle(boja(B.coffee), 1);
-      g.fillRect(294, 730, 12, Math.max(0, by - 730));
+      g.fillRect(295, 726, 10, Math.max(0, by - h - 726));
     }
     if (doza > 0 && this.mlinPF.visible) {
       g.fillStyle(boja(B.coffee), 1);
       g.lineStyle(4, boja(B.ink), 1);
       if (p?.n.tamp != null) {
-        g.fillRect(bx - 56, by - 6, 112, 14);
-        g.strokeRect(bx - 56, by - 6, 112, 14);
+        g.fillRect(bx - 42, by + 2, 84, 10);
+        g.strokeRect(bx - 42, by + 2, 84, 10);
       } else {
-        const h = Math.min(80, (doza / 22) * 64);
-        g.fillEllipse(bx, by, 116, h * 2);
-        g.strokeEllipse(bx, by, 116, h * 2);
+        // kupa kafe iznad korpe raste sa dozom
+        g.fillEllipse(bx, by + 4, 86, h * 2);
+        g.strokeEllipse(bx, by + 4, 86, h * 2);
       }
     }
     // tamper stoji na podlozi; dok se tampuje, pritiska kafu u korpi
     const naPodlozi = this.pfNaPodlozi;
-    if (this.tampuje) this.mlinTamper.setPosition(bx, by + 4 + (this.pritisak / 35) * 10);
-    else this.mlinTamper.setPosition(930, 985);
+    if (this.tampuje) this.mlinTamper.setPosition(bx, by + 6 + (this.pritisak / 35) * 8);
+    else this.mlinTamper.setPosition(940, 980);
     // merač pritiska
     const m = this.mlinMerac;
     m.clear();
@@ -941,12 +1023,15 @@ class Smena extends Phaser.Scene {
   // ---------- aparat ----------
 
   private aparatSolje!: Phaser.GameObjects.Container;
+  private soljaNaPolici: Record<string, { x: number; y: number }> = {};
   private grupaUI: {
     solja: Phaser.GameObjects.Image;
     pf: Phaser.GameObjects.Image;
     mlaz: Phaser.GameObjects.Graphics;
+    tecnost: Phaser.GameObjects.Graphics;
     vaga: Phaser.GameObjects.Text;
     ime: Phaser.GameObjects.Text;
+    cilj: Phaser.GameObjects.Text;
     glavno: Dugme;
     tara: Dugme;
   }[] = [];
@@ -954,31 +1039,35 @@ class Smena extends Phaser.Scene {
   private gradiAparat() {
     const k = this.kont.aparat;
     k.add(this.add.image(0, 0, "zid").setOrigin(0));
-    k.add(this.add.image(40, 80, "aparat").setOrigin(0));
+    k.add(this.add.image(40, APARAT_Y, "aparat").setOrigin(0));
     this.aparatSolje = this.add.container(0, 0);
     k.add(this.aparatSolje);
+    // šolje stoje na grejaču na vrhu aparata, u istoj razmeri kao na vagi
     const n = this.meni.solje.length;
     this.meni.solje.forEach((s, i) => {
-      const x = n === 1 ? 480 : 130 + (i * 700) / (n - 1);
-      const img = this.add.image(x, 122, `solja-${s.id}`).setOrigin(0.5, 1).setScale(0.62);
+      const x = n === 1 ? 480 : 170 + (i * 700) / (n - 1);
+      const img = this.add.image(x, APARAT_Y, `solja-${s.id}`).setOrigin(0.5, 1);
       img.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.uzmiSolju(s.id));
       this.aparatSolje.add(img);
-      k.add(this.tekst(x, 193, `${s.naziv} ${s.ml}`, 20, { color: "#fff", align: "center", wordWrap: { width: 700 / n } }).setOrigin(0.5));
+      this.soljaNaPolici[s.id] = { x, y: APARAT_Y - img.height / 2 };
+      k.add(this.tekst(x, APARAT_Y + 96, `${s.naziv}\n${s.ml} ml`, 20, { color: B.ink, align: "center", wordWrap: { width: 640 / n } }).setOrigin(0.5));
     });
     [330, 750].forEach((x, i) => {
       this.grupe.push({ x, por: null, pf: false, tece: false, t: 0, q: 0, kafa: 0, tara: 0, gotova: false, upozoren: false, hiss: null });
       const mlaz = this.add.graphics();
-      const solja = this.add.image(x, 930, "solja-" + this.meni.solje[0].id).setOrigin(0.5, 1).setVisible(false);
-      const pf = this.add.image(x - 280, 614, "portafilter").setOrigin(0).setVisible(false);
+      const tecnost = this.add.graphics();
+      const solja = this.add.image(x, RESETKA, "solja-" + this.meni.solje[0].id).setOrigin(0.5, 1).setVisible(false);
+      const pf = this.add.image(x - PF_KORPA.x, GRUPA_DNO - PF_KORPA.y, "portafilter").setOrigin(0).setVisible(false);
       const tabla = this.add.graphics();
       tabla.fillStyle(boja(B.ink), 1);
-      tabla.fillRoundedRect(x - 130, 938, 260, 54, 12);
-      const vaga = this.tekst(x, 965, "", 32, { color: "#7cf0a9" }).setOrigin(0.5);
-      const ime = this.naslov(x, 1062, "", 26).setOrigin(0.5);
-      const glavno = new Dugme(this, x, 1150, 390, 120, "", { boja: B.yellow, velicina: 36, tap: () => this.glavnoNaGrupi(i) });
-      const tara = new Dugme(this, x, 1286, 390, 96, "Tara", { velicina: 34, tap: () => this.tariraj(i) });
-      k.add([mlaz, solja, pf, tabla, vaga, ime, glavno, tara]);
-      this.grupaUI.push({ solja, pf, mlaz, vaga, ime, glavno, tara });
+      tabla.fillRoundedRect(x - 100, RESETKA + 6, 200, 40, 10);
+      const vaga = this.tekst(x, RESETKA + 26, "", 26, { color: "#7cf0a9" }).setOrigin(0.5);
+      const ime = this.naslov(x, 1044, "", 26).setOrigin(0.5);
+      const cilj = this.tekst(x, 1074, "", 22, { color: B.caption }).setOrigin(0.5);
+      const glavno = new Dugme(this, x, 1160, 390, 110, "", { boja: B.yellow, velicina: 36, tap: () => this.glavnoNaGrupi(i) });
+      const tara = new Dugme(this, x, 1290, 390, 90, "Tara", { velicina: 34, tap: () => this.tariraj(i) });
+      k.add([tecnost, solja, mlaz, pf, tabla, vaga, ime, cilj, glavno, tara]);
+      this.grupaUI.push({ solja, pf, mlaz, tecnost, vaga, ime, cilj, glavno, tara });
     });
   }
 
@@ -989,7 +1078,7 @@ class Smena extends Phaser.Scene {
     let gi = p.grupa;
     if (gi == null) {
       gi = this.grupe.findIndex((g) => !g.por && !g.gotova);
-      if (gi < 0) return this.javi("Obe grupe su zauzete.");
+      if (gi < 0) return this.javi(this.grupe.some((g) => g.gotova) ? "Prvo očisti grupu." : "Obe grupe su zauzete.");
     }
     const g = this.grupe[gi];
     if (g.tece) return this.javi("Šot već teče.");
@@ -1020,11 +1109,12 @@ class Smena extends Phaser.Scene {
   private glavnoNaGrupi(i: number) {
     const g = this.grupe[i];
     if (g.gotova) {
-      // izbij talog i isperi grupu; šolja ide na šank
+      // izbij talog i isperi grupu, da bude spremna za sledeći šot
       g.gotova = false;
       g.pf = false;
       g.por = null;
       g.kafa = 0;
+      g.t = 0;
       g.tara = 0;
       g.upozoren = false;
       sfx.swish();
@@ -1034,6 +1124,7 @@ class Smena extends Phaser.Scene {
     if (g.tece) return this.zaustavi(i);
     if (!g.pf) {
       const p = g.por ?? this.aktivna;
+      if (p && !p.n.sot && g.gotova) return this.javi("Prvo očisti grupu.");
       if (!p || p.n.sot) return;
       if (p.grupa != null && p.grupa !== i) return this.javi("Ova porudžbina je na drugoj grupi.");
       if (p.n.tamp == null) return this.javi("Prvo samelji i tampuj kafu na mlinu.");
@@ -1041,7 +1132,7 @@ class Smena extends Phaser.Scene {
       g.por = p;
       g.pf = true;
       this.pfNaPodlozi = false;
-      this.mlinPF.setPosition(20, 760);
+      this.mlinPF.setPosition(MLIN_PF.x, MLIN_PF.y);
       sfx.tick();
       this.osveziSve();
       return;
@@ -1065,6 +1156,14 @@ class Smena extends Phaser.Scene {
     g.hiss = null;
     const p = g.por;
     p.n.sot = { g: g.kafa, s: g.t };
+    // šolja odmah ide na šank; grupa ostaje sa talogom dok se ne očisti
+    const ui = this.grupaUI[i];
+    if (this.stanica === "aparat" && ui.solja.visible && !this.mirno) {
+      const leti = this.add.image(ui.solja.x, ui.solja.y + VRH, ui.solja.texture.key).setOrigin(0.5, 1).setDepth(5);
+      this.tweens.add({ targets: leti, y: leti.y - 160, alpha: 0, duration: 450, ease: "Sine.In", onComplete: () => leti.destroy() });
+    }
+    g.por = null;
+    g.tara = 0;
     const pr = M.uOpsegu(g.kafa, p.gost.pice.espreso.prinos, 6);
     const vr = M.uOpsegu(g.t, p.gost.pice.espreso.vreme, 6);
     if (pr > 0.99 && vr > 0.99) sfx.ok();
@@ -1086,7 +1185,8 @@ class Smena extends Phaser.Scene {
       ui.solja.setVisible(!!p?.n.solja);
       if (p?.n.solja) ui.solja.setTexture(`solja-${p.n.solja}`);
       ui.pf.setVisible(g.pf);
-      ui.ime.setText(p ? `${p.gost.pice.naziv} · ${p.gost.ime}` : "");
+      ui.ime.setText(p ? `${p.gost.pice.naziv} · ${p.gost.ime}` : g.gotova ? "Talog u grupi" : "");
+      ui.cilj.setText(p && this.vidiCilj(p) ? `cilj ${opseg(p.gost.pice.espreso.prinos, " g")} za ${opseg(p.gost.pice.espreso.vreme, " s")}` : "");
       let tekst = "Ubaci portafilter";
       let ok = false;
       let bojaD = B.yellow;
@@ -1129,12 +1229,24 @@ class Smena extends Phaser.Scene {
       const vaga = g.por?.n.solja || g.kafa ? this.masaNaVagi(g) - g.tara : 0;
       ui.vaga.setText(`${zarez(vaga)} g · ${Math.floor(g.t)} s`);
       ui.mlaz.clear();
+      ui.tecnost.clear();
+      const s = g.por?.n.solja ? this.meni.solje.find((x) => x.id === g.por!.n.solja) : null;
+      if (s && g.kafa > 0) {
+        // u čaši se vidi espreso kako raste (u šolji ga krije porcelan)
+        const v = C.velicinaSolje(s);
+        const nivo = Math.min(1, (g.kafa * M.ML_PO_G) / s.ml) * (v.telo - 8);
+        ui.tecnost.fillStyle(boja(B.coffee), 1);
+        ui.tecnost.fillRect(g.x - v.sir / 2 + 6, RESETKA - 12 - nivo, v.sir - 12, nivo);
+        ui.tecnost.fillStyle(boja(B.crema), 1);
+        ui.tecnost.fillRect(g.x - v.sir / 2 + 6, RESETKA - 12 - nivo, v.sir - 12, Math.min(nivo, 6));
+      }
       if (g.tece && g.t > M.KASNJENJE) {
-        const vrh = 930 - ui.solja.displayHeight + 30;
-        const deb = Math.min(8, 3 + (g.t - M.KASNJENJE) * 2);
+        const vrh = RESETKA - ui.solja.displayHeight + 8;
+        const deb = Math.min(6, 2 + (g.t - M.KASNJENJE) * 1.5);
+        const od = GRUPA_DNO - PF_KORPA.y + 72;
         ui.mlaz.fillStyle(boja(B.coffee), 1);
-        ui.mlaz.fillRect(g.x - 18 - deb / 2, 702, deb, vrh - 702);
-        ui.mlaz.fillRect(g.x + 18 - deb / 2, 702, deb, vrh - 702);
+        ui.mlaz.fillRect(g.x - 13 - deb / 2, od, deb, vrh - od);
+        ui.mlaz.fillRect(g.x + 13 - deb / 2, od, deb, vrh - od);
       }
     });
   }
@@ -1150,7 +1262,7 @@ class Smena extends Phaser.Scene {
   private mlekoMl!: Phaser.GameObjects.Text;
   private mlekoTemp!: Phaser.GameObjects.Text;
   private mlekoPoruka!: Phaser.GameObjects.Text;
-  private tetrapaci: { id: string; slika: Phaser.GameObjects.Image; okvir: Phaser.GameObjects.Graphics }[] = [];
+  private tetrapaci: { id: string; slika: Phaser.GameObjects.Image; okvir: Phaser.GameObjects.Graphics; natpis: Phaser.GameObjects.Text }[] = [];
   private paraCestice!: Phaser.GameObjects.Particles.ParticleEmitter;
   private dSipajMleko!: Dugme;
   private dPara!: Dugme;
@@ -1159,8 +1271,13 @@ class Smena extends Phaser.Scene {
   private paraZvuk: { set(l: number, f?: number): void; stop(): void } | null = null;
   private sipaMleko = false;
   private latY = 750;
-  private vuce: number | null = null;
+  /** položaj vrha stimera sa klizača: -1,2 iznad površine … +1,2 duboko */
+  private zeljenaDubina = -0.05;
+  private vuce = false;
   private vrtlog = 0;
+  private klizac!: Phaser.GameObjects.Container;
+  private klizacRucka!: Phaser.GameObjects.Graphics;
+  private sipaTetrapak: { slika: Phaser.GameObjects.Image; x: number; y: number } | null = null;
 
   /** Vrh stimera je na (600, 520) lokalno; latijera visi tako da je vrh u njoj. */
   private static readonly VRH_X = 600;
@@ -1181,21 +1298,18 @@ class Smena extends Phaser.Scene {
     panel.fillRect(710, 30, 380, 24);
     panel.strokeRect(710, 30, 380, 24);
     k.add(panel);
-    k.add(this.add.image(20, 280, "frizider").setOrigin(0));
-    const mesta = [
-      [110, 610],
-      [240, 610],
-      [110, 900],
-      [240, 900],
-    ];
-    this.meni.mleka.slice(0, 4).forEach((m, i) => {
-      const [x, y] = mesta[i];
+    if (this.textures.exists("znak")) k.add(this.add.image(205, 300, "znak").setDisplaySize(230, 230));
+    // tetrapaci stoje na pultu pored stimera, kao za pravim šankom
+    this.meni.mleka.slice(0, 3).forEach((m, i) => {
+      const x = 85 + i * 125;
       const okvir = this.add.graphics();
-      const slika = this.add.image(x, y, `mleko-${m.id}`).setOrigin(0.5, 1).setScale(0.8);
+      const slika = this.add.image(x, PLOCA, `mleko-${m.id}`).setOrigin(0.5, 1);
       slika.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.izaberiMleko(m.id));
-      k.add([okvir, slika, this.tekst(x, y - 70, m.naziv, 19, { align: "center", wordWrap: { width: 96 } }).setOrigin(0.5)]);
-      this.tetrapaci.push({ id: m.id, slika, okvir });
+      const natpis = this.tekst(x, PLOCA - 115, m.naziv, 20, { align: "center", wordWrap: { width: 88 } }).setOrigin(0.5);
+      k.add([okvir, slika, natpis]);
+      this.tetrapaci.push({ id: m.id, slika, okvir, natpis });
     });
+    this.gradiKlizac(k);
     this.paraCestice = this.add.particles(Smena.VRH_X, Smena.VRH_Y - 10, "para", {
       speed: { min: 60, max: 160 },
       angle: { min: 230, max: 310 },
@@ -1208,17 +1322,6 @@ class Smena extends Phaser.Scene {
     this.latijeraSl = this.add.image(Smena.LAT_X, this.latY, "latijera").setOrigin(0);
     this.mlekoNivo = this.add.graphics();
     k.add([this.latijeraSl, this.mlekoNivo, this.add.image(560, 0, "stimer").setOrigin(0), this.paraCestice]);
-    // latijera se pomera prevlačenjem bilo gde oko stimera (prst ne mora da pogodi samu latijeru)
-    const vuci = this.add.rectangle(580, 620, 440, 760, 0, 0).setInteractive({ useHandCursor: true });
-    k.add(vuci);
-    vuci.on("pointerdown", (pt: Phaser.Input.Pointer) => {
-      if (this.para) this.vuce = pt.y - VRH - this.latY;
-    });
-    this.input.on("pointermove", (pt: Phaser.Input.Pointer) => {
-      if (this.vuce == null || !this.para) return;
-      this.latY = Phaser.Math.Clamp(pt.y - VRH - this.vuce, Smena.VRH_Y - 225, Smena.VRH_Y - 10);
-    });
-    this.input.on("pointerup", () => (this.vuce = null));
     this.mlekoMl = this.naslov(Smena.LAT_X + 100, 900, "", 28, { backgroundColor: B.card, padding: { x: 10, y: 4 } }).setOrigin(0.5);
     k.add(this.mlekoMl);
     this.termometar = this.add.image(900, 330, `term-${this.pica.find((p) => p.mleko)?.mleko!.temp.join("-") ?? "55-65"}`).setOrigin(0.5, 160 / 300);
@@ -1235,6 +1338,59 @@ class Smena extends Phaser.Scene {
     this.dPara = new Dugme(this, 560, DUGMAD_Y, 340, 130, "Para", { boja: B.green, tekstBoja: "#fff", velicina: 40, tap: () => this.prekidacPare() });
     this.dProspi = new Dugme(this, 900, DUGMAD_Y, 280, 130, "Prospi", { velicina: 38, tap: () => this.prospi() });
     k.add([this.dSipajMleko, this.dPara, this.dProspi]);
+  }
+
+  /** Klizač: gde je vrh stimera u odnosu na površinu mleka. Gore je iznad (krupni mehurići), dole duboko (vrtlog). */
+  private static readonly KL = { x: 440, gore: 250, dole: 850 };
+
+  private dubinaZaY(y: number) {
+    const { gore, dole } = Smena.KL;
+    return -1.2 + ((Phaser.Math.Clamp(y, gore, dole) - gore) / (dole - gore)) * 2.4;
+  }
+
+  private yZaDubinu(d: number) {
+    const { gore, dole } = Smena.KL;
+    return gore + ((Phaser.Math.Clamp(d, -1.2, 1.2) + 1.2) / 2.4) * (dole - gore);
+  }
+
+  private gradiKlizac(k: Phaser.GameObjects.Container) {
+    const { x, gore, dole } = Smena.KL;
+    const c = this.add.container(0, 0);
+    const g = this.add.graphics();
+    const zone: [number, number, string, string][] = [
+      [-1.2, -0.3, B.redL, "IZNAD"],
+      [-0.3, 0.2, B.yellowL, "POVRŠINA"],
+      [0.2, 1.2, B.mint, "DUBOKO"],
+    ];
+    g.fillStyle(boja(B.ink), 1);
+    g.fillRoundedRect(x - 30 + 6, gore - 10 + 6, 60, dole - gore + 20, 30);
+    for (const [a, b, bo] of zone) {
+      g.fillStyle(boja(bo), 1);
+      g.fillRect(x - 30, this.yZaDubinu(a), 60, this.yZaDubinu(b) - this.yZaDubinu(a));
+    }
+    g.lineStyle(5, boja(B.ink), 1);
+    g.strokeRoundedRect(x - 30, gore - 10, 60, dole - gore + 20, 30);
+    c.add(g);
+    for (const [a, b, , natpis] of zone) {
+      c.add(this.tekst(x, (this.yZaDubinu(a) + this.yZaDubinu(b)) / 2, natpis, 19, { color: B.ink }).setOrigin(0.5).setAngle(-90));
+    }
+    c.add(this.tekst(x, gore - 40, "VRH", 22).setOrigin(0.5));
+    this.klizacRucka = this.add.graphics();
+    c.add(this.klizacRucka);
+    const zona = this.add.rectangle(x, (gore + dole) / 2, 150, dole - gore + 80, 0, 0).setInteractive({ useHandCursor: true });
+    c.add(zona);
+    const postavi = (pt: Phaser.Input.Pointer) => {
+      this.zeljenaDubina = this.dubinaZaY(pt.y - VRH);
+    };
+    zona.on("pointerdown", (pt: Phaser.Input.Pointer) => {
+      if (!this.para) return this.javi("Prvo uključi paru.");
+      this.vuce = true;
+      postavi(pt);
+    });
+    this.input.on("pointermove", (pt: Phaser.Input.Pointer) => this.vuce && this.para && postavi(pt));
+    this.input.on("pointerup", () => (this.vuce = false));
+    this.klizac = c;
+    k.add(c);
   }
 
   private zaMleko(): Porudzbina | null {
@@ -1254,6 +1410,28 @@ class Smena extends Phaser.Scene {
   private drziSipajMleko(dole: boolean) {
     const p = this.zaMleko();
     this.sipaMleko = dole && !!p?.n.mleko && !this.para && p.n.mleko.temp < 20;
+    // izabrani tetrapak se nagne iznad latijere dok se sipa
+    const t = this.tetrapaci.find((x) => x.id === p?.n.mleko?.vrsta);
+    if (this.sipaMleko && t && !this.sipaTetrapak) {
+      this.sipaTetrapak = { slika: t.slika, x: t.slika.x, y: t.slika.y };
+      t.natpis.setVisible(false);
+      this.kont.mleko.bringToTop(t.slika);
+      this.tweens.killTweensOf(t.slika);
+      this.tweens.add({ targets: t.slika, x: Smena.LAT_X + 300, y: 520, angle: -118, duration: this.mirno ? 1 : 220, ease: "Sine.Out" });
+    } else if (!this.sipaMleko && this.sipaTetrapak) {
+      const { slika, x, y } = this.sipaTetrapak;
+      this.sipaTetrapak = null;
+      this.tweens.killTweensOf(slika);
+      this.tweens.add({
+        targets: slika,
+        x,
+        y,
+        angle: 0,
+        duration: this.mirno ? 1 : 220,
+        ease: "Sine.In",
+        onComplete: () => this.tetrapaci.forEach((tp) => tp.natpis.setVisible(true)),
+      });
+    }
   }
 
   private prekidacPare() {
@@ -1262,8 +1440,9 @@ class Smena extends Phaser.Scene {
     if (this.para) return this.paraIskljuci();
     if (p.n.mleko.pregorelo) return this.javi("Mleko je pregorelo. Prospi ga.");
     this.para = true;
-    // latijera ide pod stimer, vrh tik ispod površine: odatle počinje ubacivanje vazduha
-    this.latY = Phaser.Math.Clamp(Smena.VRH_Y - (this.povrsina(p.n.mleko.ml) - 4), Smena.VRH_Y - 225, Smena.VRH_Y - 10);
+    // latijera ide pod stimer, vrh na površini: odatle počinje ubacivanje vazduha
+    this.zeljenaDubina = -0.05;
+    this.latY = this.latijeraZaDubinu(p.n.mleko.ml, this.zeljenaDubina);
     this.paraZvuk = sfx.hiss(2600, 0.6);
     this.zvuci.push(this.paraZvuk);
     this.paraCestice.start();
@@ -1274,7 +1453,7 @@ class Smena extends Phaser.Scene {
     this.sipaMleko = false;
     if (!this.para) return;
     this.para = false;
-    this.vuce = null;
+    this.vuce = false;
     this.paraZvuk?.stop();
     this.paraZvuk = null;
     this.paraCestice?.stop();
@@ -1300,16 +1479,22 @@ class Smena extends Phaser.Scene {
     return (Smena.VRH_Y - this.latY - this.povrsina(ml)) / 45;
   }
 
+  /** y latijere za željenu dubinu vrha (latijera se ne penje preko stimera ni ne pada ispod njega). */
+  private latijeraZaDubinu(ml: number, d: number) {
+    return Phaser.Math.Clamp(Smena.VRH_Y - this.povrsina(ml) - d * 45, Smena.VRH_Y - 225, Smena.VRH_Y - 10);
+  }
+
   private osveziMleko() {
     const p = this.zaMleko();
     const m = p?.n.mleko;
     for (const t of this.tetrapaci) {
       t.okvir.clear();
-      if (m?.vrsta === t.id) {
+      if (m?.vrsta === t.id && !this.sipaTetrapak) {
         t.okvir.lineStyle(8, boja(B.green), 1);
-        t.okvir.strokeRoundedRect(t.slika.x - 66, t.slika.y - 196, 132, 200, 16);
+        t.okvir.strokeRoundedRect(t.slika.x - 62, PLOCA - 310, 124, 318, 16);
       }
     }
+    this.klizac.setAlpha(this.para ? 1 : 0.45);
     const pice = p?.gost.pice;
     if (pice?.mleko && this.textures.exists(`term-${pice.mleko.temp.join("-")}`)) this.termometar.setTexture(`term-${pice.mleko.temp.join("-")}`);
     this.dSipajMleko.postavi({ omogucen: !!m && !this.para && m.temp < 20 });
@@ -1323,7 +1508,7 @@ class Smena extends Phaser.Scene {
     if (!this.aktivna.gost.pice.mleko) return "Ovo piće je bez mleka.";
     if (!p) return "Mleko za ovo piće je već u šolji.";
     const m = p.n.mleko;
-    if (!m) return `Gost traži ${p.gost.mleko?.naziv.toLowerCase() ?? ""} mleko. Uzmi ga iz frižidera.`;
+    if (!m) return `Gost traži ${p.gost.mleko?.naziv.toLowerCase() ?? ""} mleko. Tapni taj tetrapak.`;
     if (m.ml === 0) return "Drži Sipaj da sipaš mleko u latijeru.";
     if (m.temp < 20) return "Kad je dosta mleka, uključi paru.";
     if (m.pregorelo) return "Pregorelo. Prospi i sipaj novo mleko.";
@@ -1335,6 +1520,8 @@ class Smena extends Phaser.Scene {
     const m = p?.n.mleko;
     if (this.sipaMleko && m) m.ml = Math.min(350, m.ml + 90 * dt);
     if (this.para && m) {
+      // latijera prati klizač
+      this.latY += (this.latijeraZaDubinu(m.ml, this.zeljenaDubina) - this.latY) * Math.min(1, dt * 12);
       const d = this.dubina(m.ml);
       M.korakPare(m, d, dt);
       const vrh = M.vrhZa(d);
@@ -1343,11 +1530,11 @@ class Smena extends Phaser.Scene {
       if (vrh === "duboko") this.vrtlog += dt * 6;
       this.mlekoPoruka.setText(
         vrh === "iznad"
-          ? "Previsoko! Krupni mehurići. Spusti latijeru."
+          ? "Vrh je iznad mleka: krupni mehurići! Pomeri klizač na POVRŠINA."
           : vrh === "povrsina"
             ? m.pena < PENA_OPSEG[p!.gost.pice.mleko!.pena][0]
-              ? "Vrh na površini: ulazi vazduh (pena raste)."
-              : "Dosta vazduha. Podigni latijeru da vrh potone."
+              ? "Vrh na površini: ulazi vazduh i pena raste."
+              : "Dosta pene. Pomeri klizač na DUBOKO za vrtlog."
             : m.pena < 0.04
               ? "Potopljeno, ali bez vazduha nema pene."
               : "Vrtlog spaja penu i mleko. Pazi na temperaturu.",
@@ -1358,14 +1545,35 @@ class Smena extends Phaser.Scene {
         this.paraIskljuci();
       }
     } else if (!this.para && this.stanica === "mleko") {
-      // latijera se spušta na ploču
+      // latijera se vraća na pult
       this.latY += (750 - this.latY) * Math.min(1, dt * 10);
     }
     if (this.stanica !== "mleko") return;
     this.latijeraSl.setY(this.latY).setVisible(!!m || !!p);
     const n = this.mlekoNivo;
     n.clear();
-    this.mlekoMl.setText(m && m.ml > 0 ? `${Math.round(m.ml)} ml` : "").setVisible(!!m && m.ml > 0).setPosition(Smena.LAT_X + 100, this.latY + 196);
+    const cilj = p && this.vidiCilj(p) && p.gost.pice.mleko ? ` / ${opseg(p.gost.pice.mleko.ml)}` : "";
+    this.mlekoMl
+      .setText(m && m.ml > 0 ? `${Math.round(m.ml)}${cilj} ml` : "")
+      .setVisible(!!m && m.ml > 0)
+      .setPosition(Smena.LAT_X + 100, this.latY + 196);
+    // ručka klizača pokazuje gde je vrh zaista (latijera ne može preko svojih ivica)
+    const kr = this.klizacRucka;
+    kr.clear();
+    const dPrikaz = this.para && m ? this.dubina(m.ml) : this.zeljenaDubina;
+    const hy = this.yZaDubinu(dPrikaz);
+    kr.fillStyle(boja(B.ink), 1);
+    kr.fillCircle(Smena.KL.x + 4, hy + 4, 34);
+    kr.fillStyle(boja(B.card), 1);
+    kr.fillCircle(Smena.KL.x, hy, 34);
+    kr.lineStyle(5, boja(B.ink), 1);
+    kr.strokeCircle(Smena.KL.x, hy, 34);
+    kr.lineBetween(Smena.KL.x - 16, hy, Smena.KL.x + 16, hy);
+    // mlaz iz tetrapaka
+    if (this.sipaMleko && this.sipaTetrapak && m) {
+      n.fillStyle(boja(B.milk), 1);
+      n.fillRect(Smena.LAT_X + 30, 662, 14, Math.max(0, this.latY + this.povrsina(m.ml) - 662));
+    }
     // kazaljka termometra
     const temp = m?.temp ?? 5;
     const a = Math.PI * (0.75 + (Math.min(80, temp) / 80) * 1.5);
@@ -1466,10 +1674,9 @@ class Smena extends Phaser.Scene {
     k.add([this.dSipaj, this.dVisina, this.dPosluzi]);
   }
 
-  /** Espreso je na šanku kad je grupa očišćena (ili je šolja već skinuta). */
+  /** Espreso ide na šank čim se šot zaustavi. */
   private naSanku(p: Porudzbina | null) {
-    if (!p || !p.n.sot) return false;
-    return p.grupa == null || !this.grupe[p.grupa].gotova || this.grupe[p.grupa].por !== p;
+    return !!p?.n.sot;
   }
 
   private drziSipaj(dole: boolean) {
@@ -1621,9 +1828,7 @@ class Smena extends Phaser.Scene {
         ? "Izaberi porudžbinu na traci gore."
         : !p.n.sot
           ? "Prvo napravi espreso na aparatu."
-          : !naSanku
-            ? "Očisti grupu na aparatu i šolja dolazi ovde."
-            : !mleko
+          : !mleko
               ? "Espreso je spreman. Posluži ga."
               : !p.n.mleko || p.n.mleko.ml === 0
                 ? "Prvo pripremi mleko."
@@ -1647,15 +1852,11 @@ class Smena extends Phaser.Scene {
       const redosled = p.visoko >= p.n.sipano * 0.35 ? 1 : 0.6;
       p.n.art = velicina * tekstura * redosled;
     }
-    const ocena = M.oceni(p.n, p.gost, this.meni, this.t - p.pogled.dosao);
+    const ocena = M.oceni(p.n, p.gost, this.meni, this.obuka ? 0 : this.t - p.pogled.dosao);
     this.ocene.push({ ocena, pice: p.gost.pice.id });
     this.napojnice += ocena.napojnica;
     this.porudzbine = this.porudzbine.filter((x) => x !== p);
     this.cekaju = this.cekaju.filter((x) => x !== p.pogled);
-    if (p.grupa != null && this.grupe[p.grupa].por === p && !this.grupe[p.grupa].tece) {
-      const g = this.grupe[p.grupa];
-      Object.assign(g, { gotova: false, pf: false, por: null, kafa: 0, tara: 0, upozoren: false });
-    }
     this.aktivna = this.porudzbine[0] ?? null;
     this.nisko = false;
     this.idiNa("kasa");
@@ -1718,7 +1919,8 @@ class Smena extends Phaser.Scene {
           onComplete: () => pg.slika.destroy(),
         });
         this.osveziSve();
-        if (this.ocene.length === this.gosti.length) this.time.delayedCall(this.mirno ? 100 : 900, () => this.krajSmene());
+        if (this.ocene.length === this.gosti.length)
+          this.time.delayedCall(this.mirno ? 100 : 900, () => (this.obuka ? this.krajObuke() : this.krajSmene()));
       },
     );
   }
@@ -1807,6 +2009,221 @@ class Smena extends Phaser.Scene {
     });
   }
 
+  // ---------- vođena smena ----------
+
+  private vodic!: Phaser.GameObjects.Container;
+  private vodicKartica!: Phaser.GameObjects.Graphics;
+  private vodicTekst!: Phaser.GameObjects.Text;
+  private vodicBroj!: Phaser.GameObjects.Text;
+  private prsten!: Phaser.GameObjects.Container;
+  private korakObuke = 0;
+  private koraci: KorakObuke[] = [];
+
+  /** Gde stoji kartica sa uputstvom na svakoj stanici (da ne pokrije ono što treba tapnuti). */
+  private static readonly VODIC: Record<StanicaId, { x: number; y: number; w: number }> = {
+    kasa: { x: 20, y: VRH + 1070, w: W - 40 },
+    mlin: { x: 20, y: VRH + 16, w: W - 40 },
+    aparat: { x: 20, y: VRH + 330, w: W - 40 },
+    mleko: { x: 20, y: VRH + 16, w: 370 },
+    sank: { x: 20, y: VRH + 16, w: W - 40 },
+  };
+
+  private gradiVodic() {
+    this.vodic = this.add.container(0, 0).setDepth(60);
+    this.vodicKartica = this.add.graphics();
+    this.vodicBroj = this.tekst(0, 0, "", 22, { color: B.caption });
+    this.vodicTekst = this.naslov(0, 0, "", 34, { lineSpacing: 2 });
+    const preskoci = this.tekst(0, 0, "Preskoči", 24, { color: B.caption }).setOrigin(1, 0).setInteractive({ useHandCursor: true });
+    preskoci.on("pointerdown", () => this.zavrsiObuku());
+    preskoci.name = "preskoci";
+    this.vodic.add([this.vodicKartica, this.vodicBroj, this.vodicTekst, preskoci]);
+    // žuti krug koji pulsira na mestu gde treba tapnuti, sa strelicom iznad
+    this.prsten = this.add.container(0, 0).setDepth(61);
+    const g = this.add.graphics();
+    g.lineStyle(10, boja(B.yellow), 1);
+    g.strokeCircle(0, 0, 78);
+    g.lineStyle(4, boja(B.ink), 1);
+    g.strokeCircle(0, 0, 84);
+    g.strokeCircle(0, 0, 72);
+    const strela = this.add.graphics();
+    strela.fillStyle(boja(B.yellow), 1);
+    strela.fillTriangle(-26, -130, 26, -130, 0, -96);
+    strela.lineStyle(4, boja(B.ink), 1);
+    strela.strokeTriangle(-26, -130, 26, -130, 0, -96);
+    this.prsten.add([g, strela]);
+    if (!this.mirno) {
+      this.tweens.add({ targets: g, scale: { from: 0.9, to: 1.08 }, alpha: { from: 1, to: 0.55 }, duration: 600, yoyo: true, repeat: -1, ease: "Sine.InOut" });
+      this.tweens.add({ targets: strela, y: -14, duration: 500, yoyo: true, repeat: -1, ease: "Sine.InOut" });
+    }
+    this.koraci = this.napraviKorake();
+  }
+
+  private napraviKorake(): KorakObuke[] {
+    const tab = (id: StanicaId) => () => [(W / STANICE.length) * (STANICE.findIndex((x) => x.id === id) + 0.5), VRH + VIS + 80] as [number, number];
+    const dole = (x: number) => () => [x, VRH + DUGMAD_Y] as [number, number];
+    const p = () => this.aktivna ?? this.porudzbine[0] ?? null;
+    const pice = this.gosti[0].pice;
+    const mleko = this.gosti[0].mleko;
+    const solja = this.meni.solje.find((x) => x.id === pice.solja)!;
+    const gi = () => p()?.grupa ?? 0;
+    const grupaX = () => this.grupe[gi()].x;
+    const sm = pice.mleko;
+    const k: KorakObuke[] = [
+      { st: "kasa", tekst: () => "Gost je stigao i rekao šta želi. Tapni Primi porudžbinu.", gde: () => (this.red[0]?.stigao ? [540, VRH + 960] : null), gotovo: () => this.porudzbine.length > 0 || this.ocene.length > 0 },
+      { st: "kasa", tekst: () => "Porudžbina sada visi gore na traci. Idi na Mlin.", gde: tab("mlin"), gotovo: () => this.stanica !== "kasa" || (p()?.n.doza ?? 0) > 0 },
+      {
+        st: "mlin",
+        tekst: () =>
+          (p()?.n.doza ?? 0) > pice.espreso.doza[1] + 0.4
+            ? "Previše kafe. Tapni Isprazni i melji ponovo."
+            : `Drži Melji dok ekran ne pokaže ${opseg(pice.espreso.doza, " g")}. Pusti malo ranije: mlin dobaci još 0,3 g.`,
+        gde: () => ((p()?.n.doza ?? 0) > pice.espreso.doza[1] + 0.4 ? [900, VRH + DUGMAD_Y] : [190, VRH + DUGMAD_Y]),
+        gotovo: () => {
+          const n = p()?.n;
+          return !!n && (n.tamp != null || n.sot != null || (n.doza >= pice.espreso.doza[0] && n.doza <= pice.espreso.doza[1] + 0.4 && !this.melje && this.zaostatak <= 0));
+        },
+      },
+      { st: "mlin", tekst: () => `Drži Tampuj. Pritisak raste na merilu desno; pusti kad je u zelenom (${M.TAMP.join("–")} kg).`, gde: dole(560), gotovo: () => p()?.n.tamp != null || !!p()?.n.sot },
+      { st: "mlin", tekst: () => "Portafilter je spreman. Idi na Aparat.", gde: tab("aparat"), gotovo: () => this.stanica === "aparat" || !!p()?.n.sot },
+      {
+        st: "aparat",
+        tekst: () => (p()?.n.solja && p()!.n.solja !== pice.solja ? `To nije prava šolja. ${pice.naziv} ide u: ${solja.naziv}.` : `Tapni šolju za ${pice.naziv.toLowerCase()}: ${solja.naziv} (${solja.ml} ml). Ona ide na vagu.`),
+        gde: () => {
+          const m = this.soljaNaPolici[pice.solja];
+          return m ? [m.x, VRH + m.y] : null;
+        },
+        gotovo: () => p()?.n.solja === pice.solja || !!p()?.n.sot,
+      },
+      { st: "aparat", tekst: () => "Tapni Tara: vaga se vraća na 0, pa meri samo espreso, bez šolje.", gde: () => [grupaX(), VRH + 1290], gotovo: () => !!p()?.n.tara || !!p()?.n.sot },
+      { st: "aparat", tekst: () => "Tapni Ubaci portafilter.", gde: () => [grupaX(), VRH + 1160], gotovo: () => this.grupe.some((g) => g.pf) || !!p()?.n.sot },
+      { st: "aparat", tekst: () => "Tapni Start. Prvih 5 sekundi nema kapi: to je predinfuzija.", gde: () => [grupaX(), VRH + 1160], gotovo: () => this.grupe.some((g) => g.tece) || !!p()?.n.sot },
+      {
+        st: "aparat",
+        tekst: () => `Prati vagu ispod šolje. Tapni Stop kad pokaže ${opseg(pice.espreso.prinos, " g")}; tada bi trebalo da je prošlo ${opseg(pice.espreso.vreme, " s")}.`,
+        gde: () => [grupaX(), VRH + 1160],
+        gotovo: () => !!p()?.n.sot,
+      },
+      {
+        st: "aparat",
+        tekst: () => "Šolja je već otišla na šank. Tapni Očisti grupu: izbij talog i isperi grupu za sledeći šot.",
+        gde: () => [this.grupe.find((g) => g.gotova)?.x ?? grupaX(), VRH + 1160],
+        gotovo: () => !this.grupe.some((g) => g.gotova),
+      },
+    ];
+    if (sm) {
+      k.push(
+        { st: "aparat", tekst: () => "Sad mleko: idi na Mleko.", gde: tab("mleko"), gotovo: () => this.stanica === "mleko" || !!p()?.n.mleko },
+        {
+          st: "mleko",
+          tekst: () => `Gost traži ${mleko!.naziv.toLowerCase()} mleko. Tapni taj tetrapak.`,
+          gde: () => {
+            const t = this.tetrapaci.find((x) => x.id === mleko!.id);
+            return t ? [t.slika.x, VRH + PLOCA - 160] : null;
+          },
+          gotovo: () => p()?.n.mleko?.vrsta === mleko!.id,
+        },
+        { st: "mleko", tekst: () => `Drži Sipaj dok na latijeri ne piše ${opseg(sm.ml)} ml.`, gde: dole(190), gotovo: () => (p()?.n.mleko?.ml ?? 0) >= sm.ml[0] && !this.sipaMleko },
+        { st: "mleko", tekst: () => "Tapni Para. Latijera ide pod stimer, sa vrhom na površini mleka.", gde: dole(560), gotovo: () => this.para || (p()?.n.mleko?.temp ?? 0) > 30 },
+        {
+          st: "mleko",
+          tekst: () => "Vrh je na površini i ulazi vazduh. Gledaj traku Pena desno: čekaj da uđe u svetlozelenu zonu.",
+          gde: () => [915, VRH + 570],
+          gotovo: () => (p()?.n.mleko?.pena ?? 0) >= PENA_OPSEG[sm.pena][0] || (p()?.n.mleko?.temp ?? 0) > 50,
+        },
+        {
+          st: "mleko",
+          tekst: () => "Dosta pene. Povuci klizač VRH dole na DUBOKO: vrh potone i mleko se vrti.",
+          gde: () => [Smena.KL.x, VRH + this.yZaDubinu(0.7)],
+          gotovo: () => (this.para && p()?.n.mleko ? M.vrhZa(this.dubina(p()!.n.mleko!.ml)) === "duboko" : false) || (p()?.n.mleko?.temp ?? 0) > 50,
+        },
+        {
+          st: "mleko",
+          tekst: () => `Vrtlog spaja penu i mleko. Tapni Isključi paru kad je kazaljka termometra u zelenom (${opseg(sm.temp, " °C")}).`,
+          gde: dole(560),
+          gotovo: () => !this.para && (p()?.n.mleko?.temp ?? 0) > 40,
+        },
+        { st: "mleko", tekst: () => "Mleko je spremno. Idi na Šank.", gde: tab("sank"), gotovo: () => this.stanica === "sank" || (p()?.n.sipano ?? 0) > 0 },
+        {
+          st: "sank",
+          tekst: () => "Drži Sipaj: latijera je visoko, pa se mleko meša sa espresom. Pusti kad je šolja do pola.",
+          gde: dole(190),
+          gotovo: () => (p() ? this.popunjenost(p()!) >= 0.45 : false) && !this.sipa,
+        },
+        { st: "sank", tekst: () => "Tapni Spusti latijeru: blizu površine mleko ostaje belo i crta.", gde: dole(560), gotovo: () => this.nisko || (p() ? this.popunjenost(p()!) >= 0.85 : false) },
+        {
+          st: "sank",
+          tekst: () => "Drži Sipaj i crtaj belu tačku. Pusti kad je traka šolje u svetlozelenom (85–100%).",
+          gde: dole(190),
+          gotovo: () => (p() ? this.popunjenost(p()!) >= 0.85 : false) && !this.sipa,
+        },
+      );
+    } else {
+      k.push({ st: "aparat", tekst: () => "Espreso te čeka na šanku. Idi na Šank.", gde: tab("sank"), gotovo: () => this.stanica === "sank" });
+    }
+    k.push({ st: "sank", tekst: () => "Tapni Posluži. Gost će oceniti svaki korak.", gde: dole(900), gotovo: () => this.ocene.length > 0 });
+    return k;
+  }
+
+  private osveziVodic() {
+    if (!this.obuka || !this.vodic) return;
+    while (this.korakObuke < this.koraci.length && this.koraci[this.korakObuke].gotovo()) {
+      this.korakObuke++;
+      if (this.korakObuke < this.koraci.length) sfx.tick();
+    }
+    const korak = this.koraci[this.korakObuke];
+    const skrij = !korak || this.pauza;
+    this.vodic.setVisible(!skrij);
+    this.prsten.setVisible(false);
+    if (skrij) return;
+    const mesto = Smena.VODIC[this.stanica];
+    const tekst = korak.tekst();
+    if (this.vodicTekst.text !== tekst || this.vodic.getData("st") !== this.stanica) {
+      this.vodic.setData("st", this.stanica);
+      this.vodicTekst.setText(tekst).setWordWrapWidth(mesto.w - 48).setPosition(mesto.x + 24, mesto.y + 50);
+      this.vodicBroj.setText(`Korak ${this.korakObuke + 1} od ${this.koraci.length}`).setPosition(mesto.x + 24, mesto.y + 16);
+      (this.vodic.getByName("preskoci") as Phaser.GameObjects.Text).setPosition(mesto.x + mesto.w - 20, mesto.y + 14);
+      const h = this.vodicTekst.height + 70;
+      const g = this.vodicKartica;
+      g.clear();
+      g.fillStyle(boja(B.ink), 1);
+      g.fillRoundedRect(mesto.x + 6, mesto.y + 6, mesto.w, h, 22);
+      g.fillStyle(boja(B.yellowL), 1);
+      g.fillRoundedRect(mesto.x, mesto.y, mesto.w, h, 22);
+      g.lineStyle(5, boja(B.ink), 1);
+      g.strokeRoundedRect(mesto.x, mesto.y, mesto.w, h, 22);
+    }
+    // krug se vidi samo na stanici na kojoj je korak (ili na dugmetu stanice dole)
+    const gde = korak.gde();
+    if (gde && (korak.st === this.stanica || gde[1] > VRH + VIS)) {
+      this.prsten.setVisible(true).setPosition(gde[0], gde[1]);
+    }
+  }
+
+  private zavrsiObuku() {
+    try {
+      localStorage.setItem(KLJUC_OBUKA, "1");
+    } catch {
+      /* bez skladišta: obuka se nudi ponovo */
+    }
+    this.ponovo(false);
+  }
+
+  private krajObuke() {
+    this.prozor(820, (c, _zatvori, sir) => {
+      c.add(this.naslov(sir / 2, 70, "Obuka je gotova!", 60).setOrigin(0.5, 0));
+      c.add(
+        this.tekst(
+          sir / 2,
+          180,
+          "U pravoj smeni dolazi 5 gostiju, a porudžbine se preklapaju: dok šot teče, spremaš mleko. Karta na traci bira na kojoj porudžbini radiš, a žuta tačka dole pokazuje sledeću stanicu.",
+          34,
+          { color: B.text2, align: "center", wordWrap: { width: sir - 120 } },
+        ).setOrigin(0.5, 0),
+      );
+      c.add(new Dugme(this, sir / 2, 680, 560, 130, "Prava smena", { boja: B.green, tekstBoja: "#fff", velicina: 46, tap: () => this.zavrsiObuku() }));
+    });
+  }
+
   // ---------- petlja ----------
 
   private osveziSve() {
@@ -1818,7 +2235,7 @@ class Smena extends Phaser.Scene {
     this.osveziAparat();
     this.osveziMleko();
     this.osveziSank();
-    this.dugmeRecept.setVisible(!!this.aktivna && this.stanica !== "kasa");
+    this.dugmeRecept.setVisible(!!this.aktivna && this.stanica !== "kasa" && !this.obuka);
     this.brojGostiju.setText(`Gost ${Math.min(this.gosti.length, this.ocene.length + 1)}/${this.gosti.length}`);
     this.novac.setText(`${this.napojnice} din`);
   }
@@ -1840,7 +2257,7 @@ class Smena extends Phaser.Scene {
     this.korakSanka(dt);
     // raspoloženje onih koji čekaju
     for (const pg of [...this.red, ...this.cekaju]) {
-      const odnos = (this.t - pg.dosao) / M.strpljenje(pg.gost.pice);
+      const odnos = (this.t - pg.dosao) / this.strpljenje(pg.gost.pice);
       const r: C.Raspolozenje = odnos < 0.6 ? "neutralan" : odnos < 1 ? "nestrpljiv" : "ljut";
       if (r !== pg.raspolozenje) {
         pg.raspolozenje = r;
@@ -1857,34 +2274,63 @@ class Smena extends Phaser.Scene {
     }
     if (this.para || this.sipaMleko) this.osveziMleko();
     if (this.sipa) this.osveziSank();
+    this.osveziVodic();
   }
 }
 
 export const smena: PokreniIgru = (host, ulaz, gotovo) => {
-  const pocetak = Date.now();
   sfx.on = ulaz.podesavanja.zvuk;
   const konf = ulaz.konfiguracija as unknown as KonfiguracijaSmene;
-  host.innerHTML = "";
-  const scena = new Smena(konf, ulaz.podesavanja.smanjeno_kretanje, (r) => gotovo({ ...r, trajanje_ms: Date.now() - pocetak }));
-  const igra = new Phaser.Game({
-    // e2e u razvoju: softverski WebGL je spor, pa testovi mogu da traže 2D canvas
-    type: process.env.NODE_ENV !== "production" && /[?&]canvas\b/.test(location.search) ? Phaser.CANVAS : Phaser.AUTO,
-    parent: host,
-    width: W,
-    height: H,
-    backgroundColor: B.bg,
-    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-    scene: scena,
-    banner: false,
-    audio: { noAudio: true },
-    input: { activePointers: 2 },
-  });
-  // e2e provere u razvoju čitaju stanje smene
-  if (process.env.NODE_ENV !== "production") (window as unknown as { __smena?: unknown }).__smena = scena;
+  let scena: Smena | null = null;
+  let igra: Phaser.Game | null = null;
+  let ugasena = false;
+
+  const ugasi = () => {
+    scena?.ugasi();
+    igra?.destroy(true);
+    scena = null;
+    igra = null;
+  };
+
+  /** Vođena i prava smena su posebne igre: prelaz gasi jednu i pravi drugu u istom prostoru. */
+  const pokreni = (obuka: boolean) => {
+    const pocetak = Date.now();
+    host.innerHTML = "";
+    scena = new Smena(
+      konf,
+      ulaz.podesavanja.smanjeno_kretanje,
+      obuka,
+      (r) => gotovo({ ...r, trajanje_ms: Date.now() - pocetak }),
+      (sledeca) =>
+        // Phaser ne sme da se ugasi iz sopstvenog događaja: prelaz ide u sledeći krug
+        setTimeout(() => {
+          if (ugasena) return;
+          ugasi();
+          pokreni(sledeca);
+        }, 0),
+    );
+    igra = new Phaser.Game({
+      // e2e u razvoju: softverski WebGL je spor, pa testovi mogu da traže 2D canvas
+      type: process.env.NODE_ENV !== "production" && /[?&]canvas\b/.test(location.search) ? Phaser.CANVAS : Phaser.AUTO,
+      parent: host,
+      width: W,
+      height: H,
+      backgroundColor: B.bg,
+      scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+      scene: scena,
+      banner: false,
+      audio: { noAudio: true },
+      input: { activePointers: 2 },
+    });
+    // e2e provere u razvoju čitaju stanje smene
+    if (process.env.NODE_ENV !== "production") (window as unknown as { __smena?: unknown }).__smena = scena;
+  };
+
+  pokreni(false);
   return {
     unisti: () => {
-      scena.ugasi();
-      igra.destroy(true);
+      ugasena = true;
+      ugasi();
     },
   };
 };
