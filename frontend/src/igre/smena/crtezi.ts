@@ -109,52 +109,74 @@ export function gost(iz: Izgled, r: Raspolozenje): string {
 
 // ---------- šolje ----------
 
-const SOLJA_VISINA = { soljica: 0.8, solja: 0.95, casa: 1.35 };
+/** Razmera opreme na aparatu i mlinu: piksela po centimetru (aparat sa dve grupe je ≈ 77 cm = 1000 px). */
+export const PX_CM = 13;
 
-/** Veličina šolje sa strane za datu zapreminu (veća šolja je veća i na ekranu, ali umereno). */
-export function velicinaSolje(s: Solja): { w: number; h: number } {
-  const f = Math.pow(s.ml / 180, 0.42);
-  const w = Math.round(130 * f);
-  return { w: w + 70, h: Math.round(w * SOLJA_VISINA[s.oblik]) + 40 };
+/**
+ * Prečnik i visina šolje u cm iz zapremine: šolje su niske i široke (visina ≈ 0,8 prečnika), čaše uže,
+ * a velika late čaša je visoka. Tako se espreso šoljica, kapućino šolja i late čaša vide u pravoj srazmeri.
+ */
+export function merSolje(s: Solja): { d: number; h: number } {
+  const k = Math.cbrt(s.ml);
+  if (s.oblik === "casa") {
+    const d = 1.3 * k;
+    return { d, h: d * (s.ml >= 200 ? 1.65 : 1.2) };
+  }
+  const d = 1.6 * k;
+  return { d, h: d * 0.8 };
 }
 
-/** Šolja sa strane, sa tacnom; čaša je providna (tečnost crta igra iza nje). */
+/** Veličina crteža šolje (sa drškom i tacnom) u pikselima. */
+export function velicinaSolje(s: Solja): { w: number; h: number; telo: number; sir: number } {
+  const { d, h } = merSolje(s);
+  const sir = Math.round(d * PX_CM);
+  const telo = Math.round(h * PX_CM);
+  return s.oblik === "casa" ? { w: sir + 16, h: telo + 12, telo, sir } : { w: sir + Math.round(sir * 0.42) + 16, h: telo + 26, telo, sir };
+}
+
+/** Šolja sa strane, sa tacnom; čaša je providna (tečnost crta igra iza nje). Dno je na dnu crteža. */
 export function soljaSaStrane(s: Solja, boja: string = B.card): string {
-  const { w, h } = velicinaSolje(s);
-  const sw = w - 70;
-  const x0 = 12;
-  const telo = h - 40;
+  const { w, h, telo, sir } = velicinaSolje(s);
+  const x0 = 8;
+  const y0 = 4;
+  const lw = 5;
+  const iv5 = iv(lw);
   if (s.oblik === "casa") {
-    return svg(w, h, `<path d="M${x0} 8 L${x0 + sw} 8 L${x0 + sw - 12} ${telo} Q${x0 + sw / 2} ${telo + 10} ${x0 + 12} ${telo} Z"
-      fill="${B.blueL}" fill-opacity=".35" ${IV}/>
-      <path d="M${x0 + 18} 26 L${x0 + 26} ${telo - 22}" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".8"/>`);
+    return svg(w, h, `<path d="M${x0} ${y0} L${x0 + sir} ${y0} L${x0 + sir - sir * 0.08} ${y0 + telo} L${x0 + sir * 0.08} ${y0 + telo} Z"
+      fill="${B.blueL}" fill-opacity=".35" ${iv5}/>
+      <path d="M${x0 + sir * 0.08} ${y0 + telo - 8} L${x0 + sir * 0.92} ${y0 + telo - 8}" stroke="${B.ink}" stroke-width="3" opacity=".35"/>
+      <path d="M${x0 + sir * 0.18} ${y0 + 12} L${x0 + sir * 0.24} ${y0 + telo - 16}" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".8"/>`);
   }
-  const rucka = `<path d="M${x0 + sw - 6} ${telo * 0.22} Q${x0 + sw + 52} ${telo * 0.2} ${x0 + sw + 40} ${telo * 0.55} Q${x0 + sw + 30} ${telo * 0.78} ${x0 + sw - 14} ${telo * 0.72}"
-    fill="none" stroke="${B.ink}" stroke-width="${L + 12}" stroke-linecap="round"/>
-    <path d="M${x0 + sw - 6} ${telo * 0.22} Q${x0 + sw + 52} ${telo * 0.2} ${x0 + sw + 40} ${telo * 0.55} Q${x0 + sw + 30} ${telo * 0.78} ${x0 + sw - 14} ${telo * 0.72}"
-    fill="none" stroke="${boja}" stroke-width="10" stroke-linecap="round"/>`;
-  const tacna = `<ellipse cx="${x0 + sw / 2}" cy="${telo + 14}" rx="${sw / 2 + 26}" ry="16" fill="${boja}" ${IV}/>`;
-  const sudic = `<path d="M${x0} 8 L${x0 + sw} 8 Q${x0 + sw} ${telo} ${x0 + sw / 2} ${telo} Q${x0} ${telo} ${x0} 8 Z" fill="${boja}" ${IV}/>`;
-  const traka = `<path d="M${x0 + 4} 30 L${x0 + sw - 4} 30" stroke="${B.green}" stroke-width="10"/>`;
+  const r = sir * 0.42;
+  const ruckaPut = `M${x0 + sir - 4} ${y0 + telo * 0.2} Q${x0 + sir + r} ${y0 + telo * 0.15} ${x0 + sir + r * 0.8} ${y0 + telo * 0.5} Q${x0 + sir + r * 0.6} ${y0 + telo * 0.78} ${x0 + sir - 10} ${y0 + telo * 0.7}`;
+  const rucka = `<path d="${ruckaPut}" fill="none" stroke="${B.ink}" stroke-width="${lw + 10}" stroke-linecap="round"/>
+    <path d="${ruckaPut}" fill="none" stroke="${boja}" stroke-width="8" stroke-linecap="round"/>`;
+  const tacna = `<ellipse cx="${x0 + sir / 2}" cy="${y0 + telo + 10}" rx="${sir / 2 + sir * 0.28}" ry="${Math.max(7, sir * 0.09)}" fill="${boja}" ${iv5}/>`;
+  const sudic = `<path d="M${x0} ${y0} L${x0 + sir} ${y0} Q${x0 + sir} ${y0 + telo} ${x0 + sir / 2} ${y0 + telo} Q${x0} ${y0 + telo} ${x0} ${y0} Z" fill="${boja}" ${iv5}/>`;
+  const traka = `<path d="M${x0 + 3} ${y0 + telo * 0.22} L${x0 + sir - 3} ${y0 + telo * 0.22}" stroke="${B.green}" stroke-width="${Math.max(5, telo * 0.09)}"/>`;
   return svg(w, h, `${rucka}${tacna}${sudic}${traka}`);
 }
 
 // ---------- oprema ----------
 
-/** Portafilter sa strane: korpa desno, drška levo; 360 × 110 (korpa od x 220 do 340). */
+/**
+ * Portafilter sa strane u razmeri aparata (korpa 58 mm, malo uvećana): drška levo, korpa desno; 300 × 80.
+ * Gornja ivica korpe je na (245, 10), izlivi ispod na y ≈ 74.
+ */
 export function portafilter(): string {
-  return svg(360, 110, `<rect x="10" y="40" width="190" height="34" rx="17" fill="${B.ink}" ${IV}/>
-    <path d="M190 52 L226 52 L226 64 L190 64 Z" fill="${B.chromeD}" ${IV}/>
-    <path d="M216 26 L344 26 L334 88 Q280 100 226 88 Z" fill="${B.chrome}" ${IV}/>
-    <path d="M232 40 L326 40" stroke="#fff" stroke-width="6" opacity=".7"/>`);
+  return svg(300, 80, `<rect x="6" y="24" width="176" height="26" rx="13" fill="${B.ink}" ${iv(5)}/>
+    <path d="M176 32 L204 32 L204 44 L176 44 Z" fill="${B.chromeD}" ${iv(4)}/>
+    <path d="M198 10 L292 10 L284 54 Q245 64 206 54 Z" fill="${B.chrome}" ${iv(5)}/>
+    <path d="M210 20 L280 20" stroke="#fff" stroke-width="5" opacity=".7"/>
+    <path d="M232 58 L232 72 M258 58 L258 72" stroke="${B.chromeD}" stroke-width="8" stroke-linecap="round"/>`);
 }
 
-/** Tamper: drvena drška i inoks baza; 120 × 220. */
+/** Tamper 58 mm u razmeri: drvena drška i inoks baza; 90 × 140, baza na dnu. */
 export function tamper(): string {
-  return svg(120, 220, `<ellipse cx="60" cy="40" rx="34" ry="34" fill="${B.wood}" ${IV}/>
-    <path d="M42 64 L78 64 L70 150 L50 150 Z" fill="${B.wood}" ${IV}/>
-    <rect x="10" y="150" width="100" height="56" rx="10" fill="${B.chrome}" ${IV}/>
-    <path d="M22 166 L98 166" stroke="#fff" stroke-width="6" opacity=".7"/>`);
+  return svg(90, 140, `<ellipse cx="45" cy="28" rx="24" ry="22" fill="${B.wood}" ${iv(5)}/>
+    <path d="M33 44 L57 44 L52 98 L38 98 Z" fill="${B.wood}" ${iv(5)}/>
+    <rect x="6" y="96" width="78" height="38" rx="8" fill="${B.chrome}" ${iv(5)}/>
+    <path d="M16 108 L74 108" stroke="#fff" stroke-width="5" opacity=".7"/>`);
 }
 
 /** Latijera sa strane, 240 × 260; kljun levo, drška desno. Unutrašnjost za nivo mleka: x 30–170, y 40–236. */
@@ -166,15 +188,15 @@ export function latijera(): string {
     <path d="M40 120 L176 120 M40 170 L176 170" stroke="${B.chromeD}" stroke-width="4" stroke-dasharray="10 10"/>`);
 }
 
-/** Tetrapak mleka 140 × 230 u boji vrste; natpis dodaje igra. */
+/** Tetrapak mleka 110 × 300 u boji vrste; stoji na pultu pored stimera, natpis dodaje igra. */
 export function tetrapak(boja: string): string {
-  return svg(140, 230, `${senka(`<path d="M14 60 L70 18 L126 60 L126 222 L14 222 Z" fill="${B.card}" ${IV}/>`, 6, 6)}
-    <path d="M14 60 L126 60" ${IV}/><rect x="52" y="6" width="36" height="22" rx="4" fill="${boja}" ${IV}/>
-    <rect x="14" y="100" width="112" height="86" fill="${boja}" ${IV}/>
-    <circle cx="70" cy="80" r="10" fill="${B.ink}"/>`);
+  return svg(110, 300, `${senka(`<path d="M8 70 L55 24 L102 70 L102 292 L8 292 Z" fill="${B.card}" ${iv(5)}/>`, 6, 6)}
+    <path d="M8 70 L102 70" ${iv(5)}/><rect x="40" y="6" width="30" height="24" rx="4" fill="${boja}" ${iv(5)}/>
+    <rect x="8" y="130" width="94" height="110" fill="${boja}" ${iv(5)}/>
+    <circle cx="55" cy="96" r="9" fill="${B.ink}"/>`);
 }
 
-/** Mlin: levak sa zrnima, telo, ekran, točkić granulacije, viljuška; 520 × 1000. Portafilter stoji na y ≈ 770. */
+/** Mlin: levak sa zrnima, telo, ekran, točkić granulacije, viljuška; 520 × 1000. Korpa portafiltera stoji na (260, 776). */
 export function mlin(): string {
   const zrna = Array.from({ length: 26 }, (_, i) => {
     const x = 160 + ((i * 53) % 200);
@@ -191,35 +213,37 @@ export function mlin(): string {
     <rect x="130" y="380" width="260" height="120" rx="14" fill="#0f2a1c" stroke="${B.chromeD}" stroke-width="6"/>
     <circle cx="260" cy="590" r="70" fill="${B.chrome}" ${IV}/>
     <circle cx="260" cy="590" r="40" fill="${B.chromeL}" ${IV}/>
-    <path d="M226 680 L294 680 L284 720 L236 720 Z" fill="${B.chrome}" ${IV}/>
-    <path d="M150 760 L180 760 L180 840 L150 840 Z M340 760 L370 760 L370 840 L340 840 Z" fill="${B.chromeD}" ${IV}/>
+    <path d="M236 680 L284 680 L276 716 L244 716 Z" fill="${B.chrome}" ${IV}/>
+    <path d="M196 766 L212 766 L212 832 L196 832 Z M308 766 L324 766 L324 832 L308 832 Z" fill="${B.chromeD}" ${iv(5)}/>
     <rect x="40" y="930" width="440" height="56" rx="12" fill="${B.chromeD}" ${IV}/>
     <path d="M70 948 L450 948" stroke="#fff" stroke-width="5" opacity=".6"/>`);
 }
 
-/** Espreso aparat sa dve grupe, 1000 × 920; grupe su na x 290 i 710, donja ivica glave na y 560, rešetka na y 850. */
+/**
+ * Espreso aparat sa dve grupe u razmeri (≈ 77 × 59 cm), 1000 × 770. Na vrhu je grejač šolja (šolje stoje na y 0),
+ * grupe su na x 290 i 710 sa donjom ivicom na y 470, rešetka sa vagom na y 720. Ispod tela se vidi zid.
+ */
 export function aparat(): string {
-  const grupa = (x: number) => `<rect x="${x - 70}" y="470" width="140" height="56" rx="10" fill="${B.chrome}" ${IV}/>
-    <path d="M${x - 58} 526 L${x + 58} 526 L${x + 46} 560 L${x - 46} 560 Z" fill="${B.chromeD}" ${IV}/>
-    <path d="M${x - 50} 486 L${x + 50} 486" stroke="#fff" stroke-width="6" opacity=".7"/>
-    <circle cx="${x}" cy="420" r="26" fill="${B.ink}" ${IV}/><circle cx="${x}" cy="420" r="10" fill="${B.green}"/>`;
-  return svg(1000, 920, `
-    <rect x="40" y="40" width="920" height="40" rx="8" fill="${B.chrome}" ${IV}/>
-    <path d="M60 40 L60 8 M940 40 L940 8 M60 12 L940 12" fill="none" ${IV}/>
-    ${senka(`<path d="M40 80 L960 80 L960 470 Q960 500 930 500 L70 500 Q40 500 40 470 Z" fill="${B.pink}" ${IV}/>`, 10, 10)}
-    <rect x="40" y="100" width="920" height="26" fill="${B.green}" ${IV}/>
-    <circle cx="500" cy="250" r="78" fill="${B.card}" ${IV}/>
-    <circle cx="500" cy="250" r="62" fill="none" stroke="${B.line}" stroke-width="4"/>
+  const grupa = (x: number) => `<rect x="${x - 56}" y="380" width="112" height="56" rx="10" fill="${B.chrome}" ${IV}/>
+    <path d="M${x - 48} 436 L${x + 48} 436 L${x + 40} 470 L${x - 40} 470 Z" fill="${B.chromeD}" ${IV}/>
+    <path d="M${x - 40} 394 L${x + 40} 394" stroke="#fff" stroke-width="6" opacity=".7"/>
+    <circle cx="${x}" cy="330" r="22" fill="${B.ink}" ${IV}/><circle cx="${x}" cy="330" r="8" fill="${B.green}"/>`;
+  return svg(1000, 770, `
+    <rect x="40" y="0" width="920" height="30" rx="8" fill="${B.chrome}" ${IV}/>
+    ${senka(`<path d="M40 30 L960 30 L960 352 Q960 380 930 380 L70 380 Q40 380 40 352 Z" fill="${B.pink}" ${IV}/>`, 10, 10)}
+    <rect x="40" y="44" width="920" height="26" fill="${B.green}" ${IV}/>
+    <circle cx="500" cy="190" r="68" fill="${B.card}" ${IV}/>
+    <circle cx="500" cy="190" r="54" fill="none" stroke="${B.line}" stroke-width="4"/>
     ${Array.from({ length: 9 }, (_, i) => {
       const a = Math.PI * (0.8 + (i / 8) * 1.4);
-      return `<path d="M${500 + Math.cos(a) * 50} ${250 + Math.sin(a) * 50} L${500 + Math.cos(a) * 62} ${250 + Math.sin(a) * 62}" ${iv(4)}/>`;
+      return `<path d="M${500 + Math.cos(a) * 42} ${190 + Math.sin(a) * 42} L${500 + Math.cos(a) * 54} ${190 + Math.sin(a) * 54}" ${iv(4)}/>`;
     }).join("")}
-    <path d="M500 250 L540 214" ${IV}/><circle cx="500" cy="250" r="8" fill="${B.ink}"/>
-    <rect x="410" y="350" width="180" height="56" rx="12" fill="${B.ink}"/>
-    <text x="500" y="388" text-anchor="middle" font-family="Arial, sans-serif" font-weight="800" font-size="26" fill="${B.pink}">KAFETERIJA</text>
+    <path d="M500 190 L534 160" ${IV}/><circle cx="500" cy="190" r="8" fill="${B.ink}"/>
+    <rect x="420" y="280" width="160" height="50" rx="12" fill="${B.ink}"/>
+    <text x="500" y="314" text-anchor="middle" font-family="Arial, sans-serif" font-weight="800" font-size="23" fill="${B.pink}">KAFETERIJA</text>
     ${grupa(290)}${grupa(710)}
-    <rect x="40" y="850" width="920" height="60" rx="12" fill="${B.chromeD}" ${IV}/>
-    ${Array.from({ length: 22 }, (_, i) => `<path d="M${76 + i * 40} 864 L${76 + i * 40} 896" stroke="${B.ink}" stroke-width="6" stroke-linecap="round"/>`).join("")}`);
+    <rect x="40" y="720" width="920" height="46" rx="12" fill="${B.chromeD}" ${IV}/>
+    ${Array.from({ length: 22 }, (_, i) => `<path d="M${76 + i * 40} 732 L${76 + i * 40} 754" stroke="${B.ink}" stroke-width="6" stroke-linecap="round"/>`).join("")}`);
 }
 
 /** Stimer: cev sa strane aparata do vrha na (40, 520) lokalno; 200 × 540. */
@@ -292,15 +316,6 @@ export function kasaPult(w: number, h: number): string {
     <rect x="-10" y="${pult + 60}" width="${w + 20}" height="${h - pult}" fill="${B.card}" ${IV}/>
     ${Array.from({ length: 13 }, (_, i) => `<path d="M${40 + i * 84} ${pult + 80} L${40 + i * 84} ${h}" stroke="${B.line}" stroke-width="5"/>`).join("")}
     <rect x="-10" y="${h - 60}" width="${w + 20}" height="34" fill="${B.green}" ${IV}/>`);
-}
-
-/** Frižider sa dve police, 320 × 720. */
-export function frizider(): string {
-  return svg(320, 720, `${senka(`<rect x="10" y="10" width="290" height="690" rx="22" fill="${B.card}" ${IV}/>`, 8, 8)}
-    <rect x="34" y="34" width="242" height="640" rx="12" fill="${B.blueL}" ${IV}/>
-    <rect x="34" y="330" width="242" height="16" fill="${B.chrome}" ${IV}/>
-    <rect x="34" y="620" width="242" height="16" fill="${B.chrome}" ${IV}/>
-    <path d="M60 60 L80 300" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".6"/>`);
 }
 
 /** Šank odozgo: drvena ploča sa daskama i podmetačem za šolju. */

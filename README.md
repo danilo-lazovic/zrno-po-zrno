@@ -118,11 +118,11 @@ npm run build
 Igra u stilu Papa's igara: gosti poručuju, polaznik pravi piće kroz pet stanica. Otključava se posle nivoa 5; pića sa mlekom posle nivoa 8.
 
 1. Posle `git pull` pokreni `npm install` u `frontend` (nova biblioteka Phaser) i uvezi sadržaj (meni i igra su u njemu): u `backend` `.venv\Scripts\python seed.py --samo-sadrzaj`. Uvoz pravi novu objavljenu verziju iz fajla, pa izmene kursa napravljene u uređivaču treba ponoviti posle njega.
-2. Kao polaznik: Igre → Smena u Kafeteriji → Otvori kafić.
+2. Kao polaznik: Igre → Smena u Kafeteriji. Prvi put je glavno dugme **Vođena smena**: jedan gost, bez žurbe, žuta kartica kaže šta je sledeće, a žuti krug pokazuje gde da tapneš (23 koraka za piće sa mlekom). Na kraju „Prava smena”. Posle toga uvod nudi Otvori kafić, a vođena smena ostaje kao sporedno dugme. U vođenoj smeni se vide i ciljne vrednosti (doza, prinos, ml); u pravoj tek kad otvoriš Recept.
 3. Kasa: Primi porudžbinu. Porudžbina visi na traci gore; tap na kartu bira na kojoj radiš. Žuta tačka na dnu pokazuje sledeću stanicu.
 4. Mlin: drži Melji do doze iz recepta (mlin dobaci još malo posle puštanja), pa drži Tampuj i pusti u zelenom (13–20 kg). Granulacija (− / +) važi za sledeće šotove.
-5. Aparat: tap na šolju gore je stavlja na vagu, Tara, Ubaci portafilter, Start, Stop kad vaga pokaže prinos. Prebrz ili spor šot znači da treba promeniti granulaciju. Pa Očisti grupu.
-6. Mleko: tap na tetrapak koji je gost tražio, drži Sipaj do količine iz recepta, Para. Prevlačenjem gore-dole menjaš dubinu vrha: na površini ulazi vazduh, potopljen pravi vrtlog. Isključi paru u zelenoj zoni.
+5. Aparat: tap na šolju na grejaču je stavlja na vagu, Tara, Ubaci portafilter, Start, Stop kad vaga pokaže prinos. Šolja odmah ide na šank. Prebrz ili spor šot znači da treba promeniti granulaciju. Grupa ostaje sa talogom dok ne tapneš Očisti grupu (pre sledećeg šota na njoj).
+6. Mleko: tap na tetrapak koji je gost tražio (stoje na pultu), drži Sipaj do količine iz recepta, Para. Klizač VRH pokazuje gde je vrh stimera: IZNAD (krupni mehurići), POVRŠINA (ulazi vazduh, pena raste), DUBOKO (vrtlog spaja penu i mleko). Isključi paru u zelenoj zoni termometra.
 7. Šank: drži Sipaj sa visine do pola, Spusti latijeru i sipaj belu tačku, Posluži. Gost oceni svaki korak i ostavi napojnicu; ko ne otvori Recept dobija +20 din.
 8. Posle 5 gostiju: kraj smene sa ocenom po stanicama i savetima. 3 zvezdice daju bedž „Šef smene”.
 9. Admin → Igre: ispod tabele „Smena u Kafeteriji: stanice” pokazuje prosek po koraku za izabrani lokal.
