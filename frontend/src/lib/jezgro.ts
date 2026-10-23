@@ -115,6 +115,11 @@
       swish() { tone(900, 0.12, "sine", 0.04, 0, 300); },
       win() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.2, "triangle", 0.1, i * 0.09)); },
       tick() { tone(1200, 0.03, "square", 0.025); },
+      /* zvuci za Smenu: zvonce na vratima, kasa, udarac portafiltera o kutiju za talog, klik ručke */
+      zvono() { tone(1568, 0.5, "sine", 0.07); tone(2093, 0.6, "sine", 0.05, 0.12); },
+      kasa() { tone(1318, 0.08, "square", 0.04); tone(1975, 0.25, "triangle", 0.07, 0.07); },
+      tup() { tone(110, 0.12, "sine", 0.18, 0, 60); },
+      klik() { tone(320, 0.04, "square", 0.05); tone(180, 0.05, "square", 0.04, 0.04); },
       hiss
     };
   })();

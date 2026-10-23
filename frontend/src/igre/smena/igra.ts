@@ -90,7 +90,10 @@ type Porudzbina = {
 
 type GostPogled = {
   gost: M.Gost;
+  /** kontejner koji hoda po kafiću; slika u njemu diše i menja izraz */
+  telo: Phaser.GameObjects.Container;
   slika: Phaser.GameObjects.Image;
+  korak: Phaser.Tweens.Tween | null;
   /** sekunda smene kad je ušao (od tada se meri čekanje) */
   dosao: number;
   raspolozenje: C.Raspolozenje;
@@ -252,6 +255,7 @@ class Smena extends Phaser.Scene {
   private novac!: Phaser.GameObjects.Text;
   private traka!: Phaser.GameObjects.Container;
   private karte: { por: Porudzbina; strp: Phaser.GameObjects.Graphics }[] = [];
+  private novaKarta: Porudzbina | null = null;
   private tabovi: { id: StanicaId; g: Phaser.GameObjects.Graphics; znacka: Phaser.GameObjects.Text; tackica: Phaser.GameObjects.Graphics; cx: number }[] = [];
   private dugmeRecept!: Dugme;
   private obavestenje!: Phaser.GameObjects.Text;
@@ -321,6 +325,9 @@ class Smena extends Phaser.Scene {
       ucitajSvg(this, "latijera", C.latijera()),
       ucitajSvg(this, "para", C.para()),
       ucitajSvg(this, "zrno", C.zrno()),
+      ucitajSvg(this, "srce", C.srce()),
+      ucitajSvg(this, "mrvica", C.mrvica()),
+      ucitajSvg(this, "ljutnja", C.ljutnja()),
       ...solje,
       ...mleka,
       ...temp,
@@ -406,6 +413,12 @@ class Smena extends Phaser.Scene {
       const y = 120;
       const akt = p === this.aktivna;
       const c = this.add.container(x, y + (akt ? 12 : 0));
+      if (p === this.novaKarta && !this.mirno) {
+        // nova karta se okači na žicu i zaljulja
+        this.novaKarta = null;
+        c.setAngle(-14).setY(c.y - 60);
+        this.tweens.add({ targets: c, angle: 0, y: y + (akt ? 12 : 0), duration: 900, ease: "Elastic.Out" });
+      }
       const g = this.add.graphics();
       g.fillStyle(boja(B.ink), 1);
       g.fillRoundedRect(6, 6, sir, 214, 14);
@@ -506,8 +519,21 @@ class Smena extends Phaser.Scene {
     sfx.tap();
     // para i sipanje se ne ostavljaju bez nadzora
     this.paraIskljuci();
+    const staro = this.kont[this.stanica];
+    const novo = this.kont[id];
+    const smer = Math.sign(STANICE.findIndex((s) => s.id === id) - STANICE.findIndex((s) => s.id === this.stanica));
     this.stanica = id;
-    for (const s of STANICE) this.kont[s.id].setVisible(s.id === id);
+    for (const s of STANICE) {
+      this.tweens.killTweensOf(this.kont[s.id]);
+      this.kont[s.id].setX(0).setVisible(s.id === id);
+    }
+    if (!this.mirno) {
+      // kamera klizi duž šanka: nova stanica dolazi sa strane, stara odlazi
+      staro.setVisible(true);
+      novo.setX(smer * W * 0.6);
+      this.tweens.add({ targets: novo, x: 0, duration: 220, ease: "Cubic.Out" });
+      this.tweens.add({ targets: staro, x: -smer * W * 0.6, duration: 220, ease: "Cubic.Out", onComplete: () => staro.setVisible(false).setX(0) });
+    }
     this.osveziSve();
   }
 
@@ -549,6 +575,62 @@ class Smena extends Phaser.Scene {
       }
       tb.znacka.setText(z).setVisible(!!z);
     }
+  }
+
+  // ---------- efekti ----------
+
+  /** Kratak prasak čestica (srca, mrvice) na mestu u koordinatama igre. */
+  private prasak(tekstura: string, x: number, y: number, n: number) {
+    const e = this.add
+      .particles(x, y, tekstura, {
+        speed: { min: 160, max: 340 },
+        angle: { min: 220, max: 320 },
+        gravityY: 520,
+        lifespan: 1000,
+        scale: { start: 0.9, end: 0.5 },
+        alpha: { start: 1, end: 0 },
+        rotate: { min: -30, max: 30 },
+        emitting: false,
+      })
+      .setDepth(70);
+    e.explode(n);
+    this.time.delayedCall(1200, () => e.destroy());
+  }
+
+  /** Zrna napojnice lete od gosta do brojača gore desno; brojač se odbrojava do novog iznosa. */
+  private napojnicaLeti(x: number, y: number, iznos: number) {
+    const n = Math.min(8, 2 + Math.round(iznos / 40));
+    for (let i = 0; i < n; i++) {
+      const z = this.add.image(x + (i - n / 2) * 18, y, "zrno").setDepth(71).setScale(0.8);
+      this.tweens.add({
+        targets: z,
+        x: W - 250,
+        y: 50,
+        scale: 0.5,
+        duration: 650,
+        delay: 80 * i,
+        ease: "Cubic.In",
+        onComplete: () => {
+          z.destroy();
+          sfx.tick();
+        },
+      });
+    }
+    this.time.delayedCall(650, () => sfx.kasa());
+  }
+
+  private prikazNovca = { v: 0 };
+
+  private osveziNovac() {
+    if (this.prikazNovca.v === this.napojnice) return this.novac.setText(`${this.napojnice} din`);
+    this.tweens.killTweensOf(this.prikazNovca);
+    this.tweens.add({
+      targets: this.prikazNovca,
+      v: this.napojnice,
+      delay: this.mirno ? 0 : 700,
+      duration: this.mirno ? 1 : 600,
+      onUpdate: () => this.novac.setText(`${Math.round(this.prikazNovca.v)} din`),
+    });
   }
 
   // ---------- poruke i prozori ----------
@@ -725,9 +807,12 @@ class Smena extends Phaser.Scene {
   }
 
   private gostUlazi(gost: M.Gost) {
-    const slika = this.add.image(W + 220, 860, `gost-${gost.id}-neutralan`).setOrigin(0.5, 1);
-    this.kasaGosti.add(slika);
-    const pg: GostPogled = { gost, slika, dosao: this.t, raspolozenje: "neutralan", stigao: false };
+    const slika = this.add.image(0, 0, `gost-${gost.id}-neutralan`).setOrigin(0.5, 1);
+    const telo = this.add.container(W + 220, 860, [slika]);
+    this.kasaGosti.add(telo);
+    // disanje: blago širenje grudi, svaki gost svojim ritmom
+    if (!this.mirno) this.tweens.add({ targets: slika, scaleY: 1.018, duration: 1100 + gost.id * 130, yoyo: true, repeat: -1, ease: "Sine.InOut" });
+    const pg: GostPogled = { gost, telo, slika, korak: null, dosao: this.t, raspolozenje: "neutralan", stigao: false };
     this.red.push(pg);
     this.sledeci++;
     this.zvono();
@@ -736,34 +821,34 @@ class Smena extends Phaser.Scene {
   }
 
   private zvono() {
-    sfx.combo(8);
-    this.time.delayedCall(140, () => sfx.combo(4));
+    sfx.zvono();
   }
 
   /** Pomeri goste na mesta u redu i u čekaonici. */
   private rasporedi() {
     const idi = (pg: GostPogled, x: number, y: number, s: number) => {
-      this.tweens.killTweensOf(pg.slika);
-      const d = Math.abs(pg.slika.x - x);
+      this.tweens.killTweensOf(pg.telo);
+      const d = Math.abs(pg.telo.x - x);
       if (d < 2) {
-        pg.slika.setPosition(x, y).setScale(s);
+        pg.telo.setPosition(x, y).setScale(s);
         pg.stigao = true;
         return;
       }
       pg.stigao = false;
+      this.hodaj(pg, true);
       this.tweens.add({
-        targets: pg.slika,
+        targets: pg.telo,
         x,
         y,
         scale: s,
         duration: this.mirno ? 200 : Math.min(1400, 300 + d * 1.4),
         ease: "Sine.InOut",
         onComplete: () => {
+          this.hodaj(pg, false);
           pg.stigao = true;
           this.osveziKasu();
         },
       });
-      if (!this.mirno) this.tweens.add({ targets: pg.slika, angle: { from: -3, to: 3 }, duration: 180, yoyo: true, repeat: Math.max(1, Math.round(d / 160)) });
     };
     this.red.forEach((pg, i) => {
       const p = this.pozicijaURedu(i);
@@ -774,7 +859,15 @@ class Smena extends Phaser.Scene {
       idi(pg, p.x, p.y, p.s);
     });
     // prvi u redu je ispred ostalih
-    [...this.red].reverse().forEach((pg) => this.kasaGosti.bringToTop(pg.slika));
+    [...this.red].reverse().forEach((pg) => this.kasaGosti.bringToTop(pg.telo));
+  }
+
+  /** Hod: gost poskakuje u koraku dok se kreće. */
+  private hodaj(pg: GostPogled, da: boolean) {
+    pg.korak?.stop();
+    pg.korak = null;
+    pg.slika.setY(0);
+    if (da && !this.mirno) pg.korak = this.tweens.add({ targets: pg.slika, y: -16, duration: 170, yoyo: true, repeat: -1, ease: "Sine.Out" });
   }
 
   private narudzbinaTekst(g: M.Gost) {
@@ -786,6 +879,10 @@ class Smena extends Phaser.Scene {
   private osveziKasu() {
     const prvi = this.red[0];
     const vidi = !!prvi && prvi.stigao;
+    if (vidi && !this.balon.visible && !this.mirno) {
+      this.balon.setScale(0.2);
+      this.tweens.add({ targets: this.balon, scale: 1, duration: 260, ease: "Back.Out" });
+    }
     this.balon.setVisible(vidi);
     this.dugmePrimi.setVisible(vidi);
     if (prvi) this.balonTekst.setText(this.narudzbinaTekst(prvi.gost));
@@ -797,6 +894,7 @@ class Smena extends Phaser.Scene {
     if (!pg) return;
     const por: Porudzbina = { gost: pg.gost, n: M.noviNapitak(), pogled: pg, grupa: null, visoko: 0, nisko: 0, tacka: 0 };
     this.porudzbine.push(por);
+    this.novaKarta = por;
     this.cekaju.push(pg);
     if (!this.aktivna) this.aktivna = por;
     sfx.ok();
@@ -806,6 +904,8 @@ class Smena extends Phaser.Scene {
 
   // ---------- mlin ----------
 
+  private mlinSl!: Phaser.GameObjects.Image;
+  private mrvice!: Phaser.GameObjects.Particles.ParticleEmitter;
   private mlinEkran!: Phaser.GameObjects.Text;
   private mlinCilj!: Phaser.GameObjects.Text;
   private mlinBroj!: Phaser.GameObjects.Text;
@@ -829,7 +929,8 @@ class Smena extends Phaser.Scene {
   private gradiMlin() {
     const k = this.kont.mlin;
     k.add(this.add.image(0, 0, "zid").setOrigin(0));
-    k.add(this.add.image(40, 10, "mlin").setOrigin(0));
+    this.mlinSl = this.add.image(40, 10, "mlin").setOrigin(0);
+    k.add(this.mlinSl);
     // podloga za tampovanje
     const pod = this.add.graphics();
     pod.fillStyle(boja(B.ink), 1);
@@ -851,7 +952,16 @@ class Smena extends Phaser.Scene {
     this.mlinKafa = this.add.graphics();
     this.mlinPF = this.add.image(MLIN_PF.x, MLIN_PF.y, "portafilter").setOrigin(0);
     this.mlinTamper = this.add.image(940, 980, "tamper").setOrigin(0.5, 1);
-    k.add([this.mlinPF, this.mlinKafa, this.mlinTamper]);
+    this.mrvice = this.add.particles(300, 728, "mrvica", {
+      speedY: { min: 220, max: 320 },
+      speedX: { min: -30, max: 30 },
+      gravityY: 900,
+      lifespan: 180,
+      quantity: 2,
+      frequency: 30,
+      emitting: false,
+    });
+    k.add([this.mlinPF, this.mlinKafa, this.mrvice, this.mlinTamper]);
     this.mlinMerac = this.add.graphics();
     this.mlinKg = this.naslov(990, 500, "", 34).setOrigin(0.5);
     k.add([this.mlinMerac, this.mlinKg]);
@@ -970,6 +1080,10 @@ class Smena extends Phaser.Scene {
     }
     if (this.tampuje) this.pritisak = Math.min(35, this.pritisak + 16 * dt);
     if (this.stanica !== "mlin") return;
+    // motor mlina trese kućište; mrvice padaju samo dok melje
+    this.mlinSl.setPosition(40 + (this.melje && !this.mirno ? (Math.random() - 0.5) * 4 : 0), 10);
+    if (this.melje && !this.mrvice.emitting) this.mrvice.start();
+    else if (!this.melje && this.mrvice.emitting) this.mrvice.stop();
     const doza = p?.n.doza ?? 0;
     this.mlinEkran.setText(`${zarez(doza)} g`);
     const bx = this.mlinPF.x + PF_KORPA.x;
@@ -1110,6 +1224,15 @@ class Smena extends Phaser.Scene {
     const g = this.grupe[i];
     if (g.gotova) {
       // izbij talog i isperi grupu, da bude spremna za sledeći šot
+      const pfUI = this.grupaUI[i].pf;
+      if (!this.mirno && this.stanica === "aparat" && pfUI.visible) {
+        const kopija = this.add.image(pfUI.x, pfUI.y + VRH, "portafilter").setOrigin(0).setDepth(5);
+        this.tweens.add({ targets: kopija, y: kopija.y + 60, angle: 8, duration: 120, yoyo: true, repeat: 1 });
+        this.tweens.add({ targets: kopija, alpha: 0, delay: 420, duration: 160, onComplete: () => kopija.destroy() });
+        this.time.delayedCall(120, () => sfx.tup());
+        this.time.delayedCall(360, () => sfx.tup());
+        this.prasak("mrvica", g.x, VRH + GRUPA_DNO + 60, 12);
+      } else sfx.tup();
       g.gotova = false;
       g.pf = false;
       g.por = null;
@@ -1117,7 +1240,6 @@ class Smena extends Phaser.Scene {
       g.t = 0;
       g.tara = 0;
       g.upozoren = false;
-      sfx.swish();
       this.osveziSve();
       return;
     }
@@ -1131,6 +1253,15 @@ class Smena extends Phaser.Scene {
       p.grupa = i;
       g.por = p;
       g.pf = true;
+      sfx.klik();
+      const pfUI = this.grupaUI[i].pf;
+      if (!this.mirno && this.stanica === "aparat") {
+        // ručka se ubacuje odozdo i zaključava okretom
+        const x0 = g.x - PF_KORPA.x;
+        const y0 = GRUPA_DNO - PF_KORPA.y;
+        pfUI.setPosition(x0 - 40, y0 + 70).setAngle(-12);
+        this.tweens.add({ targets: pfUI, x: x0, y: y0, angle: 0, duration: 280, ease: "Back.Out" });
+      }
       this.pfNaPodlozi = false;
       this.mlinPF.setPosition(MLIN_PF.x, MLIN_PF.y);
       sfx.tick();
@@ -1242,7 +1373,8 @@ class Smena extends Phaser.Scene {
       }
       if (g.tece && g.t > M.KASNJENJE) {
         const vrh = RESETKA - ui.solja.displayHeight + 8;
-        const deb = Math.min(6, 2 + (g.t - M.KASNJENJE) * 1.5);
+        // mlaz se tanji i blago njiše, kao pravi espreso
+        const deb = Math.min(6, 2 + (g.t - M.KASNJENJE) * 1.5) + Math.sin(this.t * 22 + i) * 0.8;
         const od = GRUPA_DNO - PF_KORPA.y + 72;
         ui.mlaz.fillStyle(boja(B.coffee), 1);
         ui.mlaz.fillRect(g.x - 13 - deb / 2, od, deb, vrh - od);
@@ -1549,7 +1681,9 @@ class Smena extends Phaser.Scene {
       this.latY += (750 - this.latY) * Math.min(1, dt * 10);
     }
     if (this.stanica !== "mleko") return;
-    this.latijeraSl.setY(this.latY).setVisible(!!m || !!p);
+    this.latijeraSl
+      .setPosition(Smena.LAT_X + (this.para && !this.mirno ? (Math.random() - 0.5) * 3 : 0), this.latY)
+      .setVisible(!!m || !!p);
     const n = this.mlekoNivo;
     n.clear();
     const cilj = p && this.vidiCilj(p) && p.gost.pice.mleko ? ` / ${opseg(p.gost.pice.mleko.ml)}` : "";
@@ -1783,11 +1917,23 @@ class Smena extends Phaser.Scene {
       g.fillCircle(cx - R * 0.7, cy + R * 0.75, 40);
       g.fillCircle(cx - R * 0.4, cy + R * 0.95, 26);
     }
-    // crtež: bela tačka, posle posluženja srce
+    // crtež: bela tačka; pri posluženju presek kroz tačku pravi srce
     if (p.tacka > 0) {
       const r = Math.min(rt * 0.8, p.tacka);
+      const t = this.servira ? this.srceT.v : 0;
       g.fillStyle(boja(B.milk), 1);
-      g.fillCircle(cx, cy - r * 0.1, r);
+      if (t === 0) g.fillCircle(cx, cy - r * 0.1, r);
+      else {
+        const rr = r * (1 - 0.38 * t);
+        const dx = r * 0.42 * t;
+        const vy = cy - r * 0.15;
+        g.fillCircle(cx - dx, vy, rr);
+        g.fillCircle(cx + dx, vy, rr);
+        // donji vrh srca se izvlači kako latijera preseca tačku
+        g.fillTriangle(cx - dx - rr * 0.93, vy + rr * 0.36, cx + dx + rr * 0.93, vy + rr * 0.36, cx, vy + r * (0.9 + 0.55 * t));
+        g.lineStyle(Math.max(2, 10 * (1 - t)), boja(B.milk), 1);
+        g.lineBetween(cx, vy - r * 1.3, cx, vy - r * 1.3 + r * 2.6 * t);
+      }
     }
     // latijera i mlaz
     if (this.sankLatijera.visible) {
@@ -1822,7 +1968,7 @@ class Smena extends Phaser.Scene {
     const imaMleka = naSanku && mleko && !!p!.n.mleko && p!.n.mleko.ml - p!.n.sipano > 1;
     this.dSipaj.postavi({ omogucen: imaMleka }).setVisible(mleko);
     this.dVisina.postavi({ omogucen: imaMleka, tekst: this.nisko ? "Podigni latijeru" : "Spusti latijeru" }).setVisible(mleko);
-    this.dPosluzi.postavi({ omogucen: naSanku });
+    this.dPosluzi.postavi({ omogucen: naSanku && !this.servira });
     this.sankPoruka.setText(
       !p
         ? "Izaberi porudžbinu na traci gore."
@@ -1839,9 +1985,12 @@ class Smena extends Phaser.Scene {
     if (this.stanica === "sank") this.crtajSank();
   }
 
+  private servira = false;
+  private srceT = { v: 0 };
+
   private posluzi() {
     const p = this.aktivna;
-    if (!p || !this.naSanku(p)) return;
+    if (!p || !this.naSanku(p) || this.servira) return;
     this.drziSipaj(false);
     // crtež: tačka u dobroj veličini i dobro spojeno mleko, sipano prvo sa visine
     if (p.gost.pice.mleko && p.n.mleko && p.n.sipano > 0) {
@@ -1852,6 +2001,30 @@ class Smena extends Phaser.Scene {
       const redosled = p.visoko >= p.n.sipano * 0.35 ? 1 : 0.6;
       p.n.art = velicina * tekstura * redosled;
     }
+    if (!this.mirno && p.tacka > 0 && this.stanica === "sank") {
+      // završni presek: tačka se razvuče u srce, pa šolja ide gostu
+      this.servira = true;
+      this.srceT.v = 0;
+      this.osveziSank();
+      sfx.swish();
+      this.tweens.add({
+        targets: this.srceT,
+        v: 1,
+        duration: 520,
+        ease: "Sine.InOut",
+        onUpdate: () => this.crtajSank(),
+        onComplete: () =>
+          this.time.delayedCall(350, () => {
+            this.servira = false;
+            this.zavrsiPosluzivanje(p);
+          }),
+      });
+      return;
+    }
+    this.zavrsiPosluzivanje(p);
+  }
+
+  private zavrsiPosluzivanje(p: Porudzbina) {
     const ocena = M.oceni(p.n, p.gost, this.meni, this.obuka ? 0 : this.t - p.pogled.dosao);
     this.ocene.push({ ocena, pice: p.gost.pice.id });
     this.napojnice += ocena.napojnica;
@@ -1869,13 +2042,26 @@ class Smena extends Phaser.Scene {
   private reakcija(pg: GostPogled, o: M.Ocena) {
     const r: C.Raspolozenje = o.ukupno >= 0.75 ? "srecan" : o.ukupno >= 0.45 ? "neutralan" : "ljut";
     pg.slika.setTexture(`gost-${pg.gost.id}-${r}`);
-    this.kasaGosti.bringToTop(pg.slika);
-    this.tweens.killTweensOf(pg.slika);
-    pg.slika.setPosition(470, 870).setScale(1.12).setAngle(0);
-    if (!this.mirno && r === "srecan") this.tweens.add({ targets: pg.slika, y: 830, duration: 160, yoyo: true, repeat: 1 });
+    this.kasaGosti.bringToTop(pg.telo);
+    this.tweens.killTweensOf(pg.telo);
+    this.hodaj(pg, false);
+    pg.telo.setPosition(470, 870).setScale(1.12);
+    const glava = { x: 470, y: VRH + 870 - 400 * 1.12 };
+    if (!this.mirno) {
+      if (r === "srecan") {
+        this.tweens.add({ targets: pg.telo, y: 830, duration: 170, yoyo: true, repeat: 1, ease: "Quad.Out" });
+        this.prasak("srce", glava.x, glava.y, 9);
+      } else if (r === "ljut") {
+        this.tweens.add({ targets: pg.telo, x: { from: 456, to: 484 }, duration: 60, yoyo: true, repeat: 4, onComplete: () => pg.telo.setX(470) });
+        const l = this.add.image(glava.x + 120, glava.y - 20, "ljutnja").setDepth(6).setScale(0.6);
+        this.tweens.add({ targets: l, scale: 1.4, alpha: 0, y: l.y - 40, duration: 900, ease: "Quad.Out", onComplete: () => l.destroy() });
+      }
+      // zrna kreću iz ruke gosta (ispred pulta) i lete do brojača gore
+      if (o.napojnica > 0) this.napojnicaLeti(glava.x + 60, VRH + 800, o.napojnica);
+    }
     if (o.ukupno >= 0.75) sfx.win();
     else if (o.ukupno < 0.45) sfx.bad();
-    this.time.delayedCall(this.mirno ? 100 : 700, () => this.prozorOcene(pg, o));
+    this.time.delayedCall(this.mirno ? 100 : 900, () => this.prozorOcene(pg, o));
   }
 
   private prozorOcene(pg: GostPogled, o: M.Ocena) {
@@ -1911,12 +2097,13 @@ class Smena extends Phaser.Scene {
         c.add(new Dugme(this, sir / 2, vis - 95, 400, 110, "Dalje", { boja: B.yellow, tap: zatvori }));
       },
       () => {
+        this.hodaj(pg, true);
         this.tweens.add({
-          targets: pg.slika,
+          targets: pg.telo,
           x: -260,
           duration: this.mirno ? 200 : 1100,
           ease: "Sine.In",
-          onComplete: () => pg.slika.destroy(),
+          onComplete: () => pg.telo.destroy(),
         });
         this.osveziSve();
         if (this.ocene.length === this.gosti.length)
@@ -1949,7 +2136,8 @@ class Smena extends Phaser.Scene {
     this.paraIskljuci();
     const rez = this.ocene.length ? this.ocene.reduce((a, o) => a + o.ocena.ukupno, 0) / this.ocene.length : 0;
     const proseci = M.sazetak(this.ocene.map((o) => o.ocena));
-    const slabo = M.KATEGORIJE.filter((c) => proseci[c.id] != null && proseci[c.id]! < 0.8)
+    // saveti za najslabije stanice; "sve odlično" samo kad je svaka stanica skoro savršena
+    const slabo = M.KATEGORIJE.filter((c) => proseci[c.id] != null && proseci[c.id]! < 0.95)
       .sort((a, b) => proseci[a.id]! - proseci[b.id]!)
       .slice(0, 2);
     const kat = M.KATEGORIJE.filter((c) => proseci[c.id] != null);
@@ -2237,7 +2425,7 @@ class Smena extends Phaser.Scene {
     this.osveziSank();
     this.dugmeRecept.setVisible(!!this.aktivna && this.stanica !== "kasa" && !this.obuka);
     this.brojGostiju.setText(`Gost ${Math.min(this.gosti.length, this.ocene.length + 1)}/${this.gosti.length}`);
-    this.novac.setText(`${this.napojnice} din`);
+    this.osveziNovac();
   }
 
   update() {
