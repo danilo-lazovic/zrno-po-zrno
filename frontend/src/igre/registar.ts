@@ -5,6 +5,7 @@
 
 import * as G from "@/lib/igre";
 import { sfx } from "@/lib/jezgro";
+import type { Meni } from "./smena/meni";
 import { type IgraId, type Implementacija, type PokreniIgru, zvezdiceZa } from "./ugovor";
 
 /** Konfiguracija koju aplikacija daje igri (ulaz.konfiguracija). */
@@ -13,9 +14,12 @@ export type KonfiguracijaIgre = {
   mod: "lekcija" | "igraonica";
   /** Brza runda: tvrdnje iz završenih nivoa */
   pitanja?: { id: string; q: string; a: boolean }[];
+  /** Smena: meni kursa i završeni nivoi (otključavaju pića) */
+  meni?: Meni;
+  zavrseni?: string[];
 };
 
-const JS_FUNKCIJA: Record<IgraId, string> = {
+const JS_FUNKCIJA: Partial<Record<IgraId, string>> = {
   swipe: "swipeGame",
   dialin: "dialin",
   recipe: "recipe",
@@ -32,7 +36,7 @@ function jsIgra(id: IgraId): PokreniIgru {
     const konf = ulaz.konfiguracija as KonfiguracijaIgre;
     sfx.on = ulaz.podesavanja.zvuk;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pokreni = (G as any)[JS_FUNKCIJA[id]];
+    const pokreni = (G as any)[JS_FUNKCIJA[id]!];
     const inst = pokreni(host, {
       mode: konf.mod === "lekcija" ? "lesson" : "arcade",
       items: konf.pitanja?.map((p) => [p.q, p.a]) ?? null,
@@ -53,48 +57,29 @@ function jsIgra(id: IgraId): PokreniIgru {
 }
 
 /**
- * 3D verzije u three.js (proba). Modul se učitava tek kad se igra otvori; bez WebGL-a ili ako učitavanje
- * ne uspe, igra se pokreće u klasičnoj verziji.
+ * Veće JS igre (Phaser) se učitavaju tek kad se otvore, da ne opterećuju ostatak aplikacije.
+ * Service worker pamti njihov kod posle prvog otvaranja, pa rade i bez mreže.
  */
-const TRI_D: Partial<Record<IgraId, () => Promise<(host: HTMLElement, opt: object) => { destroy(): void }>>> = {
-  milk: () => import("./mleko3d").then((m) => m.mleko3d),
+const LENJE: Partial<Record<IgraId, () => Promise<PokreniIgru>>> = {
+  smena: () => import("./smena/igra").then((m) => m.smena),
 };
 
-/** WebGL postoji? Bez njega se igra pokreće u klasičnoj verziji (i tako se i beleži). */
-function imaWebGL() {
-  try {
-    const c = document.createElement("canvas");
-    return !!(c.getContext("webgl2") || c.getContext("webgl"));
-  } catch {
-    return false;
-  }
-}
-
-export const ima3D = (igra: IgraId) => igra in TRI_D && imaWebGL();
-
-function triDIgra(id: IgraId): PokreniIgru {
+function lenjaIgra(id: IgraId): PokreniIgru {
   return (host, ulaz, gotovo) => {
-    const pocetak = Date.now();
-    sfx.on = ulaz.podesavanja.zvuk;
-    let inst: { destroy(): void } | null = null;
+    let inst: { unisti(): void } | null = null;
     let ugasena = false;
-    host.innerHTML = '<p class="m3-ucitava">Učitavam 3D igru…</p>';
-    const onDone = (r: RezultatArtifacta) => {
-      const rezultat = Math.max(0, Math.min(1, r.score));
-      gotovo({ igra_id: id, rezultat, zvezdice: zvezdiceZa(rezultat), poeni: Math.round(rezultat * 100), trajanje_ms: Date.now() - pocetak, detalji: {} });
-    };
-    TRI_D[id]!()
+    host.innerHTML = '<p class="game-ucitava">Učitavam igru…</p>';
+    LENJE[id]!()
       .then((pokreni) => {
-        if (!ugasena) inst = pokreni(host, { onDone, smanjenoKretanje: ulaz.podesavanja.smanjeno_kretanje });
+        if (!ugasena) inst = pokreni(host, ulaz, gotovo);
       })
       .catch(() => {
-        // modul nije stigao (npr. bez mreže pre prvog učitavanja): ista igra u klasičnoj verziji
-        if (!ugasena) inst = { destroy: jsIgra(id)(host, ulaz, gotovo).unisti };
+        if (!ugasena) host.innerHTML = '<p class="game-ucitava">Igra nije stigla. Proveri mrežu i otvori je ponovo.</p>';
       });
     return {
       unisti: () => {
         ugasena = true;
-        inst?.destroy();
+        inst?.unisti();
       },
     };
   };
@@ -110,8 +95,7 @@ const UNITY: Partial<Record<IgraId, PokreniIgru>> = {};
 export function pokretac(igra: IgraId, implementacija: Implementacija = "js"): { pokreni: PokreniIgru; izvor: Implementacija } {
   const unity = implementacija === "unity" ? UNITY[igra] : undefined;
   if (unity) return { pokreni: unity, izvor: "unity" };
-  if (implementacija === "3d" && ima3D(igra)) return { pokreni: triDIgra(igra), izvor: "3d" };
-  return { pokreni: jsIgra(igra), izvor: "js" };
+  return { pokreni: igra in LENJE ? lenjaIgra(igra) : jsIgra(igra), izvor: "js" };
 }
 
 /** Podešavanja za ulaz igre iz trenutnog stanja aplikacije. */

@@ -34,7 +34,7 @@ class RezultatIn(BaseModel):
     poeni: int = Field(ge=0, le=10_000)
     trajanje_ms: int = Field(ge=0, le=3_600_000)
     detalji: dict[str, Any] = {}
-    izvor: Literal["js", "3d", "unity"] = "js"
+    izvor: Literal["js", "unity"] = "js"
     kontekst: Literal["igraonica", "lekcija"] = "igraonica"
 
     @field_validator("detalji")
@@ -67,6 +67,8 @@ def _bedzevi(db: Session, uid: int, kid: int, body: RezultatIn, zvezdice: int, n
         b.dodeli_bedz(db, uid, kid, "milk", novi)
     if igra == "latte" and zvezdice == 3:
         b.dodeli_bedz(db, uid, kid, "latte", novi)
+    if igra == "smena" and zvezdice == 3:
+        b.dodeli_bedz(db, uid, kid, "smena", novi)
     if igra == "dialin" and body.rezultat > 0.2:
         b.dodeli_bedz(db, uid, kid, "dial", novi)
     if igra == "recipe":

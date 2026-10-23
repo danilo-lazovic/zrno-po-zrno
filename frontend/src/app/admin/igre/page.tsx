@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Procenat } from "@/components/admin/grafikoni";
 import { IzborLokala } from "@/components/admin/IzborLokala";
+import { KATEGORIJE } from "@/igre/smena/model";
 import { upit, useAdminKurs } from "@/lib/adminKurs";
 import { api } from "@/lib/api";
 import type { IgraStat } from "@/lib/statistika";
@@ -31,7 +32,7 @@ export default function IgreStrana() {
         </div>
       </div>
       <p className="sub" style={{ marginBottom: 16 }}>
-        Igranja iz igraonice i iz lekcija. Kolone 3D i Unity broje igranja tih verzija, za poređenje sa klasičnom.
+        Igranja iz igraonice i iz lekcija. Kolona Unity broji igranja Unity verzije, za poređenje sa JS verzijom.
       </p>
       {greska && <p className="note bad">{greska}</p>}
       {lista && (
@@ -44,7 +45,6 @@ export default function IgreStrana() {
               <th>Prosečan rezultat</th>
               <th>Tri zvezdice</th>
               <th>Iz lekcija</th>
-              <th>3D</th>
               <th>Unity</th>
             </tr>
           </thead>
@@ -57,12 +57,34 @@ export default function IgreStrana() {
                 <td>{g.igranja ? <Procenat v={g.prosek} /> : "–"}</td>
                 <td className="mono">{g.igranja ? `${g.tri_zvezdice}%` : "–"}</td>
                 <td className="mono">{g.iz_lekcija}</td>
-                <td className="mono">{g.tri_d}</td>
                 <td className="mono">{g.unity}</td>
               </tr>
             ))}
           </tbody>
         </table>
+      )}
+      {lista?.map(
+        (g) =>
+          g.stanice && (
+            <section className="panel" key={`st-${g.igra}`} style={{ marginTop: 16 }}>
+              <h2 className="h2">{g.naziv}: stanice</h2>
+              <p className="sub">Prosečna ocena gostiju po koraku. Najniži red je ono što treba vežbati za šankom.</p>
+              <table className="tabela">
+                <tbody>
+                  {KATEGORIJE.filter((c) => g.stanice![c.id] != null)
+                    .sort((a, b) => g.stanice![a.id] - g.stanice![b.id])
+                    .map((c) => (
+                      <tr key={c.id}>
+                        <td>{c.naziv}</td>
+                        <td>
+                          <Procenat v={g.stanice![c.id]} />
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </section>
+          ),
       )}
     </>
   );

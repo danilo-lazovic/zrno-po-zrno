@@ -43,7 +43,8 @@ export type IgraStat = {
   tri_zvezdice: number;
   iz_lekcija: number;
   unity: number;
-  tri_d: number;
+  /** Smena: prosek po stanici u procentima */
+  stanice: Record<string, number> | null;
 };
 
 export type LokalStat = {

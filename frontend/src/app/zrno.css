@@ -328,6 +328,10 @@ input[type=range]:disabled { opacity: .6; cursor: default; }
 
 /* igre */
 .game { display: grid; gap: 12px; }
+.gv-pun .ls-body { display: flex; padding: 0; overflow: hidden; }
+.gv-pun .game-host { flex: 1; min-width: 0; min-height: 0; overflow: hidden; background: var(--bg); }
+.gv-pun .ls-foot[hidden] { display: none; }
+.game-ucitava { margin: 40px 16px; color: var(--ink-2); font: 700 16px var(--font-body); text-align: center; }
 .g-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
 .g-goal { color: var(--ink); }
 .g-brief { margin: 0; font-weight: 600; }
@@ -547,19 +551,3 @@ label, .lbl-s { font: 600 11px var(--font-mono); text-transform: uppercase; lett
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
 }
-
-/* ---------- 3D igre (three.js, proba) ---------- */
-.gv-3d { cursor: pointer; }
-.gv-3d[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
-.znak-3d { margin-left: 6px; padding: 1px 7px; border: 1.5px solid var(--stroke); border-radius: 999px; background: var(--pink); font: 800 10px var(--font-body); font-style: normal; text-transform: uppercase; letter-spacing: .06em; vertical-align: 2px; }
-.milk-stage.m3 { aspect-ratio: 36 / 25; background: var(--surface); }
-.milk-stage.m3 canvas { width: 100%; height: 100%; cursor: ns-resize; }
-.m3-ucitava { display: grid; place-items: center; min-height: 160px; margin: 0; color: var(--ink-3); font-size: 14px; text-align: center; }
-.milk-stage.m3 .m3-ucitava { position: absolute; inset: 0; }
-.m3-termo { position: absolute; top: 10px; right: 10px; bottom: 10px; display: grid; grid-template-rows: auto 1fr; justify-items: center; gap: 6px; pointer-events: none; }
-.m3-termo b { padding: 2px 8px; border: 1.5px solid var(--stroke); border-radius: 999px; background: var(--surface); font: 800 12px var(--font-body); }
-.m3-termo span { position: relative; width: 14px; border: 1.5px solid var(--stroke); border-radius: 999px; background: var(--surface); overflow: hidden; }
-/* zelena zona 55–65 °C na skali 0–80 */
-.m3-termo em { position: absolute; left: 0; right: 0; bottom: 68.75%; height: 12.5%; background: var(--leaf-soft); }
-.m3-termo i { position: absolute; left: 2px; right: 2px; bottom: 2px; border-radius: 999px; background: var(--flame); transition: height .1s linear; }
-.m3-termo i.vruce { background: var(--cherry); }

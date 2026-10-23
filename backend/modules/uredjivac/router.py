@@ -240,7 +240,7 @@ def objavi_nacrt(kurs: str, body: ObjavaIn, korisnik: Korisnik = Depends(urednik
 
 # za nov kurs: rangovi i bedževi kao u osnovnom (bez bedževa igara, nov kurs nema igre)
 SABLON = Path(__file__).resolve().parents[1] / "sadrzaj" / "data" / "osnovni-nivo.json"
-BEDZEVI_IGARA = {"dial", "swipe", "milk", "latte", "recipe"}
+BEDZEVI_IGARA = {"dial", "swipe", "milk", "latte", "recipe", "smena"}
 
 
 def nov_dokument(kljuc: str, naziv: str, opis: str | None) -> dict[str, Any]:

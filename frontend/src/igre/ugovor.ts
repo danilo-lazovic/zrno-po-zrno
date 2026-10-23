@@ -6,10 +6,9 @@
  * Tako Unity verzija može da zameni JS verziju bez izmene ostatka sistema.
  */
 
-export type IgraId = "swipe" | "dialin" | "recipe" | "milk" | "latte";
+export type IgraId = "swipe" | "dialin" | "recipe" | "milk" | "latte" | "smena";
 
-/** js: canvas iz artifacta; 3d: three.js u pregledaču (proba); unity: Unity WebGL */
-export type Implementacija = "js" | "3d" | "unity";
+export type Implementacija = "js" | "unity";
 
 export type UlazIgre = {
   igra_id: IgraId;

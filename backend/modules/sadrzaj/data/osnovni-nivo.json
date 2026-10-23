@@ -117,6 +117,11 @@
    "opis": "Složi tri recepta bez greške."
   },
   {
+   "id": "smena",
+   "naziv": "Šef smene",
+   "opis": "Odradi smenu sa 3 zvezdice."
+  },
+  {
    "id": "allstars",
    "naziv": "Sve zvezdice",
    "opis": "Tri zvezdice na svih 8 nivoa."
@@ -2657,6 +2662,15 @@
  ],
  "igre": [
   {
+   "id": "smena",
+   "t": "Smena u Kafeteriji",
+   "d": "Gosti poručuju, ti praviš: mlin, šot, mleko i šank.",
+   "ic": "cup",
+   "after": "m5",
+   "color": "#23A566",
+   "implementacija": "js"
+  },
+  {
    "id": "swipe",
    "t": "Brza runda",
    "d": "60 sekundi, tačno ili netačno. Prevlači levo-desno.",
@@ -3083,5 +3097,207 @@
     "6–24 h"
    ]
   }
- ]
+ ],
+ "meni": {
+  "napomena": "Privremeni meni sa uobičajenim vrednostima, dok ne stignu recepture Kafeterije.",
+  "pica": [
+   {
+    "id": "espreso",
+    "naziv": "Espreso",
+    "after": "m5",
+    "opis": "Dupla doza, razmera 1:2.",
+    "espreso": {
+     "doza": [
+      18,
+      20
+     ],
+     "prinos": [
+      36,
+      40
+     ],
+     "vreme": [
+      25,
+      30
+     ]
+    },
+    "solja": "espreso",
+    "mleko": null
+   },
+   {
+    "id": "kortado",
+    "naziv": "Kortado",
+    "after": "m8",
+    "opis": "Espreso i malo mleka sa tankom penom.",
+    "espreso": {
+     "doza": [
+      18,
+      20
+     ],
+     "prinos": [
+      36,
+      40
+     ],
+     "vreme": [
+      25,
+      30
+     ]
+    },
+    "solja": "gibraltar",
+    "mleko": {
+     "ml": [
+      100,
+      130
+     ],
+     "temp": [
+      55,
+      65
+     ],
+     "pena": "tanka"
+    }
+   },
+   {
+    "id": "kapucino",
+    "naziv": "Kapućino",
+    "after": "m8",
+    "opis": "Espreso, mleko i gusta pena.",
+    "espreso": {
+     "doza": [
+      18,
+      20
+     ],
+     "prinos": [
+      36,
+      40
+     ],
+     "vreme": [
+      25,
+      30
+     ]
+    },
+    "solja": "kapucino",
+    "mleko": {
+     "ml": [
+      150,
+      200
+     ],
+     "temp": [
+      55,
+      65
+     ],
+     "pena": "gusta"
+    }
+   },
+   {
+    "id": "flet-vajt",
+    "naziv": "Flet vajt",
+    "after": "m8",
+    "opis": "Espreso i mleko sa tankom mikropenom.",
+    "espreso": {
+     "doza": [
+      18,
+      20
+     ],
+     "prinos": [
+      36,
+      40
+     ],
+     "vreme": [
+      25,
+      30
+     ]
+    },
+    "solja": "kapucino",
+    "mleko": {
+     "ml": [
+      140,
+      180
+     ],
+     "temp": [
+      55,
+      65
+     ],
+     "pena": "tanka"
+    }
+   },
+   {
+    "id": "late",
+    "naziv": "Kafa late",
+    "after": "m8",
+    "opis": "Espreso i više mleka, srednja pena.",
+    "espreso": {
+     "doza": [
+      18,
+      20
+     ],
+     "prinos": [
+      36,
+      40
+     ],
+     "vreme": [
+      25,
+      30
+     ]
+    },
+    "solja": "late",
+    "mleko": {
+     "ml": [
+      220,
+      280
+     ],
+     "temp": [
+      55,
+      65
+     ],
+     "pena": "srednja"
+    }
+   }
+  ],
+  "solje": [
+   {
+    "id": "espreso",
+    "naziv": "Espreso šoljica",
+    "ml": 80,
+    "g": 110,
+    "oblik": "soljica"
+   },
+   {
+    "id": "gibraltar",
+    "naziv": "Gibraltar",
+    "ml": 120,
+    "g": 190,
+    "oblik": "casa"
+   },
+   {
+    "id": "kapucino",
+    "naziv": "Šolja",
+    "ml": 180,
+    "g": 260,
+    "oblik": "solja"
+   },
+   {
+    "id": "late",
+    "naziv": "Late čaša",
+    "ml": 300,
+    "g": 330,
+    "oblik": "casa"
+   }
+  ],
+  "mleka": [
+   {
+    "id": "kravlje",
+    "naziv": "Kravlje",
+    "boja": "#dce4f5"
+   },
+   {
+    "id": "ovseno",
+    "naziv": "Ovseno",
+    "boja": "#ffc935"
+   },
+   {
+    "id": "bez-laktoze",
+    "naziv": "Bez laktoze",
+    "boja": "#cde8da"
+   }
+  ]
+ }
 }

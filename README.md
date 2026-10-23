@@ -34,7 +34,7 @@ npm install
 npm run dev                     # http://localhost:3001
 ```
 
-Sledeći put je dovoljno: Docker Desktop upaljen, `docker compose up -d db`, pa `uvicorn` u `backend` i `npm run dev` u `frontend`. Posle `git pull` pokreni još `.venv\Scripts\pip install -r requirements-dev.txt`, `.venv\Scripts\alembic upgrade head` i `npm install`, za slučaj da ima nečeg novog.
+Sledeći put je dovoljno: Docker Desktop upaljen, `docker compose up -d db`, pa `uvicorn` u `backend` i `npm run dev` u `frontend`. Posle `git pull` pokreni još `.venv\Scripts\pip install -r requirements-dev.txt`, `.venv\Scripts\alembic upgrade head`, `.venv\Scripts\python seed.py --samo-sadrzaj` i `npm install`, za slučaj da ima nečeg novog.
 
 (WSL/Linux: `.venv/bin/...` umesto `.venv\Scripts\...`, `cp` umesto `copy`.)
 
@@ -113,6 +113,22 @@ npm run build
 4. Igra kao korak lekcije (nivoi 5, 7 i 8) se računa i za bedževe, a zrna idu kroz lekciju.
 5. Kartica igre u igraonici prikazuje rekord i zvezdice.
 
+## Kako se testira Smena u Kafeteriji
+
+Igra u stilu Papa's igara: gosti poručuju, polaznik pravi piće kroz pet stanica. Otključava se posle nivoa 5; pića sa mlekom posle nivoa 8.
+
+1. Posle `git pull` pokreni `npm install` u `frontend` (nova biblioteka Phaser) i uvezi sadržaj (meni i igra su u njemu): u `backend` `.venv\Scripts\python seed.py --samo-sadrzaj`. Uvoz pravi novu objavljenu verziju iz fajla, pa izmene kursa napravljene u uređivaču treba ponoviti posle njega.
+2. Kao polaznik: Igre → Smena u Kafeteriji → Otvori kafić.
+3. Kasa: Primi porudžbinu. Porudžbina visi na traci gore; tap na kartu bira na kojoj radiš. Žuta tačka na dnu pokazuje sledeću stanicu.
+4. Mlin: drži Melji do doze iz recepta (mlin dobaci još malo posle puštanja), pa drži Tampuj i pusti u zelenom (13–20 kg). Granulacija (− / +) važi za sledeće šotove.
+5. Aparat: tap na šolju gore je stavlja na vagu, Tara, Ubaci portafilter, Start, Stop kad vaga pokaže prinos. Prebrz ili spor šot znači da treba promeniti granulaciju. Pa Očisti grupu.
+6. Mleko: tap na tetrapak koji je gost tražio, drži Sipaj do količine iz recepta, Para. Prevlačenjem gore-dole menjaš dubinu vrha: na površini ulazi vazduh, potopljen pravi vrtlog. Isključi paru u zelenoj zoni.
+7. Šank: drži Sipaj sa visine do pola, Spusti latijeru i sipaj belu tačku, Posluži. Gost oceni svaki korak i ostavi napojnicu; ko ne otvori Recept dobija +20 din.
+8. Posle 5 gostiju: kraj smene sa ocenom po stanicama i savetima. 3 zvezdice daju bedž „Šef smene”.
+9. Admin → Igre: ispod tabele „Smena u Kafeteriji: stanice” pokazuje prosek po koraku za izabrani lokal.
+
+Meni (pića, šolje, vrste mleka) je u sadržaju kursa, ključ `meni` u `backend/modules/sadrzaj/data/osnovni-nivo.json`. Trenutno je privremen, sa uobičajenim vrednostima; pravi meni Kafeterije se upisuje tamo (doza, prinos i vreme šota, šolja, mleko u ml, temperatura i pena), pa `seed.py --samo-sadrzaj`.
+
 ## Kako se testira Modul 3
 
 1. Polaznik sa svih 8 završenih nivoa: Put → „Završni test” (ili trofej na kraju staze) → uvod (pitanja, prag, najbolji rezultat, broj pokušaja) → „Kreni na test”.
@@ -174,20 +190,6 @@ Radi samo u produkcionom buildu (`npm run build` pa `npm start`); u `npm run dev
 4. Kao polaznik: na Putu je dugme „Kurs · Promeni”. U spisku su oba kursa sa napretkom; izbor otvara stazu tog kursa.
 5. Preduslov: na stranici Sadržaj za nov kurs izaberi „Položen test: Osnovni nivo”. Polaznik koji nije položio osnovni vidi kurs zaključan i šta ga otključava.
 6. U adminu se u meniju bira „Statistika za kurs”: Pregled, Pitanja, Igre i Rang lista prikazuju izabrani kurs.
-
-## 3D igre (proba)
-
-„Kralj pare” u igraonici ima 3D verziju (three.js); prekidač „3D / Klasično” je u zaglavlju igre. Modeli se prave skriptom u Blender-u:
-
-```powershell
-# jednom: Python 3.11 i Blender kao modul
-py -3.11 -m venv .blender
-.blender\Scripts\pip install bpy==4.2.0
-# posle izmene skripte:
-.blender\Scripts\python frontend\modeli\kralj_pare.py --pregled   # piše public\modeli\kralj-pare.glb i render modeli\kralj-pare-pregled.png
-```
-
-Ili u samom Blender-u: Scripting → otvori `frontend/modeli/kralj_pare.py` → Run Script. Model može da se otvori i doradi ručno (File → Import → glTF), pa izveze nazad u `frontend/public/modeli/kralj-pare.glb`; igra traži objekte `Latijera` (sa extras `profil`) i `Stimer`.
 
 ## Sadržaj
 

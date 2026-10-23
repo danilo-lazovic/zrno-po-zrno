@@ -36,6 +36,3 @@ Thumbs.db
 
 # lokalna podešavanja Claude Code-a
 .claude/settings.local.json
-
-# Blender kao Python modul (za frontend/modeli/*.py)
-.blender/

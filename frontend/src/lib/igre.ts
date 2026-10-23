@@ -522,31 +522,6 @@ export const RECEPTI: { recepti: unknown[]; polja: unknown[] } = { recepti: [], 
     return { destroy() { cancelAnimationFrame(raf); if (hiss) hiss.stop(); } };
   }
 
-  /* ---------- pravila „Kralja pare”, zajednička za 2D i 3D verziju (igre/mleko3d.ts) ---------- */
-  const mlekoPocetak = () => ({ t: 0, depth: -0.45, foam: 0, texture: 0, big: 0, temp: 5, steam: false, swirl: false });
-  const mlekoZona = (s) => (s.depth < -0.3 ? "air" : s.depth <= 0.2 ? "surf" : "deep");
-  /** Jedan korak dok je para uključena; vraća savet za polaznika. Na 72 °C igra se sama završava (pregorelo). */
-  function mlekoKorak(s, dt) {
-    const z = mlekoZona(s); let h;
-    s.temp += 3.6 * dt;
-    if (z === "air") { s.big = clamp(s.big + 0.42 * dt, 0, 1); s.foam = clamp(s.foam + 0.1 * dt, 0, 1); h = "Previsoko! Prave se krupni mehurići. Spusti vrh do površine."; }
-    else if (z === "surf") { s.foam = clamp(s.foam + 0.12 * dt, 0, 1); h = s.foam < 0.24 ? "Tako! Vrh na površini, ulazi vazduh." : "Dosta vazduha. Sad potopi vrh za vrtlog."; }
-    else { if (s.foam > 0.04) s.texture = clamp(s.texture + 0.17 * dt, 0, 1); s.big = clamp(s.big - 0.05 * dt, 0, 1); h = s.foam < 0.12 ? "Potopljeno, ali bez vazduha nema pene." : "Vrtlog spaja penu i mleko."; }
-    s.swirl = z === "deep";
-    return { zona: z, savet: h, pregorelo: s.temp >= 72 };
-  }
-  /** Ocena kad se para isključi (ili pregori): četiri provere, zvezdice po broju tačnih. */
-  function mlekoOcena(s, scorched) {
-    const checks = [
-      [s.foam >= 0.22 && s.foam <= 0.55, s.foam < 0.22 ? "Premalo vazduha: tanka pena." : s.foam > 0.55 ? "Previše vazduha: pena je kruta." : "Taman vazduha."],
-      [s.texture >= 0.6, s.texture >= 0.6 ? "Pena i mleko su spojeni." : "Malo vrtloga: pena i mleko nisu spojeni."],
-      [s.big < 0.25, s.big < 0.25 ? "Bez krupnih mehurića." : "Krupni mehurići: vrh je bio previsoko."],
-      [!scorched && s.temp >= 55 && s.temp <= 66, scorched || s.temp > 66 ? "Prevruće: mleko je pregorelo." : s.temp < 55 ? "Prehladno: isključio si paru prerano." : "Temperatura je u zelenoj zoni."]
-    ];
-    const okN = checks.filter((c) => c[0]).length;
-    return { checks, okN, stars: okN === 4 ? 3 : okN === 3 ? 2 : okN === 2 ? 1 : 0 };
-  }
-
   /* ---------- IGRA: Stimuj mleko ---------- */
   function milk(host, opt) {
     host.innerHTML =
@@ -564,20 +539,26 @@ export const RECEPTI: { recepti: unknown[]; polja: unknown[] } = { recepti: [], 
     const { cv, ctx, W, H } = makeCanvas(stage, 360, 250);
     let s, raf = 0, last = 0, hiss = null, hint = "", C = U.colors(), finished = false;
     function reset() {
-      s = mlekoPocetak();
+      s = { t: 0, depth: -0.45, foam: 0, texture: 0, big: 0, temp: 5, steam: false, swirl: false };
       rng.value = -45; finished = false; msg.textContent = ""; msg.className = "g-msg";
       const r = host.querySelector(".g-res"); if (r) r.remove();
       go.textContent = "Uključi paru"; go.className = "btn btn-gold btn-big g-go"; go.hidden = false;
     }
+    function zone() { return s.depth < -0.3 ? "air" : s.depth <= 0.2 ? "surf" : "deep"; }
     function frame(now) {
       if (!last) last = now;
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
       s.t += dt;
       if (s.steam) {
-        const k = mlekoKorak(s, dt), z = k.zona;
-        if (k.savet !== hint) { hint = k.savet; msg.textContent = hint; msg.className = "g-msg"; }
+        const z = zone(); let h;
+        s.temp += 3.6 * dt;
+        if (z === "air") { s.big = clamp(s.big + 0.42 * dt, 0, 1); s.foam = clamp(s.foam + 0.1 * dt, 0, 1); h = "Previsoko! Prave se krupni mehurići. Spusti vrh do površine."; }
+        else if (z === "surf") { s.foam = clamp(s.foam + 0.12 * dt, 0, 1); h = s.foam < 0.24 ? "Tako! Vrh na površini, ulazi vazduh." : "Dosta vazduha. Sad potopi vrh za vrtlog."; }
+        else { if (s.foam > 0.04) s.texture = clamp(s.texture + 0.17 * dt, 0, 1); s.big = clamp(s.big - 0.05 * dt, 0, 1); h = s.foam < 0.12 ? "Potopljeno, ali bez vazduha nema pene." : "Vrtlog spaja penu i mleko."; }
+        s.swirl = z === "deep";
+        if (h !== hint) { hint = h; msg.textContent = h; msg.className = "g-msg"; }
         if (hiss) hiss.set(z === "air" ? 0.07 : z === "surf" ? 0.045 : 0.02, z === "air" ? 4200 : z === "surf" ? 2600 : 600);
-        if (k.pregorelo) return end(true);
+        if (s.temp >= 72) return end(true);
       }
       paint();
       raf = requestAnimationFrame(frame);
@@ -592,7 +573,13 @@ export const RECEPTI: { recepti: unknown[]; polja: unknown[] } = { recepti: [], 
     function end(scorched) {
       s.steam = false; s.swirl = false; if (hiss) { hiss.stop(); hiss = null; }
       finished = true;
-      const { checks, okN, stars: st } = mlekoOcena(s, scorched);
+      const checks = [
+        [s.foam >= 0.22 && s.foam <= 0.55, s.foam < 0.22 ? "Premalo vazduha: tanka pena." : s.foam > 0.55 ? "Previše vazduha: pena je kruta." : "Taman vazduha."],
+        [s.texture >= 0.6, s.texture >= 0.6 ? "Pena i mleko su spojeni." : "Malo vrtloga: pena i mleko nisu spojeni."],
+        [s.big < 0.25, s.big < 0.25 ? "Bez krupnih mehurića." : "Krupni mehurići: vrh je bio previsoko."],
+        [!scorched && s.temp >= 55 && s.temp <= 66, scorched || s.temp > 66 ? "Prevruće: mleko je pregorelo." : s.temp < 55 ? "Prehladno: isključio si paru prerano." : "Temperatura je u zelenoj zoni."]
+      ];
+      const okN = checks.filter((c) => c[0]).length, st = okN === 4 ? 3 : okN === 3 ? 2 : okN === 2 ? 1 : 0;
       st >= 2 ? sfx.ok() : sfx.bad();
       const res = document.createElement("div"); res.className = "g-res";
       res.innerHTML = starRow(st) + '<ul class="checks">' + checks.map((c) => '<li class="' + (c[0] ? "ok" : "bad") + '">' + icon(c[0] ? "check" : "close") + esc(c[1]) + "</li>").join("") + "</ul>";
@@ -885,4 +872,4 @@ export const RECEPTI: { recepti: unknown[]; polja: unknown[] } = { recepti: [], 
   }
 
 
-export { clip, dialin, milk, latte, recipe, swipeDeck, swipeGame, starRow, starsFor, mlekoPocetak, mlekoZona, mlekoKorak, mlekoOcena };
+export { clip, dialin, milk, latte, recipe, swipeDeck, swipeGame, starRow, starsFor };

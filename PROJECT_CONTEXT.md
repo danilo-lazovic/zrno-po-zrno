@@ -37,7 +37,7 @@ Pravila koja se ne krše:
 - Svaka igra poštuje isti ugovor, da implementacija može da bude JS ili Unity bez izmene ostatka sistema:
   - ulaz: `igra_id`, konfiguracija nivoa (JSON), podešavanja (zvuk, smanjeno kretanje)
   - izlaz: `{ igra_id, rezultat (0–1), zvezdice (0–3), poeni, trajanje_ms, detalji }`
-  - backend prima rezultat preko istog API-ja bez obzira na izvor (`izvor`: `js`, `3d` ili `unity`, radi poređenja)
+  - backend prima rezultat preko istog API-ja bez obzira na izvor (`izvor`: `js` ili `unity`, radi poređenja)
 - Ugovor je u kodu: `frontend/src/igre/ugovor.ts` (TS tipovi), `frontend/src/igre/registar.ts` (koja implementacija pokreće koju igru) i `backend/modules/igre/router.py` (`POST /api/igre/{kurs}/rezultat`). Igra ne zove API sama; vrati rezultat, a aplikacija ga šalje, a server dodeljuje zrna i bedževe.
 - Ista igra radi u igraonici i kao korak lekcije (konfiguracija `mod: "lekcija"`): lekcija i igraonica zovu samo `pokretac(igra, implementacija)`.
 - Unity igra se uključuje upisom njenog pokretača u `UNITY` mapu u `registar.ts` i `implementacija: "unity"` u sadržaju. Dok pokretača nema, sadržaj sa `unity` koristi JS verziju. Build-ovi idu u `frontend/public/unity/<igra>/` (van gita).
@@ -45,14 +45,15 @@ Pravila koja se ne krše:
 - Unity igra menja JS verziju tek kad prođe proveru na telefonima: veličina builda, vreme učitavanja i rad na iOS Safariju. Ako ne prođe, ostaje zaseban portfolio projekat (ili kasnije native app).
 - Koja implementacija se koristi za koju igru je podešavanje (`igre[].implementacija` u sadržaju kursa), ne izmena koda.
 
-### 3D u pregledaču (proba, 21.10.2026.)
+## Smena u Kafeteriji (odluka 21.10.2026.)
 
-- Treći put pored JS i Unity: three.js u samom sajtu, modeli iz Blender-a. Proba je „Kralj pare” (`frontend/src/igre/mleko3d.ts`).
-- Pravila i bodovanje su zajednički sa 2D verzijom (`mlekoKorak`, `mlekoOcena` u `lib/igre.ts`), pa se rezultati porede pošteno; server beleži `izvor: "3d"`, a admin → Igre ima kolonu 3D.
-- Modeli se prave skriptom u Blender-u (`frontend/modeli/kralj_pare.py`, `bpy` 4.2) i izvoze u `frontend/public/modeli/kralj-pare.glb` (146 KB); isti `.glb` može kasnije i u Unity.
-- Three.js i igra su poseban deo koda (oko 155 KB kompresovano, plus model) i učitavaju se tek kad se igra otvori; ostatak aplikacije nije teži. Bez WebGL-a igra radi u klasičnoj verziji.
-- U igraonici je 3D podrazumevana za „Kralja pare”, a prekidač „3D / Klasično” se pamti na telefonu. U lekcijama je zasad klasična verzija.
-- Isti kriterijum kao za Unity: 3D postaje jedina verzija tek posle provere na pravim telefonima (Android i iPhone: brzina učitavanja, glatkoća, baterija). Scena se crta samo kad se nešto menja, a gustina piksela je ograničena na 1,5.
+- 3D proba (three.js, Blender) je uklonjena: nije davala osećaj prave igre. Pravac je igra u stilu Papa's igara (2D, crtani stil, tok smene), u pregledaču, bez Unity-ja.
+- Igra `smena` (`frontend/src/igre/smena/`): Phaser 3, učitava se tek kad se otvori (≈ 330 KB gzip), service worker je pamti za rad bez mreže. Ekran 1080 × 1920, uspravan telefon.
+- Tok: kasa (porudžbina) → mlin (doza, tamp, granulacija) → aparat (šolja, tara, šot na vagi i tajmeru) → mleko (vrsta, količina, para: vazduh pa vrtlog, temperatura) → šank (sipanje, crtež, posluženje). Više porudžbina istovremeno; šot teče i dok si na drugoj stanici.
+- Gost ocenjuje po stanicama (`model.ts`, `oceni`): doza, tamp, šot (prinos i vreme), procedura (tara), šolja, mleko (vrsta, temperatura, pena, spajanje, mehurići), sipanje (puno, crtež), čekanje. Prosek se umanjuje prema najslabijoj stanici; pogrešna vrsta mleka obara piće. Napojnica raste sa ocenom; +20 din za piće bez otvaranja recepta.
+- Rezultat po ugovoru igre: `rezultat` je prosek gostiju, `poeni` su napojnice, `detalji.kategorije` su proseci po stanici. Statistika (Admin → Igre) iz njih pravi prosek po stanici, da trener vidi šta se vežba za šankom.
+- Crteži su SVG iz koda (`crtezi.ts`) u Kafeterija stilu: ravne boje, debela crna ivica, tvrda senka; logo iz `public/brand/`. Gosti se slažu iz delova (koža, kosa, frizura, majica, naočare, kapa, brada) sa četiri raspoloženja.
+- Meni je deo sadržaja kursa (`meni`: pića, šolje, vrste mleka; svako piće se otključava posle svog nivoa). Server proverava meni pri objavi. Trenutni meni je privremen dok ne stignu recepture Kafeterije.
 
 ## Uloge
 
@@ -178,7 +179,7 @@ Posle svakog modula: kratko uputstvo kako se testira, commit, pa sledeći.
 - Zapeo: postavio PIN, nije položio test i nema aktivnosti 7+ dana (računa se i od prijave ili otvaranja naloga ako nikad nije učio).
 - Levak: koliko polaznika je postavilo PIN, završilo svaki nivo i položilo test; procenat je u odnosu na prvi red.
 - Pitanja: tačnost je prosek rezultata (0–1) svih odgovora; prikazuju se pitanja sa bar 3 odgovora, najteža prva. Najčešći pogrešan odgovor se vidi za izbor i klizač.
-- Igre: igranja iz igraonice i iz lekcija, prosečan rezultat, udeo igranja sa 3 zvezdice, broj igranja Unity verzije.
+- Igre: igranja iz igraonice i iz lekcija, prosečan rezultat, udeo igranja sa 3 zvezdice, broj igranja Unity verzije. Za Smenu i prosek po stanici.
 - Grafikoni: jedna serija u boji `--graf` (#2D6FD6 svetlo, #5A92EC tamno; provereno validatorom palete), broj na najvišem i poslednjem stubiću, ostalo u oblačiću, „Tabela” za iste brojeve kao tekst.
 
 ## Uređivač sadržaja (Modul 5)

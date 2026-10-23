@@ -72,7 +72,7 @@
   const BEAN = '<svg viewBox="0 0 120 84" aria-hidden="true"><path class="bean-body" d="M10 46C8 20 40 6 66 8c30 2 48 20 44 38-4 22-30 34-56 32C28 76 12 64 10 46z"/><path class="bean-crease" d="M24 50c20-22 46 8 74-14"/></svg>';
 
   /* ---------- medalje (bedževi) ---------- */
-  const BADGE_IC = { first: "cup", perfect: "check", combo5: "spark", streak3: "flame", half: "half", dial: "gauge", swipe: "swap", milk: "pitcher", latte: "heart", recipe: "dripper", allstars: "star", ready: "trophy" };
+  const BADGE_IC = { first: "cup", perfect: "check", combo5: "spark", streak3: "flame", half: "half", dial: "gauge", swipe: "swap", milk: "pitcher", latte: "heart", recipe: "dripper", smena: "cup", allstars: "star", ready: "trophy" };
   function medal(id, on) {
     return '<span class="medal' + (on ? " on" : "") + '">' + icon(BADGE_IC[id] || "star") + "</span>";
   }

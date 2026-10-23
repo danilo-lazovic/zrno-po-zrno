@@ -106,8 +106,6 @@ def test_izvor_unity_isti_api(otkljucano, db):
 
     assert posalji(otkljucano, "milk", 0.7, 70, izvor="unity").status_code == 200
     assert db.scalar(select(RezultatIgre.izvor).order_by(RezultatIgre.id.desc())) == "unity"
-    assert posalji(otkljucano, "milk", 0.7, 70, izvor="3d").status_code == 200
-    assert db.scalar(select(RezultatIgre.izvor).order_by(RezultatIgre.id.desc())) == "3d"
     assert posalji(otkljucano, "milk", 0.7, 70, izvor="flash").status_code == 422
 
 
@@ -119,3 +117,13 @@ def test_neispravan_rezultat(otkljucano, polje, vrednost):
 
 def test_preveliki_detalji(otkljucano):
     assert posalji(otkljucano, "milk", detalji={"x": "a" * 3000}).status_code == 422
+
+
+def test_smena_bedz_i_detalji(otkljucano):
+    c = otkljucano
+    detalji = {"gostiju": 5, "kategorije": {"doza": 1, "sot": 0.5}, "pica": {"kapucino": 0.8}, "napamet": 2}
+    r = posalji(c, "smena", 0.85, 640, detalji=detalji).json()
+    assert r["zvezdice"] == 2 and r["novi_bedzevi"] == []
+    r = posalji(c, "smena", 0.93, 900, detalji=detalji).json()
+    # najbolje je procenat, kao za ostale igre (napojnice su poeni)
+    assert r["novi_bedzevi"] == ["smena"] and r["najbolje"] == 93

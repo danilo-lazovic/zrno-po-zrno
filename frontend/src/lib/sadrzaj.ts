@@ -1,5 +1,7 @@
 /** Dokument kursa kakav vraća GET /api/sadrzaj/{kurs} (format: backend/modules/sadrzaj/data/osnovni-nivo.json). */
 
+import type { Meni } from "@/igre/smena/meni";
+
 export type Korak = {
   id: string;
   /** story, explore, clip, game, mc, tf, num, order, match, sort, hotspot */
@@ -32,7 +34,7 @@ export type IgraOpis = {
   /** otključava se posle ovog nivoa */
   after: string;
   color: string;
-  implementacija: "js" | "3d" | "unity";
+  implementacija: "js" | "unity";
 };
 
 export type Kurs = {
@@ -46,6 +48,8 @@ export type Kurs = {
   pojmovi: { id: string; nivo: string; pojam: string; opis: string }[];
   recepti: unknown[];
   recept_polja: unknown[];
+  /** meni za igru Smena (pića, šolje, vrste mleka) */
+  meni?: Meni;
 };
 
 export type SadrzajOut = { kurs: string; verzija: number; dokument: Kurs };
