@@ -32,7 +32,6 @@ export default function RangStrana() {
     <>
       <div className="adm-glava">
         <div>
-          <p className="eyebrow">Admin</p>
           <h1 className="h1">Rang lista</h1>
         </div>
         <div className="filteri">
@@ -47,8 +46,7 @@ export default function RangStrana() {
         </div>
       </div>
       <p className="sub" style={{ marginBottom: 16 }}>
-        Zrna od ponedeljka do nedelje{lokali?.[0] ? ` (${opsegNedelje(lokali[0])})` : ""}. Polaznik vidi samo kolege iz svog lokala koje su te
-        nedelje zaradile zrna; ovde su svi polaznici sa postavljenim PIN-om.
+        Zrna od ponedeljka do nedelje{lokali?.[0] ? ` (${opsegNedelje(lokali[0])})` : ""}.
       </p>
       {greska && <p className="note bad">{greska}</p>}
       {lokali && lokali.length === 0 && <p className="prazno">Nema lokala.</p>}

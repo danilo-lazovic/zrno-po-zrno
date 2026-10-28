@@ -55,6 +55,7 @@ Pravila koja se ne krše:
 - Crteži su SVG iz koda (`crtezi.ts`) u Kafeterija stilu: ravne boje, debela crna ivica, tvrda senka; logo iz `public/brand/`. Gosti se slažu iz delova (koža, kosa, frizura, majica, naočare, kapa, brada) sa četiri raspoloženja.
 - Vođena smena (od 23.10.2026.): prvi put se nudi kao glavno dugme; jedan gost, bez žurbe, kartica sa uputstvom i žuti krug za svaki korak, ciljne vrednosti vidljive. Rezultat se ne šalje; pamti se na telefonu (`zpz-smena-obuka`). Oprema je u razmeri (`crtezi.PX_CM`, 13 px/cm: šolje po zapremini, korpa 58 mm), mleko je uveličano radi preglednosti.
 - Animacije (Phaser tweenovi i čestice, bez fajlova): gosti hodaju i dišu, srećan gost skoči uz srca, ljut se strese; napojnica leti do brojača; stanice klize jedna za drugom; mlin se trese i sipa mrvice; portafilter se ubacuje i izbija o kutiju; pri posluženju tačka postaje srce. Uz „smanjeno kretanje” na telefonu sve to se preskače. Zvuci su iz `sfx` (WebAudio): zvonce, kasa, udarac, klik ručke.
+- Igraonica (od 28.10.2026.): Smena, Brza runda i Složi recept. Uštimaj mlin, Kralj pare i Sipaj srce su samo koraci u lekcijama (nivo 5 i 8), jer Smena vežba isto; njihovi bedževi se osvajaju u lekciji. Lista je `SAMO_U_LEKCIJI` u `Polaznik.tsx`.
 - Meni je deo sadržaja kursa (`meni`: pića, šolje, vrste mleka; svako piće se otključava posle svog nivoa). Server proverava meni pri objavi. Trenutni meni je privremen dok ne stignu recepture Kafeterije.
 
 ## Uloge

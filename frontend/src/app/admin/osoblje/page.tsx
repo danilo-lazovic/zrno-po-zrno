@@ -54,7 +54,6 @@ export default function OsobljeStrana() {
     <>
       <div className="adm-glava">
         <div>
-          <p className="eyebrow">Admin</p>
           <h1 className="h1">Osoblje</h1>
         </div>
       </div>

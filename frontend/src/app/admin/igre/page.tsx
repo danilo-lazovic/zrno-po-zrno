@@ -24,7 +24,6 @@ export default function IgreStrana() {
     <>
       <div className="adm-glava">
         <div>
-          <p className="eyebrow">Admin · statistika</p>
           <h1 className="h1">Igre</h1>
         </div>
         <div className="filteri">
@@ -32,7 +31,7 @@ export default function IgreStrana() {
         </div>
       </div>
       <p className="sub" style={{ marginBottom: 16 }}>
-        Igranja iz igraonice i iz lekcija. Kolona Unity broji igranja Unity verzije, za poređenje sa JS verzijom.
+        Igranja iz igraonice i iz lekcija.
       </p>
       {greska && <p className="note bad">{greska}</p>}
       {lista && (
@@ -68,7 +67,7 @@ export default function IgreStrana() {
           g.stanice && (
             <section className="panel" key={`st-${g.igra}`} style={{ marginTop: 16 }}>
               <h2 className="h2">{g.naziv}: stanice</h2>
-              <p className="sub">Prosečna ocena gostiju po koraku. Najniži red je ono što treba vežbati za šankom.</p>
+              <p className="sub">Najniži red treba vežbati za šankom.</p>
               <table className="tabela">
                 <tbody>
                   {KATEGORIJE.filter((c) => g.stanice![c.id] != null)
