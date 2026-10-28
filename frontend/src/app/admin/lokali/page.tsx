@@ -49,7 +49,6 @@ export default function LokaliStrana() {
     <>
       <div className="adm-glava">
         <div>
-          <p className="eyebrow">Admin</p>
           <h1 className="h1">Lokali</h1>
         </div>
         <button type="button" className="btn btn-gold" onClick={izPortala} disabled={preuzima}>
@@ -57,8 +56,7 @@ export default function LokaliStrana() {
         </button>
       </div>
       <p className="sub" style={{ marginBottom: 16 }}>
-        Lokali dolaze iz Kafeterija Portala (evidencija iz dela za recenzije) i menjaju se tamo. Ručno dodaj samo lokal kog
-        u portalu još nema; pri sledećem preuzimanju lokal istog naziva prelazi pod portal.
+        Lokali stižu iz Kafeterija Portala. Ručno dodaj samo lokal kog tamo još nema.
       </p>
       {poruka && (
         <p className="note ok" role="status">

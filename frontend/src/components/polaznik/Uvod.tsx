@@ -120,7 +120,7 @@ export function Uvod({ ime, sacuvaj }: { ime: string; sacuvaj: (avatar: string) 
                 <Ikona ime="arcade" />
                 <div>
                   <b>Igre</b>
-                  <span>Uštimaj mlin, stimuj mleko, sipaj srce i složi recepte.</span>
+                  <span>Odradi smenu u Kafeteriji, brzu rundu i složi recepte.</span>
                 </div>
               </li>
               <li>

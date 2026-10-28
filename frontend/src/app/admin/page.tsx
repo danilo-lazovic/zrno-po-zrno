@@ -30,7 +30,6 @@ export default function PregledStrana() {
     <>
       <div className="adm-glava">
         <div>
-          <p className="eyebrow">Admin</p>
           <h1 className="h1">Pregled</h1>
         </div>
         <div className="filteri">

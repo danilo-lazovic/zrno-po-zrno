@@ -61,13 +61,11 @@ export default function SadrzajStrana() {
     <>
       <div className="adm-glava">
         <div>
-          <p className="eyebrow">Admin</p>
           <h1 className="h1">Sadržaj</h1>
         </div>
       </div>
       <p className="sub" style={{ marginBottom: 16 }}>
-        Izmene se prave u nacrtu i ne vide se polaznicima dok se ne objave. Svaka objava pravi novu verziju kursa sa napomenom
-        šta je promenjeno; polaznici dobijaju poslednju objavljenu.
+        Polaznici vide izmene tek kad ih objaviš.
       </p>
       {greska && <p className="note bad">{greska}</p>}
 
@@ -209,8 +207,7 @@ export default function SadrzajStrana() {
         </button>
       </form>
       <p className="sub" style={{ marginBottom: 22 }}>
-        Nov kurs počinje kao nacrt sa jednim praznim nivoom. Polaznici ga vide tek kad ga objaviš; dok nije objavljen, nivoi se
-        slobodno dodaju, brišu i premeštaju.
+        Polaznici vide nov kurs tek kad ga objaviš.
       </p>
 
       <h2 className="sec-adm">Verzije</h2>

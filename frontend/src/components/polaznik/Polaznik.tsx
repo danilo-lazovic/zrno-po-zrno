@@ -46,7 +46,6 @@ const TABS: [Tab, string, string][] = [
 ];
 
 const zrnaTxt = (n: number) => `${n} ${mnozina(n, "zrno", "zrna", "zrna")}`;
-const danaTxt = (n: number) => `${n} ${mnozina(n, "dan", "dana", "dana")}`;
 
 function citajZvuk() {
   try {
@@ -254,7 +253,6 @@ export function Polaznik({ me }: { me: Me }) {
         <button type="button" className="top-me" onClick={() => idi("profil")} aria-label="Profil">
           <Svg html={avatar(av ?? "zrno")} />
           <span className="top-rank">
-            <small>{me.korisnik.ime}</small>
             <b>{rang.naziv}</b>
           </span>
         </button>
@@ -484,8 +482,7 @@ function Put({
       <div className="hello card">
         <div className="hello-row">
           <div className="hello-txt">
-            <p className="eyebrow">Zdravo, {me.korisnik.ime}</p>
-            <h1 className="h1">Minimum za kurs</h1>
+            <h1 className="h1">Zdravo, {me.korisnik.ime}!</h1>
             <div className="mdots" aria-label={`${gotovo} od ${nivoi.length} nivoa`}>
               {nivoi.map((n) => (
                 <i key={n.id} className={zavrsen(n.id) ? "on" : ""} />
@@ -523,17 +520,14 @@ function Put({
           </div>
         </div>
         <div className="roast-row">
-          <span className="mono-s">{rang.naziv}</span>
           <div className="roast" aria-hidden="true">
-            <i style={{ width: `${(rp * 100).toFixed(1)}%` }} />
+            <i style={{ width: `${((1 - rp) * 100).toFixed(1)}%` }} />
           </div>
-          <span className="mono-s">{rang.sledeci ? rang.sledeci.naziv : "max"}</span>
         </div>
         <p className="hello-foot">
           {rang.sledeci
             ? `Još ${zrnaTxt(rang.sledeci.min - napredak.zrna)} do ranga „${rang.sledeci.naziv}“`
-            : "Najviši rang!"}{" "}
-          · {danaTxt(napredak.niz_dana)} zaredom
+            : "Najviši rang!"}
         </p>
       </div>
 
@@ -595,11 +589,7 @@ function Put({
                   </button>
                   <div className="node-meta">
                     <b>{n.title}</b>
-                    {done ? (
-                      <Svg html={zvezdice(napredak.nivoi[n.id].zvezdice)} />
-                    ) : (
-                      <span className="node-sub">{unl ? `~${n.min} min` : "Zaključano"}</span>
-                    )}
+                    {done && <Svg html={zvezdice(napredak.nivoi[n.id].zvezdice)} />}
                   </div>
                 </div>
               );
@@ -695,15 +685,16 @@ function NivoList({
 
 /* ---------- IGRE ---------- */
 
+// Smena već vežba mlin, paru i sipanje, pa ove igre ostaju samo kao koraci u lekcijama (nivo 5 i 8)
+const SAMO_U_LEKCIJI = new Set(["dialin", "milk", "latte"]);
+
 function Igre({ kurs, napredak, otvori }: { kurs: Kurs; napredak: Napredak; otvori: (g: IgraOpis) => void }) {
   return (
     <section className="igre">
-      <p className="eyebrow">Igraonica</p>
       <h1 className="h1">Vežbaj kroz igru</h1>
-      <p className="lead">Svaka igra se otključava kad završiš nivo u kom je to gradivo. Igre donose zrna i bedževe.</p>
       {kurs.igre.length === 0 && <p className="note">Ovaj kurs još nema igre. Igre iz drugih kurseva su tamo gde je i njihovo gradivo.</p>}
       <div className="glist">
-        {kurs.igre.map((g) => {
+        {kurs.igre.filter((g) => !SAMO_U_LEKCIJI.has(g.id)).map((g) => {
           const nivo = kurs.nivoi.find((n) => n.id === g.after)!;
           const otvorena = !!napredak.nivoi[g.after]?.zavrsen;
           const rekord = napredak.igre[g.id];
@@ -736,7 +727,7 @@ function Igre({ kurs, napredak, otvori }: { kurs: Kurs; napredak: Napredak; otvo
                   ) : (
                     <>
                       <Ikona ime="lock" />
-                      Posle nivoa {nivo.n} · {nivo.title}
+                      Posle nivoa {nivo.n}
                     </>
                   )}
                 </small>
@@ -817,12 +808,10 @@ function Kartice({
   if (nacin === "minimum") {
     return (
       <section className="kartice">
-        <p className="eyebrow">Učionica</p>
         <h1 className="h1">Šta moraš da znaš</h1>
         {seg}
         <p className="lead">
-          Ovo je minimum pre prvog dana kursa. Svaka stavka je „Zapamti“ kartica iz nivoa. Kad završiš nivo, stavke se
-          štikliraju.
+          Kad završiš nivo, njegove stavke se štikliraju.
         </p>
         <div className="minl">
           {kurs.nivoi.map((n) => {
@@ -856,7 +845,6 @@ function Kartice({
   const nivoPojma = p ? kurs.nivoi.find((n) => n.id === p.nivo) : undefined;
   return (
     <section className="kartice">
-      <p className="eyebrow">Učionica</p>
       <h1 className="h1">Rečnik bariste</h1>
       {seg}
       <div className="chips" role="group" aria-label="Filter po nivou">
@@ -934,7 +922,7 @@ function Kartice({
           Znam
         </button>
       </div>
-      <p className="hint">Tapni karticu da je okreneš. Strelice levo-desno listaju.</p>
+      <p className="hint">Tapni karticu da je okreneš.</p>
     </section>
   );
 }
@@ -1257,7 +1245,6 @@ function KarticaPodsetnika({
           {p.akcija.naziv}
         </button>
       </div>
-      {svi.length > 1 && <small className="podsetnik-jos">još {svi.length - 1}</small>}
     </div>
   );
 }

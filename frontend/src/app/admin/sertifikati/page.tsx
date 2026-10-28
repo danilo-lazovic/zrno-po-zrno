@@ -63,7 +63,6 @@ export default function SertifikatiStrana() {
     <>
       <div className="adm-glava">
         <div>
-          <p className="eyebrow">Admin</p>
           <h1 className="h1">Sertifikati</h1>
         </div>
       </div>

@@ -27,7 +27,6 @@ export default function PitanjaStrana() {
     <>
       <div className="adm-glava">
         <div>
-          <p className="eyebrow">Admin · statistika</p>
           <h1 className="h1">Pitanja</h1>
         </div>
         <div className="filteri">
@@ -40,8 +39,7 @@ export default function PitanjaStrana() {
         </div>
       </div>
       <p className="sub" style={{ marginBottom: 16 }}>
-        Najteža pitanja prva. Pitanje sa niskom tačnošću je signal da gradivo treba bolje objasniti ili da je pitanje nejasno.
-        Prikazana su pitanja sa bar 3 odgovora.
+        Najteža pitanja su prva: tu gradivo treba bolje objasniti.
       </p>
       {greska && <p className="note bad">{greska}</p>}
       {lista === null ? (

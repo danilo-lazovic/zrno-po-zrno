@@ -79,7 +79,6 @@ export function Polaznici() {
     <>
       <div className="adm-glava">
         <div>
-          <p className="eyebrow">Admin</p>
           <h1 className="h1">Polaznici</h1>
         </div>
         {lokali.length > 1 && (
